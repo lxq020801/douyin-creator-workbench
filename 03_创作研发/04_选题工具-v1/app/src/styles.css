@@ -2452,38 +2452,48 @@ button.task-row:hover {
 
 .settings-layout {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  gap: 18px;
+  grid-template-columns: 236px minmax(0, 1fr);
+  gap: 22px;
   margin-top: 24px;
 }
 
 .settings-nav {
   align-self: start;
-  padding: 6px;
+  padding: 5px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 7px;
   background: var(--surface);
 }
 
 .settings-nav button {
   display: grid;
   width: 100%;
-  min-height: 62px;
-  grid-template-columns: 24px minmax(0, 1fr);
+  min-height: 58px;
+  grid-template-columns: 22px minmax(0, 1fr);
   align-items: center;
-  gap: 9px;
-  padding: 9px;
+  gap: 10px;
+  padding: 7px 9px;
   border: 0;
   border-radius: 5px;
-  color: var(--muted);
+  color: #59625e;
   text-align: left;
   background: transparent;
   cursor: pointer;
 }
 
+.settings-nav button > svg {
+  width: 19px;
+  height: 19px;
+  color: #59625e;
+}
+
 .settings-nav button.is-active {
   color: var(--ink);
   background: var(--acid-soft);
+}
+
+.settings-nav button.is-active > svg {
+  color: var(--ink);
 }
 
 .settings-nav strong,
@@ -2492,17 +2502,20 @@ button.task-row:hover {
 }
 
 .settings-nav strong {
-  font-size: 11px;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.25;
 }
 
 .settings-nav small {
   margin-top: 3px;
-  color: var(--quiet);
-  font-size: 8px;
+  color: #59625e;
+  font-size: 11px;
+  line-height: 1.35;
 }
 
 .settings-panel {
-  min-height: 520px;
+  min-height: 480px;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -2510,7 +2523,7 @@ button.task-row:hover {
 }
 
 .settings-section {
-  padding: clamp(24px, 4vw, 40px);
+  padding: clamp(24px, 3vw, 34px);
 }
 
 .settings-section-heading {
@@ -2518,8 +2531,8 @@ button.task-row:hover {
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 26px;
-  padding-bottom: 16px;
+  margin-bottom: 22px;
+  padding-bottom: 14px;
   border-bottom: 1px solid var(--line);
 }
 
@@ -2555,6 +2568,32 @@ button.task-row:hover {
   padding: 0 12px;
 }
 
+.page--settings .form-grid {
+  gap: 14px 18px;
+}
+
+.page--settings .form-grid label > span,
+.page--settings .settings-section > label > span {
+  margin-bottom: 6px;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.page--settings .form-grid input {
+  height: 44px;
+  padding: 0 13px;
+  border-color: var(--line);
+  background: var(--surface);
+  font-size: 14px;
+}
+
+.page--settings input::placeholder,
+.page--settings textarea::placeholder {
+  color: #737c77;
+  opacity: 1;
+}
+
 .form-grid small {
   display: block;
   margin-top: 6px;
@@ -2569,24 +2608,45 @@ button.task-row:hover {
 
 .secret-field {
   display: flex;
-  height: 42px;
+  height: 44px;
   align-items: center;
   gap: 8px;
-  padding-left: 11px;
-  border: 1px solid var(--line-strong);
+  overflow: hidden;
+  padding-left: 12px;
+  border: 1px solid var(--line);
   border-radius: 5px;
   background: var(--surface);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.secret-field:hover {
+  border-color: var(--muted);
+}
+
+.secret-field:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgb(36 99 255 / 12%);
 }
 
 .secret-field input {
+  height: 100%;
+  flex: 1;
   min-width: 0;
-  padding: 0;
+  padding: 0 4px;
   border: 0;
+  background: transparent;
+  font-size: 14px;
   box-shadow: none;
 }
 
 .secret-field .icon-button {
+  width: 44px;
+  height: 100%;
+  flex-basis: 44px;
   border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
 }
 
 .connection-note {
@@ -2596,7 +2656,13 @@ button.task-row:hover {
 }
 
 .connection-note strong {
-  font-size: 10px;
+  font-size: 12px;
+}
+
+.page--settings .connection-note p {
+  color: #2954a8;
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .settings-textarea {
