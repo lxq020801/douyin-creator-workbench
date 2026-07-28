@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>账号风格选择台</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f0f1ed;
+        --surface: #ffffff;
+        --ink: #171915;
+        --muted: #686d65;
+        --line: #cfd3ca;
+        --accent: #e94f37;
+        --green: #4f8f58;
+        --amber: #bd7b16;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+        margin: 0;
+      }
+
+      button,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .shell {
+        margin: 0 auto;
+        max-width: 1720px;
+        padding: 28px 28px 80px;
+      }
+
+      .topbar {
+        align-items: end;
+        border-bottom: 2px solid var(--ink);
+        display: flex;
+        gap: 24px;
+        justify-content: space-between;
+        padding-bottom: 22px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 38px;
+        line-height: 1.1;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 15px;
+        margin-top: 10px;
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .command {
+        background: var(--surface);
+        border: 1px solid var(--ink);
+        border-radius: 4px;
+        color: var(--ink);
+        min-height: 40px;
+        padding: 8px 14px;
+      }
+
+      .command.primary {
+        background: var(--ink);
+        color: #ffffff;
+      }
+
+      .overview {
+        align-items: start;
+        display: grid;
+        gap: 26px;
+        grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+        padding: 28px 0;
+      }
+
+      .overview video {
+        background: #000000;
+        display: block;
+        max-height: 620px;
+        width: 100%;
+      }
+
+      .summary {
+        border-left: 3px solid var(--accent);
+        padding-left: 22px;
+      }
+
+      .summary h2 {
+        font-size: 24px;
+      }
+
+      .summary-grid {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(3, 1fr);
+        margin-top: 22px;
+      }
+
+      .summary-stat {
+        border-top: 1px solid var(--line);
+        padding-top: 10px;
+      }
+
+      .summary-stat strong {
+        display: block;
+        font-size: 32px;
+      }
+
+      .summary-stat span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      #shortlist {
+        color: var(--accent);
+        font-size: 28px;
+        font-weight: 800;
+        margin-top: 28px;
+        min-height: 40px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .style-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .style-card[data-status="keep"] {
+        border-color: var(--green);
+        box-shadow: inset 0 4px 0 var(--green);
+      }
+
+      .style-card[data-status="maybe"] {
+        border-color: var(--amber);
+        box-shadow: inset 0 4px 0 var(--amber);
+      }
+
+      .style-card[data-status="drop"] {
+        opacity: 0.58;
+      }
+
+      .video-wrap {
+        background: #111111;
+        position: relative;
+      }
+
+      .video-wrap video {
+        aspect-ratio: 9 / 16;
+        display: block;
+        object-fit: contain;
+        width: 100%;
+      }
+
+      .code {
+        background: var(--ink);
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: 800;
+        left: 10px;
+        padding: 6px 9px;
+        position: absolute;
+        top: 10px;
+      }
+
+      .meta {
+        padding: 16px;
+      }
+
+      .meta h2 {
+        font-size: 21px;
+      }
+
+      .descriptor {
+        color: var(--muted);
+        font-size: 14px;
+        margin-top: 7px;
+        min-height: 42px;
+      }
+
+      .best-for {
+        border-top: 1px solid var(--line);
+        font-size: 13px;
+        margin-top: 12px;
+        padding-top: 10px;
+      }
+
+      .segments {
+        display: grid;
+        gap: 4px;
+        grid-template-columns: repeat(3, 1fr);
+        margin-top: 14px;
+      }
+
+      .segment {
+        background: #f4f5f1;
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        font-size: 13px;
+        min-height: 38px;
+        padding: 6px 4px;
+      }
+
+      .segment[aria-pressed="true"][data-value="keep"] {
+        background: var(--green);
+        border-color: var(--green);
+        color: #ffffff;
+      }
+
+      .segment[aria-pressed="true"][data-value="maybe"] {
+        background: var(--amber);
+        border-color: var(--amber);
+        color: #ffffff;
+      }
+
+      .segment[aria-pressed="true"][data-value="drop"] {
+        background: var(--ink);
+        border-color: var(--ink);
+        color: #ffffff;
+      }
+
+      textarea {
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        color: var(--ink);
+        margin-top: 10px;
+        min-height: 70px;
+        padding: 9px;
+        resize: vertical;
+        width: 100%;
+      }
+
+      @media (max-width: 1380px) {
+        .grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 1040px) {
+        .overview {
+          grid-template-columns: 1fr;
+        }
+
+        .grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 760px) {
+        .shell {
+          padding: 20px 14px 60px;
+        }
+
+        .topbar {
+          align-items: start;
+          flex-direction: column;
+        }
+
+        .toolbar {
+          justify-content: flex-start;
+        }
+
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 470px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>账号风格选择台</h1>
+          <p class="subtitle">同一命题 · 十种画面组织 · 1080×1920 · 6 秒</p>
+        </div>
+        <div class="toolbar">
+          <button class="command" id="play-all" type="button">全部播放</button>
+          <button class="command" id="pause-all" type="button">全部暂停</button>
+          <button class="command" id="restart-all" type="button">重新开始</button>
+          <button class="command primary" id="export" type="button">导出选择</button>
+        </div>
+      </header>
+
+      <section class="overview">
+        <video src="10-style-overview.mp4" controls loop muted playsinline preload="metadata"></video>
+        <div class="summary">
+          <h2>当前选择</h2>
+          <div class="summary-grid">
+            <div class="summary-stat"><strong id="keep-count">0</strong><span>喜欢</span></div>
+            <div class="summary-stat"><strong id="maybe-count">0</strong><span>待定</span></div>
+            <div class="summary-stat"><strong id="drop-count">0</strong><span>不适合</span></div>
+          </div>
+          <div id="shortlist">尚未选择</div>
+        </div>
+      </section>
+
+      <section class="grid" id="style-grid"></section>
+    </main>
+
+    <script>
+      const styles = [
+        ["A", "StyleAEditorial", "清亮编辑部", "杂志版式 + 校对痕迹", "方法、判断与案例拆解"],
+        ["B", "StyleBStoryboard", "导演时间线", "分镜台 + 播放头", "编导身份与创作过程"],
+        ["C", "StyleCFieldNotes", "蓝图手记", "方格纸 + 手写批注", "边做边讲、实验记录"],
+        ["D", "StyleDBroadcast", "数据演播室", "新闻条带 + 证据窗口", "爆款、数据与快节奏结论"],
+        ["E", "StyleESystem", "命令行工作台", "终端语言 + 精确反馈", "AI Agent 与自动化过程"],
+        ["F", "StyleFDiagram", "连续图解", "一个节点持续变形", "概念、流程与因果解释"],
+        ["G", "StyleGPoster", "海报冲击", "巨型数字 + 人物切片", "强钩子与短促观点"],
+        ["H", "StyleHProduct", "产品纪录片", "克制 UI + 人物旁证", "工具演示与真实结果"],
+        ["I", "StyleIEvidence", "档案取证", "证据编号 + 扫描叙事", "对标拆解与真实性证明"],
+        ["J", "StyleJCollage", "动态拼贴", "剪报块面 + 栏目节奏", "年轻观点与跨行业选题"],
+      ];
+
+      const key = "ai-account-style-lab-v1";
+      const saved = JSON.parse(localStorage.getItem(key) || "{}");
+      const state = saved.state || {};
+      const notes = saved.notes || {};
+      const grid = document.querySelector("#style-grid");
+
+      const persist = () => localStorage.setItem(key, JSON.stringify({state, notes}));
+
+      const updateSummary = () => {
+        const counts = {keep: 0, maybe: 0, drop: 0};
+        Object.values(state).forEach((value) => {
+          if (counts[value] !== undefined) counts[value] += 1;
+        });
+        document.querySelector("#keep-count").textContent = counts.keep;
+        document.querySelector("#maybe-count").textContent = counts.maybe;
+        document.querySelector("#drop-count").textContent = counts.drop;
+        const shortlist = styles.filter(([code]) => state[code] === "keep").map(([code, , name]) => `${code} ${name}`);
+        document.querySelector("#shortlist").textContent = shortlist.length ? shortlist.join(" · ") : "尚未选择";
+      };
+
+      const setStatus = (card, code, value) => {
+        state[code] = value;
+        card.dataset.status = value;
+        card.querySelectorAll(".segment").forEach((button) => {
+          button.setAttribute("aria-pressed", button.dataset.value === value ? "true" : "false");
+        });
+        persist();
+        updateSummary();
+      };
+
+      styles.forEach(([code, id, name, descriptor, bestFor]) => {
+        const card = document.createElement("article");
+        card.className = "style-card";
+        card.dataset.code = code;
+        card.dataset.status = state[code] || "";
+        card.innerHTML = `
+          <div class="video-wrap">
+            <video src="renders/${id}.mp4" controls loop muted playsinline preload="metadata"></video>
+            <span class="code">${code}</span>
+          </div>
+          <div class="meta">
+            <h2>${name}</h2>
+            <p class="descriptor">${descriptor}</p>
+            <p class="best-for">适合：${bestFor}</p>
+            <div class="segments" role="group" aria-label="${name}选择">
+              <button class="segment" type="button" data-value="keep" aria-pressed="false">喜欢</button>
+              <button class="segment" type="button" data-value="maybe" aria-pressed="false">待定</button>
+              <button class="segment" type="button" data-value="drop" aria-pressed="false">不适合</button>
+            </div>
+            <textarea aria-label="${name}备注" placeholder="备注">${notes[code] || ""}</textarea>
+          </div>
+        `;
+        card.querySelectorAll(".segment").forEach((button) => {
+          button.addEventListener("click", () => setStatus(card, code, button.dataset.value));
+        });
+        card.querySelector("textarea").addEventListener("input", (event) => {
+          notes[code] = event.target.value;
+          persist();
+        });
+        if (state[code]) setStatus(card, code, state[code]);
+        grid.appendChild(card);
+      });
+
+      const videos = () => Array.from(document.querySelectorAll("video"));
+      document.querySelector("#play-all").addEventListener("click", () => videos().forEach((video) => video.play()));
+      document.querySelector("#pause-all").addEventListener("click", () => videos().forEach((video) => video.pause()));
+      document.querySelector("#restart-all").addEventListener("click", () => videos().forEach((video) => {
+        video.currentTime = 0;
+        video.play();
+      }));
+      document.querySelector("#export").addEventListener("click", () => {
+        const payload = {
+          exportedAt: new Date().toISOString(),
+          choices: styles.map(([code, id, name]) => ({code, id, name, status: state[code] || "", note: notes[code] || ""})),
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], {type: "application/json"});
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "账号风格选择.json";
+        link.click();
+        URL.revokeObjectURL(link.href);
+      });
+      updateSummary();
+    </script>
+  </body>
+</html>

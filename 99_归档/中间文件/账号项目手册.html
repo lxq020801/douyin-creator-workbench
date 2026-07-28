@@ -1,0 +1,1990 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<title>账号项目手册</title>
+<style>
+/* ========== 页面基础 ========== */
+body { margin: 0; padding: 0; }
+@page {
+    size: A4;
+    margin: 2.4cm 2.2cm;
+    @top-left { content: "账号项目手册"; font-size: 8.5pt; color: #A89C90; font-family: "Noto Sans CJK SC"; }
+    @top-right { content: string(chaptitle); font-size: 8.5pt; color: #A89C90; font-family: "Noto Sans CJK SC"; }
+    @bottom-center { content: counter(page); font-size: 9pt; color: #8A8078; font-family: "Noto Sans CJK SC"; }
+}
+@page cover { margin: 0; @top-left { content: none; } @top-right { content: none; } @bottom-center { content: none; } }
+@page frontmatter { @top-left { content: none; } @top-right { content: none; } }
+.cover-page { page: cover; }
+.frontmatter { page: frontmatter; }
+
+body {
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.75;
+    color: #2E2A26;
+    string-set: chaptitle "";
+    text-align: justify;
+    text-align-last: left;
+}
+
+/* ========== 封面 ========== */
+.cover-page {
+    width: 210mm; height: 297mm; margin: 0;
+    position: relative; overflow: hidden;
+    page-break-after: always;
+    background: #F7F3EE;
+}
+.cover-deco-1 { position: absolute; top: -60mm; right: -60mm; width: 160mm; height: 160mm;
+    border-radius: 50%; background: radial-gradient(circle, rgba(140,83,70,0.16) 0%, rgba(140,83,70,0.05) 60%, transparent 70%); }
+.cover-deco-2 { position: absolute; bottom: -40mm; left: -50mm; width: 130mm; height: 130mm;
+    border-radius: 50%; background: radial-gradient(circle, rgba(146,116,88,0.14) 0%, transparent 70%); }
+.cover-deco-3 { position: absolute; top: 55mm; left: 20mm; width: 34mm; height: 1.2mm; background: #8C5346; }
+.cover-deco-4 { position: absolute; bottom: 45mm; right: 20mm; width: 22mm; height: 22mm;
+    border: 1.5px solid rgba(140,83,70,0.35); border-radius: 50%; }
+.cover-deco-5 { position: absolute; top: 30mm; right: 25mm; width: 8mm; height: 8mm; background: rgba(140,83,70,0.28);
+    transform: rotate(45deg); }
+.cover-inner { position: absolute; top: 88mm; left: 20mm; right: 20mm; }
+.cover-kicker { font-size: 11pt; letter-spacing: 4px; color: #8C5346; margin: 0 0 10mm 0; font-family: "Noto Sans CJK SC"; }
+.cover-title { font-family: "Noto Serif CJK SC", serif; font-size: 34pt; font-weight: 700;
+    color: #2E2A26; margin: 0 0 6mm 0; line-height: 1.35; }
+.cover-sub { font-size: 12.5pt; color: #6B5F55; line-height: 2.1; margin: 0 0 16mm 0; }
+.cover-meta { font-size: 10pt; color: #A89C90; letter-spacing: 1px; }
+
+/* ========== 目录 ========== */
+.toc-page { page: frontmatter; page-break-after: always; }
+.toc-title { font-family: "Noto Serif CJK SC", serif; font-size: 20pt; color: #2E2A26;
+    border-bottom: 2px solid #8C5346; padding-bottom: 4mm; margin: 0 0 8mm 0; }
+ul.toc { list-style: none; padding: 0; margin: 0; }
+ul.toc li { margin: 0; }
+ul.toc a { display: flex; align-items: baseline; text-decoration: none; color: #2E2A26; }
+ul.toc .t { flex-shrink: 1; }
+ul.toc .dots { flex: 1; border-bottom: 1px dotted #C9BBA9; margin: 0 2mm; min-width: 8mm; }
+ul.toc a::after { content: target-counter(attr(href url), page);
+    font-weight: 400; color: #A89C90; font-size: 9.5pt; flex-shrink: 0; }
+ul.toc li.lvl1 { margin-top: 5mm; font-weight: 700; font-size: 11.5pt; }
+ul.toc li.lvl1 a { color: #8C5346; }
+ul.toc li.lvl1 a::after { color: #8C5346; }
+ul.toc li.lvl2 { margin-left: 7mm; font-size: 10pt; font-weight: 400; line-height: 2.1; }
+ul.toc li.lvl2 a { color: #4A443E; }
+
+/* ========== 章节标题页 ========== */
+.chapter-head { page-break-before: always; padding-top: 30mm; margin-bottom: 12mm;
+    string-set: chaptitle content(); }
+.chapter-no { font-size: 11pt; letter-spacing: 3px; color: #8C5346; margin-bottom: 4mm; }
+.chapter-head h1 { font-family: "Noto Serif CJK SC", serif; font-size: 24pt; font-weight: 700;
+    color: #2E2A26; margin: 0; line-height: 1.4; border: none; }
+.chapter-bar { width: 26mm; height: 1.2mm; background: #8C5346; margin-top: 6mm; }
+
+/* ========== 正文标题层级 ========== */
+h3 { font-family: "Noto Serif CJK SC", serif; font-size: 15pt; font-weight: 700; color: #8C5346;
+    margin: 9mm 0 3.5mm 0; padding-bottom: 1.5mm; border-bottom: 1px solid #E3D8CE;
+    page-break-after: avoid; }
+h4 { font-size: 12pt; font-weight: 700; color: #2E2A26; margin: 6mm 0 2.5mm 0; page-break-after: avoid; }
+h5 { font-size: 10.5pt; font-weight: 700; color: #6B5F55; margin: 5mm 0 2mm 0; page-break-after: avoid; }
+p { margin: 0 0 3mm 0; orphans: 2; widows: 2; }
+strong { color: #1F1C19; }
+
+/* ========== 表格（三线表+暖色表头） ========== */
+table { width: 100%; max-width: 100%; border-collapse: collapse; margin: 4mm 0 6mm 0;
+    font-size: 9.5pt; line-height: 1.6; }
+thead { display: table-header-group; }
+thead tr { border-top: 2px solid #8C5346; border-bottom: 1.5px solid #8C5346; background: #F4EDE6; }
+th { padding: 2.2mm 2.5mm; text-align: left; font-weight: 700; color: #5A3A30; }
+tbody tr { border-bottom: 0.5px solid #E3D8CE; }
+tbody tr:last-child { border-bottom: 2px solid #8C5346; }
+td { padding: 2mm 2.5mm; vertical-align: top; }
+tr { page-break-inside: avoid; }
+colgroup { display: none; }
+table col { width: auto !important; }
+
+/* ========== 引用块 / 代码 / 列表 ========== */
+blockquote { margin: 4mm 0; padding: 2.5mm 0 2.5mm 5mm; border-left: 3px solid #C49A8C;
+    background: #FAF6F1; color: #5A5248; font-size: 10pt; }
+blockquote p { margin: 0 0 2mm 0; }
+code { font-family: "Noto Sans Mono CJK SC", monospace; font-size: 9pt; background: #F4EDE6;
+    padding: 0.5mm 1.5mm; word-break: break-word; }
+pre { background: #F5F2EE; padding: 3mm 4mm; font-size: 9pt; max-width: 100%;
+    overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
+pre code { background: none; padding: 0; }
+ul, ol { margin: 2mm 0 3.5mm 0; padding-left: 7mm; }
+li { margin-bottom: 1.2mm; }
+hr { border: none; border-top: 1px solid #E3D8CE; margin: 7mm 0; }
+sup.cite { font-size: 0.72em; color: #A89C90; }
+a { color: #8C5346; text-decoration: none; word-break: break-all; }
+img, svg, figure { max-width: 100%; }
+
+/* 导读页 */
+.intro-block h3:first-child { margin-top: 0; }
+</style></head><body>
+
+<div class="cover-page">
+  <div class="cover-deco-1"></div><div class="cover-deco-2"></div>
+  <div class="cover-deco-3"></div><div class="cover-deco-4"></div><div class="cover-deco-5"></div>
+  <div class="cover-inner">
+    <p class="cover-kicker">「做工具的人」自媒体账号</p>
+    <h1 class="cover-title">账号项目手册</h1>
+    <p class="cover-sub">起号运营方案 ｜ 8周执行时间规划表 ｜ 个人背景与方向上下文<br>编导学习手册（个人定制版） ｜ 可行性与策略报告</p>
+    <p class="cover-meta">2026年7月 · 项目执行档案</p>
+  </div>
+</div>
+
+<div class="toc-page"><h2 class="toc-title">目录</h2><ul class="toc">
+<li class="lvl1"><a href="#intro"><span class="t">导读 · 文档导航</span><span class="dots"></span></a></li>
+<li class="lvl1"><a href="#chap1"><span class="t">第一部分　账号起号运营方案（执行版）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap1-s1"><span class="t">一、账号搭建（开号第一天照这个做）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap1-s2"><span class="t">二、前20条内容排布</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap1-s3"><span class="t">三、视频制作规范（每条照着做）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap1-s4"><span class="t">四、发布SOP</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap1-s5"><span class="t">五、评论区运营</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap1-s6"><span class="t">六、DOU+投放（第4-5条开始）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap1-s7"><span class="t">七、数据看板：什么阶段看什么</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap1-s8"><span class="t">八、起号期禁忌清单</span><span class="dots"></span></a></li>
+<li class="lvl1"><a href="#chap2"><span class="t">第二部分　8周执行时间规划表（2026.7.25 - 9.17）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap2-s1"><span class="t">一、阶段总览</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap2-s2"><span class="t">二、第1周（7.25-8.3）：学习期 + 冷启动，工具+第一条</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap2-s3"><span class="t">三、第2周（8.4-8.10）：节奏养成</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap2-s4"><span class="t">四、第3-6周（8.11-9.7）：跑通循环</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap2-s5"><span class="t">五、第7-8周（9.8-9.17）：冲刺+判决</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap2-s6"><span class="t">六、判决标准（9月中检查点，到时候不许找理由推迟）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap2-s7"><span class="t">七、每周固定动作（不排进表，永远有效）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap2-s8"><span class="t">八、铁纪律（贴脑门上）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap2-s9"><span class="t">里程碑一览</span><span class="dots"></span></a></li>
+<li class="lvl1"><a href="#chap3"><span class="t">第三部分　个人背景与方向上下文文档</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap3-s1"><span class="t">一、我是谁</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap3-s2"><span class="t">二、我的能力和偏好</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap3-s3"><span class="t">三、我的方向（已经定了，不需要重新选）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap3-s4"><span class="t">四、变现结构</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap3-s5"><span class="t">五、内容策略</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap3-s6"><span class="t">六、铁纪律（请在我跑偏时拿这些拦我）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap3-s7"><span class="t">七、已否决项（不要再建议这些）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap3-s8"><span class="t">八、我的协作偏好</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap3-s9"><span class="t">九、当前进度（更新于2026年7月25日晚）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap3-s10"><span class="t">使用节奏（关键，机制大于提示词）</span><span class="dots"></span></a></li>
+<li class="lvl1"><a href="#chap4"><span class="t">第四部分　编导学习手册（个人定制版）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap4-s1"><span class="t">写在前面</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap4-s2"><span class="t">第一部分 你的补课路径（最高优先级，放最前）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap4-s3"><span class="t">第二部分 平台怎么选（2025–2026 四平台对比）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap4-s4"><span class="t">第三部分 编导知识体系（查阅手册）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap4-s5"><span class="t">第四部分 用到你的账号上（“做工具的人”应用清单）</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap4-s6"><span class="t">附录</span><span class="dots"></span></a></li>
+<li class="lvl1"><a href="#chap5"><span class="t">第五部分　账号起号可行性与策略报告</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap5-s1"><span class="t">一、一页结论</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap5-s2"><span class="t">二、市场验证：你的定位有没有坑</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap5-s3"><span class="t">三、变现验证：每一档定价的市场实证</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap5-s4"><span class="t">四、起号思路规划方案</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap5-s5"><span class="t">五、编导前辈案例库</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap5-s6"><span class="t">六、对你现有 8 周执行表的调整建议</span><span class="dots"></span></a></li>
+<li class="lvl2"><a href="#chap5-s7"><span class="t">七、证据强度说明</span><span class="dots"></span></a></li>
+</ul></div>
+
+<div class="chapter-head" id="intro" style="page-break-before: always;">
+  <div class="chapter-no">READ FIRST</div>
+  <h1>导读 · 文档导航</h1>
+  <div class="chapter-bar"></div>
+</div>
+<div class="intro-block"><h2 id="导航">导航</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>序号</th>
+<th>文档</th>
+<th>管什么</th>
+<th>什么时候用</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>一</td>
+<td>账号起号运营方案</td>
+<td>账号怎么搭、视频怎么拍怎么发</td>
+<td>拍每条视频前翻</td>
+</tr>
+<tr class="even">
+<td>二</td>
+<td>8周执行时间规划表</td>
+<td>哪天干什么、学习期、里程碑、判决标准</td>
+<td>每天早上看今天那格</td>
+</tr>
+<tr class="odd">
+<td>三</td>
+<td>个人背景与方向上下文</td>
+<td>你是谁、方向、变现、铁纪律</td>
+<td>贴给任何AI前先贴它</td>
+</tr>
+<tr class="even">
+<td>四</td>
+<td>编导知识手册v2</td>
+<td>编导+平台+传播的底层认知，含3天补课路径和四平台对比</td>
+<td>系统学习，学习期3天配套教材</td>
+</tr>
+<tr class="odd">
+<td>五</td>
+<td>账号起号可行性与策略报告</td>
+<td>方向为什么成立的论证</td>
+<td>存档，动摇时看</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>调研原始资料（19份维度调研+交叉验证）在 /mnt/agents/output/research/，平时不用看，核对来源时去那里。 《编导知识手册》旧版已被v2取代（v2新增：3天补课路径、四平台优缺点对比、针对个人情况的补齐），旧版不再收录。</p>
+</blockquote>
+<hr />
+<hr />
+</div>
+
+
+<div class="chapter-head" id="chap1">
+  <div class="chapter-no">第 一 部 分</div>
+  <h1>账号起号运营方案（执行版）</h1>
+  <div class="chapter-bar"></div>
+</div>
+<blockquote>
+<p><strong>这份文档和《8周执行时间规划表》的关系：</strong> 8周表管”哪天干什么”，这份管”账号具体怎么运营”。拍每条视频、发每条视频之前，翻这份。 <strong>原则一句话：</strong> 不论证、不解释为什么，照着做。</p>
+</blockquote>
+<hr />
+<h3 id="chap1-s1">一、账号搭建（开号第一天照这个做）</h3>
+<h4 id="五件套">1.1 五件套</h4>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>项</th>
+<th>做法</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>昵称</td>
+<td>人格化+行业词，别带”AI”（太泛），让人一眼知道你是干嘛的</td>
+<td>「XX的工具间」「XX聊内容生产」这类结构：人名/代号+领域</td>
+</tr>
+<tr class="even">
+<td>简介</td>
+<td>三行：你是谁+你给什么+怎么找你</td>
+<td>干过几年编导，现在用AI给自媒体人做工具｜视频里的工具免费拿｜定制需求看私信</td>
+</tr>
+<tr class="odd">
+<td>头像</td>
+<td>真人半身照，干净背景，不用logo不用字</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>背景图</td>
+<td>一句话强化定位，别花哨</td>
+<td>「我把自媒体的脏活累活做成工具」</td>
+</tr>
+<tr class="odd">
+<td>置顶</td>
+<td>前期不置顶，出了第一条数据好的再置顶那条</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h4 id="平台分工">1.2 平台分工</h4>
+<ul>
+<li><strong>抖音</strong>：主阵地，60-90秒竖屏，所有视频首发这里</li>
+<li><strong>视频号</strong>：同片同步发，简介里挂”工具在公众号/私域”的钩子（视频号对导流容忍度高）</li>
+<li><strong>B站（可选第三阵地）</strong>：不放短视频，放”做工具全过程”的长视频（5-15分钟开发实录），这是它的红利区，有精力再做，没精力先放着</li>
+</ul>
+<hr />
+<h3 id="chap1-s2">二、前20条内容排布</h3>
+<h4 id="铁规">2.1 铁规</h4>
+<ol type="1">
+<li><strong>第1条直接上干货，不发自我介绍、不发”我来了”</strong>——新号没人关心你是谁，第一条就要让人觉得”这人有货”</li>
+<li><strong>前5条打同一个细分</strong>（全围绕”选题/对标拆解”这个痛点域）——让算法快速给你打上精准标签，别东一条西一条</li>
+<li><strong>前10条是学费</strong>：不看播放量，只练表达和结构，第11条才开始看数据</li>
+<li><strong>数据不好的视频别删</strong>——现在是7天长效赛马，一条视频可能第5天才起量，删了等于白拍</li>
+</ol>
+<h4 id="排布节奏">2.2 排布节奏</h4>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>条数</th>
+<th>内容</th>
+<th>目的</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>第1-5条</td>
+<td>演示型：选题/拆解/文案类的痛点，每条一个痛点现场解决</td>
+<td>打标签+练手感</td>
+</tr>
+<tr class="even">
+<td>第6-10条</td>
+<td>演示型为主，根据前5条评论区反馈微调痛点选择</td>
+<td>找到反响最好的痛点方向</td>
+</tr>
+<tr class="odd">
+<td>第11-15条</td>
+<td>加码数据好的方向；开始埋”工具免费送”的钩子</td>
+<td>起量+引流到工作台</td>
+</tr>
+<tr class="even">
+<td>第16-20条</td>
+<td>插入第1条打造型（痛点库最高频的痛点做成工具，过程全录）</td>
+<td>立”真做工具”的人设</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="chap1-s3">三、视频制作规范（每条照着做）</h3>
+<h4 id="结构结果前置四段式">3.1 结构：结果前置四段式</h4>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>时间</th>
+<th>干什么</th>
+<th>示例（第一条）</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0-3秒</td>
+<td><strong>结果前置</strong>：把最炸的结果砸出来</td>
+<td>“我让AI拆了一条300万的爆款，5分钟给一家烘焙店搞出20个选题”</td>
+</tr>
+<tr class="even">
+<td>3-15秒</td>
+<td><strong>痛点共鸣</strong>：让目标观众觉得”在说我”</td>
+<td>“做账号最磨人的就是想选题，憋一天憋不出三个”</td>
+</tr>
+<tr class="odd">
+<td>15-60秒</td>
+<td><strong>现场演示</strong>：录屏全过程，别跳步</td>
+<td>拆爆款→输入行业→选题哗哗出来</td>
+</tr>
+<tr class="even">
+<td>60-75秒</td>
+<td><strong>收口+CTA</strong>：一句观点+一个动作</td>
+<td>“你做什么行业的？评论区留行业，我挑呼声高的做成工具”</td>
+</tr>
+</tbody>
+</table>
+<h4 id="画面规范">3.2 画面规范</h4>
+<ul>
+<li><strong>真人出镜画中画小窗</strong>（放左下或右下角）：既建立信任又不挡录屏；真人出镜的流量天然比纯录屏/数字人好</li>
+<li><strong>录屏三件套</strong>：鼠标高亮（让观众跟得上）、关键步骤局部放大、停顿处加文字标注——缺了这三样，演示视频完播率必垮</li>
+<li>语速正常偏快，60-90秒控制在220-260字口播稿</li>
+</ul>
+<h4 id="钩子开头可用类型">3.3 钩子（开头）可用类型</h4>
+<ol type="1">
+<li><strong>结果前置型</strong>：“我用X时间，干成了Y”（你的第一条就是这个，继续用）</li>
+<li><strong>痛点直给型</strong>：“每天想选题想到烦的，这条看完能省你两小时”（直接、不绕弯）</li>
+<li><strong>具体反常识型</strong>：“好选题不是想出来的”（可以用，但下一句必须3秒内接住：“是拆出来的”）</li>
+</ol>
+<p><strong>禁用</strong>：“最X的不是A是B”“不是…而是…”“90%的人都不知道”——这些句式2025年已经被用烂，观众听到就划走。</p>
+<h4 id="每条发布前自检">3.4 每条发布前自检</h4>
+<ul class="task-list">
+<li><input type="checkbox" disabled="" />
+前3秒有没有给出结果或冲突？</li>
+<li><input type="checkbox" disabled="" />
+这条的痛点，同行看了会不会说”这是我”？</li>
+<li><input type="checkbox" disabled="" />
+演示过程有没有跳步？（观众跟不上就划走）</li>
+<li><input type="checkbox" disabled="" />
+鼠标高亮/放大/标注三件套齐了吗？</li>
+<li><input type="checkbox" disabled="" />
+结尾有没有给观众一个具体动作（留行业/扣1/进主页）？</li>
+<li><input type="checkbox" disabled="" />
+标题前5个字是不是核心关键词？</li>
+</ul>
+<hr />
+<h3 id="chap1-s4">四、发布SOP</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>项</th>
+<th>做法</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>发布时间</td>
+<td>固定一个时段发（建议晚18-20点），连发2周看哪条时段数据好，然后固定下来。别今天早明天晚</td>
+</tr>
+<tr class="even">
+<td>频率</td>
+<td>隔日更，每周3-4条。<strong>可以少，不能断</strong></td>
+</tr>
+<tr class="odd">
+<td>标题</td>
+<td>核心关键词放前5个字（如”AI批量选题…““拆解爆款…”）+ 系列统一前缀（如【自媒体工具间】）——这是给搜索流量铺的路，知识类账号3个月后搜索占一半流量</td>
+</tr>
+<tr class="even">
+<td>话题标签</td>
+<td>2-4个：1个大词（#自媒体运营）+1个精准词（#短视频选题）+1个领域词（#AI工具）</td>
+</tr>
+<tr class="odd">
+<td>合集</td>
+<td>1万粉才能开，前期靠”系列前缀”代替</td>
+</tr>
+<tr class="even">
+<td>同城</td>
+<td>不开，你要的是全国同行不是柳州观众</td>
+</tr>
+<tr class="odd">
+<td>定位/位置</td>
+<td>不挂</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="chap1-s5">五、评论区运营</h3>
+<ol type="1">
+<li><strong>发布前预写3-5条”神评论”</strong>，发完自己先评：补充细节的、引导讨论的、留钩子的（“想要这个工具的扣1”）</li>
+<li><strong>固定引导话术</strong>（每条视频结尾和评论区都用同一套）：“你做什么行业的？评论区留行业，我挑呼声最高的做成工具”——这句话同时干三件事：拉互动、攒选题、筛客户</li>
+<li><strong>发布后2小时内尽量全回</strong>——作者回复率是算法看重的高价值信号，也是攒信任的关键动作</li>
+<li><strong>每天15分钟把评论区痛点记进备忘录</strong>——这是你的选题库+未来定制需求的来源</li>
+</ol>
+<hr />
+<h3 id="chap1-s6">六、DOU+投放（第4-5条开始）</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>项</th>
+<th>做法</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>什么时候投</td>
+<td>第4-5条里，自然流量相对好的那条</td>
+</tr>
+<tr class="even">
+<td>投多少</td>
+<td>100-300元/条，测试性质，别多</td>
+</tr>
+<tr class="odd">
+<td>投什么目标</td>
+<td>选”点赞评论量”——给算法喂互动数据模型，不买泛粉</td>
+</tr>
+<tr class="even">
+<td>定向</td>
+<td>“达人相似粉”：选5-10个同赛道腰部账号（自媒体运营类、AI工具类）</td>
+</tr>
+<tr class="odd">
+<td>止损线</td>
+<td>投完后5秒完播率还低于40%→这条内容有问题，停投改内容，别再投钱</td>
+</tr>
+<tr class="even">
+<td>定位</td>
+<td>DOU+是”买数据模型”不是”买播放量”，数据达标就停手</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="chap1-s7">七、数据看板：什么阶段看什么</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>阶段</th>
+<th>看什么</th>
+<th>生死线</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>第1-10条</td>
+<td>不看数据，自评表达（清单见3.4）</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>第11-30条</td>
+<td>2秒跳出率、5秒完播、整体完播</td>
+<td>2秒跳出&lt;30%、5秒完播&gt;60%、整体完播&gt;25%</td>
+</tr>
+<tr class="odd">
+<td>第30-50条</td>
+<td>权重跃升窗口：有没有单条破5000、粉丝破千、咨询上门</td>
+<td>三者占一条=起量信号</td>
+</tr>
+<tr class="even">
+<td>3个月后</td>
+<td>搜索流量占比（目标&gt;30%）、转粉率、私信咨询数</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>数据不达标先改内容，不是改方向。</strong> 9月中检查点按《8周表》判决标准走，中间任何单条数据差都不构成动摇理由。</p>
+<hr />
+<h3 id="chap1-s8">八、起号期禁忌清单</h3>
+<ol type="1">
+<li>不发自我介绍类视频（第1条就要上货）</li>
+<li>不删数据差的视频（7天赛马，可能第5天才起量）</li>
+<li>不在视频里报价、不硬推定制（第5周才开定制入口）</li>
+<li>不卖课、不开收费群（万粉前，铁纪律第7条）</li>
+<li>不用”最X的不是A是B”类烂大街句式</li>
+<li>不装专家、不立导师人设——被质疑时打开后台晒过程，别辩解</li>
+<li>不东一条西一条换题材（前5条必须同一细分）</li>
+<li>断更（每周最少3条，雷打不动）</li>
+</ol>
+<hr />
+
+
+
+<div class="chapter-head" id="chap2">
+  <div class="chapter-no">第 二 部 分</div>
+  <h1>8周执行时间规划表（2026.7.25 - 9.17）</h1>
+  <div class="chapter-bar"></div>
+</div>
+<blockquote>
+<p><strong>这份表怎么用：</strong> 每天只看今天那一格，别往后看焦虑；每周日晚拿它对照复盘；跑偏了回来对表，别在脑子里重新规划。 <strong>方向一句话（贴在脑门上）：</strong> 我懂内容生产的痛点，我用AI做工具解决它们，先讲给自媒体同行听。</p>
+</blockquote>
+<hr />
+<h3 id="chap2-s1">一、阶段总览</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>阶段</th>
+<th>时间</th>
+<th>目标</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>冷启动（含3天学习期）</td>
+<td>第1-2周（7.25-8.10）</td>
+<td>编导知识补齐，工具v1完成，第一条视频上线，养成发布节奏</td>
+</tr>
+<tr class="even">
+<td>跑循环</td>
+<td>第3-6周（8.11-9.7）</td>
+<td>10条”学费期”结束，工作台v1上线，定制入口开放，开始接单</td>
+</tr>
+<tr class="odd">
+<td>冲刺判决</td>
+<td>第7-8周（9.8-9.17）</td>
+<td>模板包雏形，统计月收入，检查点判决</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="chap2-s2">二、第1周（7.25-8.3）：学习期 + 冷启动，工具+第一条</h3>
+<h4 id="学习期7.26-7.28开号前的知识补齐">学习期（7.26-7.28）：开号前的知识补齐</h4>
+<blockquote>
+<p>配套教材：《编导知识手册v2》第一部分”补课路径”。三天只学不产，不许跳过直接开干——你是编导出身但没系统学过，这三天补的就是地基。</p>
+</blockquote>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>日期</th>
+<th>任务</th>
+<th>产出物</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>7.25 第1天</td>
+<td><strong>捋顺日</strong>：通读本表+上下文文档；用自己的话把方向复述一遍；有异议就提，没异议就心安</td>
+<td>无产出要求，心安即可</td>
+</tr>
+<tr class="even">
+<td>7.26 学习Day1</td>
+<td>编导认知+视听语言基础（手册v2第三部分第1-2章）；学会”拉片三遍法”（第一部分附录操作手册），实操拉片1条对标视频</td>
+<td>拉片笔记1篇</td>
+</tr>
+<tr class="odd">
+<td>7.27 学习Day2</td>
+<td>选题方法+平台流量机制（手册v2第二部分、第三部分第3-4章）；<strong>建起自己的选题库</strong>，写出3个视频脚本</td>
+<td><strong>选题库v1 + 3个脚本</strong></td>
+</tr>
+<tr class="even">
+<td>7.28 学习Day3</td>
+<td>拉片3条（不同风格对标账号）；用手册v2附录”自检清单”过一遍昨天写的脚本；拍剪1条练习片（不发布，练手感和录屏三件套）</td>
+<td><strong>自检通过的台本</strong> + 练习片1条</td>
+</tr>
+</tbody>
+</table>
+<h4 id="冷启动7.29-8.3">冷启动（7.29-8.3）</h4>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>日期</th>
+<th>任务</th>
+<th>产出物</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>7.29 第5天</td>
+<td>上午半小时写mini-PRD（模板填空，重点写”不做什么”）；下午开始给工具加”套”（输入行业→批量生成选题）</td>
+<td>PRD一页</td>
+</tr>
+<tr class="even">
+<td>7.30 第6天</td>
+<td>完成”套”；拿3条真实爆款测试，确认输出的选题能看</td>
+<td><strong>工具v1可用</strong></td>
+</tr>
+<tr class="odd">
+<td>7.31 第7天</td>
+<td>从Day2写的3个脚本里挑1条，改成自己的口吻（不求完美，像人话就行）；拍摄第一条</td>
+<td>原始素材</td>
+</tr>
+<tr class="even">
+<td>8.1 第8天</td>
+<td>剪辑+发布第一条（抖音+小红书+视频号）；顺手写闲鱼/小红书服务介绍文案</td>
+<td>⭐<strong>第一条视频上线</strong></td>
+</tr>
+<tr class="odd">
+<td>8.2 第9天</td>
+<td>闲鱼/小红书挂链接上架（雷达模式：挂着不管，有单接没单不追）；拍第二条（演示型，半小时能搭的痛点）</td>
+<td>链接上线+素材</td>
+</tr>
+<tr class="even">
+<td>8.3 第10天</td>
+<td>发第二条；回复评论</td>
+<td>2条在线</td>
+</tr>
+</tbody>
+</table>
+<h3 id="chap2-s3">三、第2周（8.4-8.10）：节奏养成</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>日期</th>
+<th>任务</th>
+<th>产出物</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>8.4</td>
+<td>拍第3条</td>
+<td>素材</td>
+</tr>
+<tr class="even">
+<td>8.5</td>
+<td>发第3条</td>
+<td>3条在线</td>
+</tr>
+<tr class="odd">
+<td>8.6</td>
+<td>拍第4条</td>
+<td>素材</td>
+</tr>
+<tr class="even">
+<td>8.7</td>
+<td>发第4条</td>
+<td>4条在线</td>
+</tr>
+<tr class="odd">
+<td>8.8</td>
+<td>拍第5条；把评论区痛点记进备忘录</td>
+<td>素材</td>
+</tr>
+<tr class="even">
+<td>8.9</td>
+<td>发第5条；盘点痛点库</td>
+<td><strong>痛点库v1（≥10个真实痛点）</strong></td>
+</tr>
+<tr class="odd">
+<td>8.10</td>
+<td><strong>第一次监督官复盘</strong>（如实汇报这两周：做了什么/没做什么/卡在哪）</td>
+<td>复盘记录</td>
+</tr>
+</tbody>
+</table>
+<h3 id="chap2-s4">四、第3-6周（8.11-9.7）：跑通循环</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>周</th>
+<th>任务</th>
+<th>产出物</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>第3周 8.11-8.17</td>
+<td>隔日更第6-8条；Agent-wiki改版启动（定位文案+货架结构，每天最多1小时，不沉迷）；若闲鱼/小红书来单，接第一单（几百元）</td>
+<td>3条视频+改版开工</td>
+</tr>
+<tr class="even">
+<td>第4周 8.18-8.24</td>
+<td>发完第9-10条（<strong>“学费期”正式结束</strong>）；拍第一条打造型视频（痛点库里最高频的痛点→做成工具）；Agent-wiki工作台v1上线；工具低价买断链接上架（9.9-29.9元）</td>
+<td>10条在线+工作台v1</td>
+</tr>
+<tr class="odd">
+<td>第5周 8.25-8.31</td>
+<td><strong>开始看数据</strong>（完播率+评论痛点质量，不看粉丝数）；视频简介挂定制入口（有案例了）；接单目标：累计1-2单</td>
+<td>⭐定制入口开放</td>
+</tr>
+<tr class="even">
+<td>第6周 9.1-9.7</td>
+<td>数据复盘→加码表现最好的内容线；拍第二条打造型；持续接单</td>
+<td>接单月度小结</td>
+</tr>
+</tbody>
+</table>
+<h3 id="chap2-s5">五、第7-8周（9.8-9.17）：冲刺+判决</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>周</th>
+<th>任务</th>
+<th>产出物</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>第7周 9.8-9.14</td>
+<td>稳定更新节奏；把已交付的工作流整理成<strong>模板包雏形</strong>（可挂出售）；统计8月到现在的接单收入；评估工具权益社群启动条件（千粉+3-5个工具+公开好评），达标则筹备、不达标延后</td>
+<td>模板包v1</td>
+</tr>
+<tr class="even">
+<td>第8周 9.15-9.17</td>
+<td><strong>检查点周</strong>（压缩为3天）：对照判决标准，做最终判定</td>
+<td>判决结论</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="chap2-s6">六、判决标准（9月中检查点，到时候不许找理由推迟）</h3>
+<ul>
+<li><strong>月收入≥3000元，或账号明显起量</strong>（出了小爆款/稳定涨粉/咨询不断，三者占一条）→ all in，进入下一阶段（工具订阅化）</li>
+<li><strong>两条都不达标</strong> → 启动求职线：账号+工具库+服务案例打包成作品集，投AI公司/“短视频+AI”公司——这是计划内动作，不是失败</li>
+</ul>
+<h3 id="chap2-s7">七、每周固定动作（不排进表，永远有效）</h3>
+<ul>
+<li>隔日更，每周3-4条（演示型为主，打造型两周1条）</li>
+<li><strong>每天拉片1条</strong>（20分钟，手册v2”拉片三遍法”，笔记记进选题库）</li>
+<li><strong>每条视频发布48小时后做一次数据复盘</strong>（完播率/2秒跳出/评论痛点，三行以内，别写成论文）</li>
+<li>每周1次专题拉片（集中拆同类型3条，找结构共性）</li>
+<li>评论区每天15分钟：回复+痛点记备忘录</li>
+<li>每周日晚：监督官复盘（说实话）</li>
+<li>每月底：更新上下文文档”当前进度”一节</li>
+</ul>
+<h3 id="chap2-s8">八、铁纪律（贴脑门上）</h3>
+<ol type="1">
+<li>前10条视频不看播放量——那是学费</li>
+<li>工具开发时间盒2-3天，新功能写进”不做什么”清单</li>
+<li>接单渠道雷达模式——挂着不经营，有单接没单不追</li>
+<li>9月检查点前不投简历、不纠结求职——单线冲锋</li>
+<li>每个定制单必须沉淀通用版进工具库</li>
+<li>不做清单永远有效：agent团队、电商主动进攻、桌面软件/App、剧情/vlog/探店、先做产品再找用户</li>
+<li>账号起量（约1万粉+案例）前不卖课、不开收费粉丝群——0信任收费=割韭菜舆情高危（2026.7.25调研确认）</li>
+<li>学习期只有3天——学完必须开干，不许”再学一天”，学习和拍摄的比例从此保持在1:9</li>
+</ol>
+<hr />
+<h3 id="chap2-s9">里程碑一览</h3>
+<ul>
+<li>⭐ 7.28 学习期结束（选题库v1 + 3个脚本 + 自检台本）</li>
+<li>⭐ 8.1 第一条视频上线</li>
+<li>⭐ 8.10 痛点库v1（10个真实痛点）</li>
+<li>⭐ 8.24 10条学费期结束 + 工作台v1</li>
+<li>⭐ 8.31 定制入口开放</li>
+<li>⭐ 9.17 检查点判决</li>
+</ul>
+<hr />
+
+
+
+<div class="chapter-head" id="chap3">
+  <div class="chapter-no">第 三 部 分</div>
+  <h1>个人背景与方向上下文文档</h1>
+  <div class="chapter-bar"></div>
+</div>
+<blockquote>
+<p>使用方法：和新的AI对话时，根据场景把下面【速览版】或【完整版】整段复制粘贴给它，它就能立刻了解你的背景和方向，不用每次从头解释。</p>
+</blockquote>
+<hr />
+<h2 id="速览版日常聊天快速讨论用直接复制本段">【速览版】（日常聊天/快速讨论用，直接复制本段）</h2>
+<p>【我是谁】 我在广西柳州，之前做本地商家短视频编导/文案策划（服务过餐饮、烘焙、农产品等本地商家）。2026年7月已辞职，目前全职探索新方向。积蓄能撑2-3个月（房租10月到期），每月最低生存线3000元。</p>
+<p>【我会什么】 - 短视频编导与文案：懂选题、钩子设计、脚本结构，能真人出镜口播 - vibeCoding：能用AI辅助开发网页工具/小程序，提示词可内置进工具，能接飞书等团队协作流程；明确不做桌面软件和App - 熟悉各类AI工具、自动化工作流</p>
+<p>【我在做什么】（方向已定，不需要重新帮我选方向） 做一个面向”自媒体同行”的账号：用AI解决内容生产痛点。电商方向暂缓——我不懂这个行业，等有电商客户主动上门再扩展。 核心模式：拍视频展示”一个真实痛点+我用AI做出的解决方案” → 吸引同行 → 接付费定制（网页小工具/小程序）→ 每单沉淀成可复用模块，进我的开源项目 Agent-wiki（正在改版为”自媒体AI工作台”，既是资产库也是转化货架）。 客户分层：付费层=代运营公司/商家自运营团队（有预算有批量需求）；走量层=个人博主（模板/订阅）；围观层只贡献完播率。 变现阶梯：闲鱼/小红书挂链接接几百元低价单攒案例（雷达模式：挂着不经营，有单接没单不追）→ 常态2000-3000元/单 → 好单5000+ → 远期工具库订阅/模板包（辅助）。 工具产品化收入（2026.7.25调研确认）：工具低价买断9.9-29.9元（工作台v1上线后即可挂）；千粉且工具有公开好评后，开69-199元/年工具权益社群（工具使用权+更新+限量答疑+需求投票，与远期订阅合并为同一层）。账号起量（约1万粉+案例）前不卖课、不开收费群——0信任收费=割韭菜舆情高危。 求职线：9月中检查点前全力冲账号，不投简历；检查点（月收入≥3000或账号起量）不达标则启动求职，作品集=账号+工具库+案例。这是计划内动作，不是失败。</p>
+<p>【已确定的边界，请不要再建议这些】 - 不做低客单、高维护的小老板服务生意（付出回报不成正比） - 不做剧情/vlog/探店类内容（只做口播+录屏） - 不做桌面软件/App（只做网页和小程序） - 不先闷头做产品再找用户——顺序永远是先有真实用户，再做东西</p>
+<p>【和我协作的偏好】 - 文案要口语、自然，拒绝”最X的不是A是B”这类烂大街钩子句式和浓重AI腔 - 直接指出我的问题，不要迎合我 - 给建议要考虑我”只有一个人、两个月时间、3000元/月生存线”的现实约束</p>
+<hr />
+<h2 id="完整版深度讨论账号内容策划用直接复制本段">【完整版】（深度讨论/账号内容策划用，直接复制本段）</h2>
+<h3 id="chap3-s1">一、我是谁</h3>
+<p>我在广西柳州，之前是一名本地商家短视频编导/文案策划，服务过餐饮、烘焙、农产品等本地商家（直播预热文案、蓝V账号运营、推广脚本这类活都干过）。2026年7月辞职，现在全职探索新方向。</p>
+<p><strong>现实约束（给建议时请始终考虑这三条）：</strong> - 积蓄能撑2-3个月，房租2026年10月到期 - 每月最低生存线3000元 - 只有我一个人，没有团队</p>
+<p><strong>辞职原因：</strong> 不是钱的问题，是成长天花板——在柳州做本地商家短视频，学不到新东西，一眼看到头。所以”回去重操旧业”不是我的选项，除非它能以结合AI的升级形态出现。</p>
+<h3 id="chap3-s2">二、我的能力和偏好</h3>
+<p><strong>擅长的：</strong> - 短视频编导/文案：选题、钩子、脚本结构、口播。抗拒剧情演绎、vlog日常、探店种草这三类形式 - vibeCoding：AI辅助开发网页工具/小程序，提示词内置进工具，能联动飞书接入团队协作流程。明确不做桌面软件和App（适配成本高） - 折腾AI工具/搭系统——这是我真正最享受的事，超过做内容本身</p>
+<p><strong>自我盘点结论（2026.7.24校准）：可卖的卖点是”vibeCoding做工具+AI整合”——编导只是背景身份，不是卖点。能力本身是通用的（不绑定行业），但账号入口必须收窄：先做自媒体同行，其他行业靠客户上门自然辐射，不主动进攻。</strong></p>
+<p><strong>我的性格模式（请AI在协作时留意）：</strong> - 容易陷入”不知道做什么”的方向迷茫，想得多、产出少 - 过去的项目都停在”搭建和试错阶段”，核心原因是不知道做出来给谁用——没有真实用户就没有收尾动力 - 有完美主义和范围蔓延倾向，需要有人帮我守住”先完成再完美”</p>
+<h3 id="chap3-s3">三、我的方向（已经定了，不需要重新选）</h3>
+<p><strong>一句话定位：干过编导的人，用AI把自媒体的内容生产痛点，直接做成能用的工具。</strong>（电商方向暂缓——我不懂电商，等有电商客户主动上门再扩展，让市场教我而不是我去猜。）</p>
+<p>目标用户（分三层）： - 付费层：代运营公司、商家的自运营团队——有预算、有批量产出需求，买工具=省人力成本，决策逻辑硬。内容面向所有同行，但收费设计冲着这层去 - 走量层：个人博主、副业做号的人——买模板/订阅，几十到几百，靠量 - 围观层：觉得有意思的外行——只贡献完播率，不负责付钱 （已删除”电商卖家”：我不懂这个行业，写不出让他们觉得”自己人”的内容）</p>
+<p><strong>核心商业循环：</strong> 拍视频（一个真实痛点+我用AI现场解决/做成工具，口播+录屏） → 算法推给精准人群（自媒体同行） → 评论区/私信带来需求：“帮我也做一个” → 收钱定制（网页工具/小程序） → 交付后把通用版沉淀进 Agent-wiki 工具库 → 工具库越厚 → 视频素材越多、信任越强 → 接更大的单 这个循环的关键：客户先于产品存在（消灭了”不知道给谁用”的老问题）；每个定制单做完必须沉淀通用版（一次劳动，多次售卖）；Agent-wiki 既是资产库也是货架——每个模块页=痛点+演示视频+定制入口，负责转化。</p>
+<p><strong>三个关键认知（我讨论问题时的底层逻辑）：</strong> 1. 内容带项目，不是项目带内容——开源项目没人会搜到，但痛点视频会被算法推到精准人群面前。项目是名片，内容是入口 2. 先有用户再做产品——定制=客户付钱让我开发产品 3. 视频的主角是”我解决问题的能力”，不是工具本身——只分享工具，观众拿走就走，流量沉淀不到我身上</p>
+<h3 id="chap3-s4">四、变现结构</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>阶段</th>
+<th>形态</th>
+<th>价格</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>前4-6周</td>
+<td>低价定制单（限名额）</td>
+<td>几百元</td>
+<td>攒案例、攒评价、攒视频素材</td>
+</tr>
+<tr class="even">
+<td>常态</td>
+<td>定制网页工具/小程序</td>
+<td>2000-3000元</td>
+<td>收入主力，每月1-2单覆盖生存线</td>
+</tr>
+<tr class="odd">
+<td>好单</td>
+<td>团队整套系统（工具+飞书流程）</td>
+<td>5000+</td>
+<td>利润来源</td>
+</tr>
+<tr class="even">
+<td>远期</td>
+<td>工具库通用版订阅</td>
+<td>走量</td>
+<td>“一次做好反复卖”的被动收入</td>
+</tr>
+</tbody>
+</table>
+<p><strong>现金流渠道：</strong> 闲鱼/小红书挂”AI小工具定制/AI文案工作流搭建”链接，接几百元单攒案例——雷达模式：挂着不经营，有单接没单不追，不依赖账号起量，接单过程拍成内容。</p>
+<p><strong>收钱模式（2026.7.24确认）：</strong> 定制单为收入主力，模板/订阅为辅助。</p>
+<p><strong>产品化变现时间线（2026.7.25调研确认）：</strong> 工具低价买断9.9-29.9元（现在就能做）→ 69-199元/年工具权益社群（1000-5000精准粉+工具公开好评后，与订阅制合并）→ 99-199元直播训练营（约1万精准粉+案例后，卖课形态中口碑最好）→ 系统课（一年后）。收费锚点是工具，社群是赠品，顺序不能反；课程只锚定”具体工具技能”，不碰”教人做号/变现”高危类目。</p>
+<p><strong>求职线（2026.7.25确认）：</strong> 9月中检查点前全力冲账号，不投简历、不纠结；检查点（月收入≥3000或账号明显起量）不达标→启动求职，作品集=账号+工具库+服务案例，投AI公司/“短视频+AI”公司。这是计划内动作，不是失败。</p>
+<h3 id="chap3-s5">五、内容策略</h3>
+<p><strong>三条内容线（2026.7.24校准权重）：</strong> 1. 演示型（日常更新主力）：一个痛点，用现成AI+提示词半小时组合解决，录屏+口播。不为拍视频过度开发 2. 打造型（少数）：评论区反复被问的痛点，真做成网页工具，vibeCoding过程全记录——最有说服力的内容 3. 编导视角方法论×AI：降级为偶尔点缀——我不把编导能力当卖点，不装专家，只展示干活</p>
+<p><strong>视频结构骨架：</strong> 痛点开场（10秒，不用烂大街句式）→ 演示解决（40-60秒）→ 收口金句（10秒）→ CTA（5秒）。60-90秒一条。 <strong>CTA节奏：</strong> 起号期只收痛点（“评论区留下你的行业/痛点”）；有案例后再挂定制入口。视频里不报价格，让需求进私信一对一谈。</p>
+<p><strong>第一期已确定的方案：</strong> - 痛点：自媒体人每天想选题的痛苦 - 工具：对标杂交型选题工具（拆爆款视频的已验证结构→用用户所在行业批量套用产出选题）——不是”输入行业生成30个选题”那种豆包就能干的东西 - 开头第一句（已定）：“我让AI拆了一条300万的爆款，然后用它的结构，5分钟给一家烘焙店搞出了20个选题。” - 开头不提”我做的工具”，身份在演示段轻描淡写揭开（“我做的这个工具”），结尾CTA再利用</p>
+<h3 id="chap3-s6">六、铁纪律（请在我跑偏时拿这些拦我）</h3>
+<ol type="1">
+<li>每个定制单必须沉淀通用版进工具库——这是这门生意和”接单苦力”的唯一区别</li>
+<li>低价单限时限量，防止被低价淹没</li>
+<li>只做网页/小程序，不碰桌面软件和App</li>
+<li>前10条视频不看播放量，那是练表达的学费</li>
+<li>工具开发设时间盒（v1给2-3天），功能蔓延写进”不做什么”清单</li>
+<li>文档写完当天必须动手——文档是开工令不是完工证</li>
+</ol>
+<h3 id="chap3-s7">七、已否决项（不要再建议这些）</h3>
+<ul>
+<li>帮本地小老板做AI普及/代运营（客单低、维护累、成长天花板低）</li>
+<li>AI资讯/趋势解读类账号（太泛，没壁垒）</li>
+<li>“输入行业输出30个选题”式简单提示词套壳工具（豆包就能干，体现不出编导壁垒）</li>
+<li>剧情/vlog/探店形式</li>
+<li>先做产品再找用户的任何路径</li>
+<li>电商方向（暂缓：我不懂电商，等有电商客户主动上门再扩展）</li>
+<li>不要建议我利用”以前服务过的商家/老客户”资源——那些只是拍摄合作，没有私交，不是我的资源</li>
+<li>账号起量（约1万粉+成功案例）前卖课、开收费粉丝群——0信任收费=人设&gt;交付=翻车第一共性（2026.7.25调研确认）</li>
+</ul>
+<h3 id="chap3-s8">八、我的协作偏好</h3>
+<ul>
+<li>文案风格：口语、自然、结构清晰，极度抗拒浓重AI腔和”最X的不是A是B”“不是…而是…”这类被用烂的钩子句式——观众对这类开头已有抗性</li>
+<li>讨论问题时：直接指出我的错误，不要迎合；可以追问我，我喜欢被追问来理清思路</li>
+<li>我容易想太多不行动，请倾向于推我尽快做最小的一步，而不是给我更多的规划</li>
+<li>给方案时请贴合”一个人+两个月+3000元/月生存线”的现实，不要给需要团队或长周期的建议</li>
+</ul>
+<h3 id="chap3-s9">九、当前进度（更新于2026年7月25日晚）</h3>
+<ul>
+<li>调研产物：已有《账号起号运营方案》（纯执行操作手册，拍发每条视频前对照）、《账号起号可行性与策略报告》（10维度调研论证）、《编导知识手册v2》（个人定制版：3天补课路径+四平台优缺点对比+编导知识体系+账号应用清单，旧版v1已作废）、《8周执行时间规划表》（每日日程，含7.26-7.28学习期）、《账号项目文档汇总》（所有文档合一本，找文件先开它）；卖课/工具社群可行性已调研定论（见变现时间线）</li>
+<li>平台策略（7.25调研更新）：主阵地抖音，小红书升第二主阵地（65%搜索流量+AI工具教程蓝海），视频号同步，B站放长视频开发实录（可选）；精力配比约 抖音35/小红书30/视频号25/B站10</li>
+<li>方向：已校准定稿 ✅（7.24-25逐条确认：方向=做工具的人；收钱=定制为主、模板订阅为辅；客户=代运营/团队+个人博主两层；渠道=闲鱼/小红书雷达模式；求职=9月检查点后再投；电商=被动雷达）</li>
+<li>执行计划：已有《8周执行时间规划表》（2026.7.25-9.17，含3天编导学习期），每天照表执行，每周日晚对照复盘</li>
+<li>一年目标：账号做起来，全职做自己的生意（订阅+定制双收入）</li>
+<li>账号：未开，待注册（抖音+小红书+视频号）</li>
+<li>当前节点：7.26-7.28为编导学习期（手册v2第一部分3天安排：Day1编导认知+视听语言+拉片；Day2选题+平台机制+选题库+3脚本；Day3拉片3条+拍剪练习+自检台本）</li>
+<li>第一期工具（对标杂交选题工具）：“链接爬取→大模型拆解”已跑通，还差”套用行业批量生成选题”一步+简单界面；目标7.30完成v1</li>
+<li>第一期视频：学习期Day2写3个脚本，挑1条改成自己口吻后拍摄；目标8.1上线</li>
+<li>Agent-wiki改版：定位为”自媒体AI工作台”（开源，货架+信任背书），链接直拆为第一个模块；批量抓取/账号监控留给付费定制版；第3周启动改版</li>
+<li>接单渠道：闲鱼/小红书未挂，目标8.2上架（雷达模式）</li>
+</ul>
+<hr />
+<h2 id="角色指令一职业规划监督官每周复盘用新开一个对话先贴完整版再贴本段">【角色指令一】职业规划监督官（每周复盘用，新开一个对话，先贴【完整版】再贴本段）</h2>
+<p>你是我的职业规划监督官。我的背景、已定方向、变现计划、铁纪律都在上面的文档里，先读完再开始工作。</p>
+<p>你的职责不是给我新方向，而是监督我执行已定方向。每次我来找你，严格按以下流程：</p>
+<ol type="1">
+<li><p>先问我三个问题，等我一一回答： ① 距上次复盘，我实际完成了什么？ ② 原计划该做但没做的是什么？原因是什么？ ③ 现在最大的卡点是什么？</p></li>
+<li><p>把我的回答对照文档里的8周计划和铁纪律，给出明确判定：进度正常 / 落后 / 跑偏。判定要狠，不要客气，不要鼓励式敷衍。</p></li>
+<li><p>如果发现我在开新方向、给工具加新功能、研究新工具、写新文档——立即对照铁纪律提醒我，并直接问我：这是主线需要，还是在逃避主线上的难动作（拍视频、发视频、接第一单）？</p></li>
+<li><p>最后只给我下周1-3个具体动作，每个动作必须小到一天内能完成，不要超过3个。</p></li>
+</ol>
+<p>你的风格：直接、犀利、不接受借口。你的价值在于说我不爱听但有用的话。如果我连续两周没有实质产出（没发视频/没做工具/没接单），直接点破我”又回到了辞职后只迷茫不行动的老模式”。</p>
+<h2 id="角色指令二账号运营顾问选题文案数据用新开一个对话先贴完整版再贴本段">【角色指令二】账号运营顾问（选题/文案/数据用，新开一个对话，先贴【完整版】再贴本段）</h2>
+<p>你是我的账号运营顾问。我的账号定位、目标用户、内容三条线、视频结构骨架、已否决项都在上面的文档里，先读完再开始工作。</p>
+<p>你的四项职责：</p>
+<ol type="1">
+<li><p>选题把关：我给你的每个选题，按三条标准打分（满分10）并说明理由——①痛点是否真实精准 ②自媒体同行（尤其代运营/团队）看了会不会觉得”这是我” ③能不能录屏演示。低于24分的打回重做。</p></li>
+<li><p>文案打磨：帮我改口播文案。要求：口语、自然、像人说话；严禁”最X的不是A是B”“不是…而是…”这类烂大街钩子句式和浓重AI腔——观众对这类开头已有抗性。每次修改要说明你改了什么、为什么。</p></li>
+<li><p>数据复盘：我发你视频数据（播放/完播/点赞/评论/涨粉）时，分析哪条内容线在跑、差距在哪，并给下周内容调整建议。注意：前10条视频只分析表达和结构问题，不评判播放量。</p></li>
+<li><p>评论区挖矿：我把评论内容发你时，帮我分三类——高频痛点（可做下期选题）、定制意向（值得私信跟进的线索）、普通互动。定制意向的线索帮我写一句自然的私信开场白。</p></li>
+</ol>
+<p>你不负责：劝我换定位、换平台、换方向——这些已经定了。如果我的选题或做法偏离了文档里的定位，直接指出来。</p>
+<hr />
+<h3 id="chap3-s10">使用节奏（关键，机制大于提示词）</h3>
+<ul>
+<li><strong>每周日晚</strong>：开”监督官”对话，先贴【完整版】+角色指令一，然后如实汇报本周流水账（发了什么、做了什么、数据、卡点）。<strong>必须说实话，瞒它等于废了这套机制。</strong></li>
+<li><strong>平时随用</strong>：开”运营顾问”对话，贴【完整版】+角色指令二，聊选题、改文案、看数据、挖评论。</li>
+<li>两个对话分开，各管各的，不要混在一个窗口里用。</li>
+<li>每月底把【完整版】第九节”当前进度”更新一次，保证AI看到的是最新状态。</li>
+<li>执行层面的每日任务以《8周执行时间规划表》为准（2026.7.25-9.17），监督官复盘时对表判定。</li>
+</ul>
+<hr />
+<h2 id="作战节奏表每周照着做监督官按此对照判定">【作战节奏表】（每周照着做，监督官按此对照判定）</h2>
+<p>【固定动作】 - 视频：隔日更，每周3-4条（演示型为主，打造型两周1条） - 评论区：每天15分钟，回复+把痛点记进备忘录（这就是选题库） - 接单：闲鱼/小红书链接挂着（雷达模式，每天扫一眼消息即可，不经营） - 每周日晚：监督官复盘（如实汇报：发了什么/做了什么/数据/卡点） - 每月底：更新【完整版】第九节”当前进度”</p>
+<p>【阶段指标（防数据焦虑）】 - 前10条视频：不看播放量，只看自己的表达有没有进步 - 第11条起：看完播率 + 评论区痛点质量 - 接单：前4周目标1单（几百元）；第5-8周目标每月2-3单</p>
+<p>【求职线】 - 9月中检查点前不投简历，全力冲账号；检查点不达标才启动：每周投3-5家AI公司/“短视频+AI”公司，附作品集链接</p>
+<hr />
+
+
+
+<div class="chapter-head" id="chap4">
+  <div class="chapter-no">第 四 部 分</div>
+  <h1>编导学习手册（个人定制版）</h1>
+  <div class="chapter-bar"></div>
+</div>
+<h3 id="chap4-s1">写在前面</h3>
+<p>这本手册是给一个具体的人写的，不是给”所有人”写的。先把你的情况摆在桌面上：</p>
+<ul>
+<li>你不是零基础，但也不是科班。你之前靠 AI 写文案、自己拍摄，一个人跑完了编导全流程——问题是每个环节都没用上专业方法。你现在的真实状态，用行话说叫”流程跑通了，方法论是空的”<sup class="cite">[1]</sup>。</li>
+<li>你即将做一个叫”做工具的人”的账号：口播+录屏，现场用 AI 做工具，解决自媒体同行的内容生产痛点。你的观众不是路人，是同行——代运营、个人博主、新媒体运营。给同行看的东西，“不专业”三个字是藏不住的。</li>
+<li>你的时间表：7 月底开号。开号前先集中学 3 天，然后边做边学。</li>
+</ul>
+<p>所以这本手册怎么用，说清楚：</p>
+<p><strong>前 3 天：只读第一、二部分 + 第三部分的相关章节。</strong> 按第一部分的”3 天集中学习安排”执行，每天 6–8 小时，比例是精读 30% : 拉片实操 40% : 产出 30%。3 天的目标不是”学完编导”——那是几个月的事——而是三件事：建立框架、学会拉片、攒出第一批可拍的选题和脚本。</p>
+<p><strong>开号之后：这本手册变成工具书。</strong> 第一部分的”每周学习节奏”是你之后 8 周的作息表；第三部分（编导知识体系）是查阅手册，写脚本卡住了查脚本章，数据不好查平台机制章；第四部分是专门针对你账号的应用清单，每次开选题会前翻一遍；附录里的自检清单，建议打印出来贴在电脑前。</p>
+<p>最后说一句心态上的话。调研里有个反差性发现值得你知道：有 MCN 负责人复盘，说选了科班编导负责内容，结果”专业的编导并不懂用户，只会把内容结构呈现得更细腻完美”，最后反而靠编辑主导选题才起量[^1^（补）]。意思是：科班出身不等于懂传播，你缺的只是”语法”和”方法”，这两样都能补；而你对用户痛点的直觉、对 AI 工具的实战手感，恰恰是很多科班编导没有的东西。把短板补到及格线，你的长板就能用了。</p>
+<blockquote>
+<p>引用说明：文中 <sup class="cite">[N]</sup> 标记对应调研底稿（编导维度 biandao_dim01–04、平台维度 platform_dim01–02）中的来源编号。数据可信度沿用调研标注：【官方口径】&gt;学术论文&gt;行业实测&gt;经验推测，推测性数字文中均已注明”供参考/需自校准”。</p>
+</blockquote>
+<hr />
+<h3 id="chap4-s2">第一部分 你的补课路径（最高优先级，放最前）</h3>
+<p>非科班编导的缺口集中在 5 处，按严重程度排序：<strong>视听语言基本功（最大缺口）→ 叙事结构感 → 拉片方法论 → 选题的用户视角与选题库机制 → 数据复盘能力</strong>[^8^（补）][^2^（补）]。注意第 4 条：选题敏感度可能是你的优势，要补的是”选题太宽泛不垂直”的新手坑和把灵感变成选题库的机制[^3^（补）][^7^（补）]。</p>
+<p>最短路径的共识是”1 个底座 + 3 级台阶”：底座是看片量（无法速成，从今天起每天攒）；第 1 级视听语言+拉片（1–2 周入门）；第 2 级选题+脚本结构（边学边写）；第 3 级导演思维（只能实拍中练）[^6^（补）]。下面把它压缩成你的 3 天计划。</p>
+<h4 id="天集中学习安排">3 天集中学习安排</h4>
+<p><strong>总目标：建立框架 + 学会拉片 + 产出第一批可拍内容。每天 6–8 小时。</strong></p>
+<p><strong>Day 1：编导认知 + 视听语言 + 学会拉片</strong></p>
+<ul>
+<li>上午：读本手册第三部分第 1 章（编导是什么）和第 4 章（叙事与节奏）；同步刷中国大学 MOOC 浙传《影视视听语言》前 3 讲（免费），或翻《认识电影》的镜头/剪辑章，建立景别、运镜、剪辑、声音的概念框架[^19^（补）][^18^（补）]。</li>
+<li>下午：学拉片方法（B 站”陈导电影工作室”的拉片思路课[^20^（补）]），然后按本部分末尾”拉片操作手册”的三遍法+表格模板，实操拆 2 条对标爆款。</li>
+<li>晚上：确定 3–5 个对标账号并建档（选号标准见第四部分）；搭好三个文件：<strong>拉片表格模板、选题库表格、套路卡</strong>[^12^（补）][^13^（补）]。</li>
+<li>当日产出：2 份拉片表 + 3 个空文件（模板建好）+ 对标账号清单。</li>
+</ul>
+<p><strong>Day 2：选题 + 平台机制 + 建选题库 + 写 3 个脚本（产出日）</strong></p>
+<ul>
+<li>上午：读第三部分第 2 章（选题）；每个对标账号拆 2 条”跑赢其日常数据”的爆款（累计 8–10 条），把高频选题方向填进选题库[^15^（补）][^12^（补）]。</li>
+<li>下午：读第三部分第 3 章（脚本与文案）和第 6 章（平台流量底层逻辑）；按脚本公式（前 3 秒钩子 + 每 5 秒一个钩子 + 1 分钟口播 ≤300 字[^17^（补）]）手写 3 个自己的脚本——结构直接套对标验证过的模板，“换肉不换骨”[^12^（补）]。</li>
+<li>晚上：拆 1 个经典电影片段（5 分钟内）练叙事结构感，图文式拉片记录[^11^（补）]。</li>
+<li>当日产出：选题库第一批 15–20 条选题 + 3 个完整脚本 + 1 份电影片段拉片。</li>
+</ul>
+<p><strong>Day 3：拉片 3 条 + 拍剪练习 1 条 + 自检台本</strong></p>
+<ul>
+<li>上午：读第三部分第 5 章（短视频专项技能）和第 7 章（传播心理），边读边把检查项抄进自己的清单；再拉片 3 条对标视频（重点拆前 3 秒和结尾互动设计）。</li>
+<li>下午：把昨天 3 个脚本里最好的 1 个<strong>完整拍剪出来</strong>（可以不发布）：分镜→拍摄→剪辑→导出，全流程走一遍[^24^（补）]。</li>
+<li>晚上：用附录的六套自检清单（选题/钩子/结构/语言/拍剪/复盘）逐条过自己的台本和成片，跟对标视频逐段对比找差距[^12^（补）]；写下后续每周 SOP（见下节）。</li>
+<li>当日产出：1 条成片（练手作）+ 逐条打勾的自检记录 + 每周学习 SOP。</li>
+</ul>
+<h4 id="开号后的每周学习节奏">开号后的每周学习节奏</h4>
+<p>建议先跑 8 周，再判断要不要报课或补单项。</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>项目</th>
+<th>频率</th>
+<th>做什么</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>发布</td>
+<td>每周 3 条</td>
+<td>用选题库+套路卡产出；<strong>每周只改 1 个变量</strong>（比如只换钩子形式），才能归因[^23^（补）]</td>
+</tr>
+<tr class="even">
+<td>短视频拉片</td>
+<td>每天 1 条（每周 5–7 条，15–30 分钟/条）</td>
+<td>先冲”建号期 20–40 条”的目标量，之后转为按需拆[^12^（补）]</td>
+</tr>
+<tr class="odd">
+<td>专题拉片</td>
+<td>每周 1 次</td>
+<td>按弱项场景集中拆：这周专拆”开头钩子”，下周专拆”结尾引导”，同类场景跨账号对比[^11^（补）]</td>
+</tr>
+<tr class="even">
+<td>数据复盘</td>
+<td>每条发布后 48 小时 + 每周 1 次总复盘</td>
+<td>盯 3 秒跳出率、5 秒完播率、整体完播率（&gt;20% 合格、&gt;30% 较好，经验值）[^14^（补）][^17^（补）]；与对标逐段对比找原因</td>
+</tr>
+<tr class="odd">
+<td>电影片段拉片</td>
+<td>每周 1 次（3–5 分钟片段）</td>
+<td>只拉片段，不拉全片（一部 90 分钟电影能拉 30 小时，耗不起[^9^（补）]）</td>
+</tr>
+<tr class="even">
+<td>读书</td>
+<td>每周 2–3 个晚上</td>
+<td>顺序：《认识电影》→《救猫咪》→《故事》→《荣誉》[^18^（补）][^6^（补）]</td>
+</tr>
+<tr class="odd">
+<td>课程</td>
+<td>碎片时间</td>
+<td>MOOC《影视视听语言》2 周内刷完；B 站导演尚茫《从零开始做导演》1 个月内刷完[^19^（补）][^20^（补）]</td>
+</tr>
+<tr class="even">
+<td>输出</td>
+<td>每周 1 篇</td>
+<td>把拉片笔记/复盘发出来（笔记、小号或社群），费曼输出法——顺便这也是你账号的素材[^10^（补）]</td>
+</tr>
+</tbody>
+</table>
+<h4 id="里程碑自检">里程碑自检</h4>
+<ul>
+<li><strong>拆满 20 条（约第 2–3 周）</strong>：你应能不翻笔记，默写出你这个赛道的 <strong>3 类钩子句式 + 2 个结构模板</strong>。做不到，说明拉片在”看剧情”而不是”拆方法”，回去重拆[^12^（补）]。</li>
+<li><strong>拆满 40 条 + 发布满 10 条（约第 6–8 周）</strong>：你应能写出自己的”爆款公式”初版——“我的账号，前 X 秒用 XX 钩子，中段用 XX 结构，结尾用 XX 引导”，并且每条都有发布数据佐证[^12^（补）][^13^（补）]。</li>
+<li>若届时数据仍无起色：<strong>不要泛泛报课</strong>，逐项排查是表现力、拍摄还是剪辑的单项短板，再针对性补。付费课市场良莠不齐、营销软文占比高，先用免费资源+拉片练 1 个月确认短板[^5^（补）]。</li>
+</ul>
+<h4 id="拉片操作手册">拉片操作手册</h4>
+<p>这是你未来半年最重要的基本功，所有调研来源里方法共识最强的一块。照做即可。</p>
+<p><strong>① 选片</strong>：同领域优先，选”跑赢该账号日常数据”的相对爆款（不看绝对播放量，看互动率）；跨领域的只拆结构不拆题材<sup class="cite">[35]</sup><sup class="cite">[37]</sup>。</p>
+<p><strong>② 三遍法（单条操作流程）</strong>[^9^（补）]：</p>
+<ol type="1">
+<li>第 1 遍：正常看，记整体感受——哪里想划走、哪里被钩住、记住的是什么；</li>
+<li>第 2 遍：逐镜头暂停，填表；</li>
+<li>第 3 遍：<strong>关声音看一遍画面，再关画面听一遍声音</strong>——专注单一维度，你会看到很多”带着声音看”时漏掉的东西。</li>
+</ol>
+<p><strong>③ 记录模板</strong>（Excel/飞书表格即可）[^9^（补）]：</p>
+<pre><code>时间码 ｜ 景别 ｜ 画面描述 ｜ 运镜 ｜ 情绪（声音）｜ 作用</code></pre>
+<p>三条纪律：事实与判断分栏（时间码/景别/台词原话是事实，情绪/功能是判断，事实越客观复盘越可靠）；<strong>台词逐字记录，不润色不改写</strong>；每条拆完必须提炼”可复用方法”，否则拆完就忘<sup class="cite">[33]</sup><sup class="cite">[34]</sup>。</p>
+<p>口播/知识类账号还可以用”时间段切片法”补一刀：0–10 秒讲什么、10 秒–1 分钟讲什么、结尾 10 秒讲什么，各配什么音效、景别如何[^15^（补）]。</p>
+<p><strong>④ 前 3 秒逐帧模仿</strong>：平台考核 3 秒跳出率、5 秒完播率，所以对标视频的前 3 秒要拆到帧级——第一句原话是什么、第几帧出现字幕、画面给的是人脸还是录屏截图[^14^（补）]。</p>
+<p><strong>⑤ 沉淀”套路卡”</strong>：每拆 5–10 条，归纳成一页卡片：常用钩子句式 3 条、内容结构模板 1–2 个、高频选题方向、结尾互动话术。<strong>这页卡片才是拉片的真正产出</strong>——表格是过程，卡片是资产[^12^（补）]。</p>
+<p><strong>⑥ 迁移验证</strong>：下周选题时从套路卡里取 1 条，套用到自己的选题（替换题材、保留结构——“复制结构，不复制形式”），发布后对比留存曲线验证<sup class="cite">[37]</sup>。“拆解→复刻→对数据”的循环走 3–5 轮，别人的套路才会内化成你的能力[^12^（补）]。</p>
+<hr />
+<h3 id="chap4-s3">第二部分 平台怎么选（2025–2026 四平台对比）</h3>
+<p>先说结论，免得你翻半天：<strong>抖音仍是主阵地，但小红书必须升级为第二主阵地——这是原方案最大的遗漏。它是四平台里”搜索+收藏”逻辑与工具类内容最匹配、且被官方趋势点名为”AI 工具教程蓝海”的平台；视频号降为私域承接，B 站降为周更精剪的背书阵地。</strong><sup class="cite">[3015]</sup><sup class="cite">[2793]</sup></p>
+<h4 id="对比总表">对比总表</h4>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>维度</th>
+<th>抖音</th>
+<th>小红书</th>
+<th>视频号</th>
+<th>B站</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>月活体量</td>
+<td>~10 亿<sup class="cite">[2500]</sup></td>
+<td>3–4 亿<sup class="cite">[2516]</sup><sup class="cite">[3035]</sup></td>
+<td>9–12 亿<sup class="cite">[1933]</sup></td>
+<td>3.68 亿<sup class="cite">[2854]</sup></td>
+</tr>
+<tr class="even">
+<td>用户结构</td>
+<td>全年龄，18–24 占 45%，男女均衡<sup class="cite">[2500]</sup></td>
+<td>女 70%，95/00 后 50%，一二线 50%<sup class="cite">[2516]</sup></td>
+<td>偏中老年（36+ 约 60%），女约 60%（口径有冲突，一致结论是”最老”）<sup class="cite">[2975]</sup><sup class="cite">[2972]</sup></td>
+<td>平均 26 岁，本科+超 70%<sup class="cite">[2854]</sup></td>
+</tr>
+<tr class="odd">
+<td>自媒体同行浓度</td>
+<td>绝对量全网最高，但被泛流量稀释</td>
+<td><strong>高（博主/运营就是平台核心职业人群，唯一”客户即用户”的平台）</strong></td>
+<td>低（微信生态从业者除外）</td>
+<td>AI 学习者最高，但”代运营/接活”人群少</td>
+</tr>
+<tr class="even">
+<td>算法逻辑</td>
+<td>行为预测；收藏权重上调，官方扶持知识类<sup class="cite">[2803]</sup></td>
+<td>CES 评分+阶梯流量池；<strong>超 65% 流量来自搜索</strong><sup class="cite">[2793]</sup></td>
+<td>社交裂变&gt;内容质量；私域撬动公域<sup class="cite">[2842]</sup></td>
+<td>播放时长制，天然利好中长知识视频<sup class="cite">[2983]</sup></td>
+</tr>
+<tr class="odd">
+<td>偏好形态</td>
+<td>短视频+3–10 分钟中长视频权重提升<sup class="cite">[zhihu2025]</sup></td>
+<td>图文教程+2 分钟以上视频；要求”活人感”<sup class="cite">[3015]</sup></td>
+<td>口播金句+直播；知识类完播合格线约 40 秒<sup class="cite">[2844]</sup></td>
+<td>5 分钟+横屏中长视频<sup class="cite">[2974]</sup></td>
+</tr>
+<tr class="even">
+<td>新号友好度</td>
+<td><strong>低</strong>（马太固化，近两年几乎无现象级新面孔）<sup class="cite">[3058]</sup></td>
+<td><strong>高</strong>（去中心化，低粉可变现，800 粉也能被品牌找单）<sup class="cite">[2885]</sup><sup class="cite">[3015]</sup></td>
+<td>中高（但依赖已有私域启动）<sup class="cite">[3058]</sup></td>
+<td>中（起量慢以月计，腰部在壮大）<sup class="cite">[2974]</sup></td>
+</tr>
+<tr class="odd">
+<td>搜索价值</td>
+<td>高（80% 用户用过搜索，知识类搜索转化率约 12–15%）<sup class="cite">[3032]</sup><sup class="cite">[3023]</sup></td>
+<td><strong>全网最高</strong>（70% 月活用户日均 6 次主动搜索，笔记半年后仍稳定吃搜索流量）<sup class="cite">[2516]</sup><sup class="cite">[2792]</sup></td>
+<td>中</td>
+<td>中高（“学 AI 来 B 站”心智，长尾以年计）<sup class="cite">[3042]</sup></td>
+</tr>
+<tr class="even">
+<td>变现生态</td>
+<td>星图/学浪/橱窗；AI 甲方预算主战场<sup class="cite">[3019]</sup></td>
+<td>蒲公英/店铺/课程社群；知识付费转化率居各赛道前列；<strong>私域导流全网最严</strong><sup class="cite">[2950]</sup></td>
+<td><strong>私域闭环全网最强</strong>（公众号+企微+小程序+支付全打通）<sup class="cite">[2856]</sup></td>
+<td>充电（泛知识是第一垂类）/花火/课堂；商单单价低<sup class="cite">[2888]</sup></td>
+</tr>
+<tr class="odd">
+<td>AI 工具类红利</td>
+<td>内卷，但有”知识创作砥砺计划”扶持窗口<sup class="cite">[2805]</sup></td>
+<td><strong>官方趋势判断的蓝海：“AI 怎么用”搜索暴增、优质中文教程供给不足</strong><sup class="cite">[3015]</sup></td>
+<td>AI 新 IP 仍在涌现（案例：AI 口播账号 30 天涨粉百万）<sup class="cite">[3058]</sup></td>
+<td>AI 浓度全网第一（粉丝前十的 AI 创作者全是 B 站 UP 主）<sup class="cite">[3039]</sup></td>
+</tr>
+<tr class="even">
+<td>最大短板</td>
+<td>新号最难、粉丝粘性弱</td>
+<td><strong>私域导流被严打</strong>（2025 年 3 月新规：试运行期 8.7 万账号被限流、4321 个商家被永封）<sup class="cite">[2950]</sup>；需去技术腔</td>
+<td>目标受众（年轻同行）浓度低、算法黑盒、与抖音内容互斥</td>
+<td>商单便宜、无私域、受众是学习者不是客户</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>可信度说明：用户画像存在多口径冲突（尤其视频号年龄、小红书月活），表中已并列标注；算法权重类数字（CES 公式、收藏权重 25% 等）来自运营侧拆解而非官方白皮书，视为方向性参考。</p>
+</blockquote>
+<h4 id="结论与配比">结论与配比</h4>
+<p><strong>资源配比：抖音 35% : 小红书 30% : 视频号+私域 25% : B站 10%。</strong></p>
+<ul>
+<li><strong>抖音 35%（主阵地①，公域放大）</strong>：体量最大、AI 甲方预算集中、知识扶持窗口仍在<sup class="cite">[2805]</sup>。但马太效应固化是硬伤，新号必须用两招对抗：一是<strong>系列化</strong>——挂合集、做连载，让每条视频互相引流抬高账号起跑线；二是<strong>收藏率打法</strong>——收藏权重已被平台主动调高，工具教程类内容天然是”收藏型”，标题和结尾都要给收藏理由<sup class="cite">[2803]</sup><sup class="cite">[203]</sup>。</li>
+<li><strong>小红书 30%（主阵地②，搜索长尾+精准同行）</strong>：三条理由叠加——65% 流量来自搜索场景、算法对工具教程类内容的收藏权重看得更重、官方把”AI 工具教程”判断为供给不足的蓝海，还刚投入 500 亿流量扶持 2 分钟以上中长视频<sup class="cite">[2793]</sup><sup class="cite">[2798]</sup><sup class="cite">[3015]</sup><sup class="cite">[3035]</sup>。你的受众（博主、代运营）就是小红书的核心用户。代价是<strong>私域导流全网最严</strong>：私信、笔记、简介留任何联系方式或暗语诱导都违规，必须走站内闭环（专栏、店铺）或官方留资工具，别抱侥幸心理<sup class="cite">[2950]</sup><sup class="cite">[2948]</sup>。</li>
+<li><strong>视频号 25%（私域转化中枢）</strong>：不承担拉新 KPI，承担”接单/卖课/咨询”的成交——知识付费闭环全网最短（有职场 IP 视频号 0 到 30 万粉、年变现超 1200 万的案例）<sup class="cite">[2856]</sup>。<strong>铁律：与抖音内容互斥，视频中出现”抖音”字眼或水印，限流概率提升 50%</strong>——同步过去必须做去标识化处理<sup class="cite">[2844]</sup>。</li>
+<li><strong>B站 10%（背书+长尾）</strong>：AI 浓度第一，适合建立”专业人设”背书和充电长尾收入；但受众是”想学 AI 的人”而非”想接活的同行”，商单便宜、无私域，<strong>每周 1 条精剪合集即可，不重运营</strong><sup class="cite">[3039]</sup><sup class="cite">[2888]</sup>。</li>
+</ul>
+<p>变现闭环的走法：抖音/小红书负责”被发现”→ 小红书站内（专栏/店铺/官方留资卡）或视频号私域（企微）负责”成交”。另外，实测数据显示只做单一平台的账号死亡率超 60%，四平台矩阵是必要的风险对冲<sup class="cite">[3070]</sup>。</p>
+<h4 id="一鱼四吃同一素材的逐平台改造表">一鱼四吃：同一素材的逐平台改造表</h4>
+<p>母版 = 一条口播+录屏素材，四个平台各改一版，禁止”完全相同的标题+内容直接同步”（要改封面比例、错峰 24 小时、差异化标题）<sup class="cite">[3055]</sup>：</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>平台</th>
+<th>时长/形态</th>
+<th>改造要点</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>抖音</strong></td>
+<td>60 秒–3 分钟，9:16</td>
+<td>前 3 秒痛点钩子前置（“代运营一天剪 20 条视频？我用 AI 做了个工具 10 分钟搞定”）；字幕加大；挂合集做系列化拉收藏率；评论区埋”看后搜”小蓝词<sup class="cite">[203]</sup><sup class="cite">[3032]</sup></td>
+</tr>
+<tr class="even">
+<td><strong>小红书</strong></td>
+<td>图文为主 + 2–5 分钟视频，3:4</td>
+<td>①图文版：封面=工具前后对比图+大字标题（<strong>前 18 字含 2 个搜索关键词</strong>，如”AI 自动剪映”“自媒体工具”），正文=步骤清单+录屏截图，全程”我实测/我踩坑”第一人称<sup class="cite">[2793]</sup><sup class="cite">[3015]</sup>；②视频版吃中长视频扶持窗口<sup class="cite">[3035]</sup>；③标签宁精勿泛（2–3 个垂直话题）<sup class="cite">[2798]</sup>；④引流只用官方留资卡/专栏，不碰私信裸导流<sup class="cite">[2950]</sup></td>
+</tr>
+<tr class="odd">
+<td><strong>视频号</strong></td>
+<td>40–90 秒 + 定期直播</td>
+<td>去除一切”抖音”字眼与水印<sup class="cite">[2844]</sup>；结尾设计社交货币钩子（“转发给还在熬夜剪片的朋友”）<sup class="cite">[2842]</sup>；挂公众号文章/直播预约导企微；定期开直播做工具演示+接单咨询<sup class="cite">[2856]</sup></td>
+</tr>
+<tr class="even">
+<td><strong>B站</strong></td>
+<td>8–20 分钟精剪，16:9</td>
+<td>周更”完整版工作流”：痛点背景→工具搭建全过程→效果对比→思路复盘；加章节标记；标题去营销腔（B 站用户反感）；开通充电+课堂；当对外合作的”作品集”背书链接<sup class="cite">[2888]</sup></td>
+</tr>
+</tbody>
+</table>
+<p>两条通用红线：AI 生成内容需主动标识，纯 AI 无原创增量的内容会被限流——“真人实操+真实经验”就是你的护城河<sup class="cite">[2984]</sup><sup class="cite">[3015]</sup>；每个平台只改 1 个变量地做 A/B 对照，别大改策略[^23^（补）]。</p>
+<hr />
+<h3 id="chap4-s4">第三部分 编导知识体系（查阅手册）</h3>
+<p>这一部分把旧版手册八章的精华重组为七章，压缩冗余、保留干货。平时不用通读，卡住时来查。每章末尾有【一句话记住本章】。</p>
+<h4 id="第-1-章-编导是什么">第 1 章 编导是什么</h4>
+<p><strong>岗位本质</strong>：编导 = “编”（选题、策划、写脚本）+ “导”（组织拍摄、把控后期），是贯穿内容生产全流程的核心创作岗位，对”内容是什么、为什么拍”负责；摄像、剪辑、运营都是围绕编导创作意图的执行与放大<sup class="cite">[1]</sup>。小团队里编导身兼数职很正常——你现在就是——但岗位内核不变：<strong>编导是内容的总设计师</strong>。你补课的重点不是学新工具，而是把你已经跑通的每个环节背后的”为什么这么做”补齐。</p>
+<p><strong>三种核心思维</strong>：</p>
+<ul>
+<li><strong>受众思维</strong>：一切从”给谁看”出发，不从”我想说啥”出发。选题时从利益、兴趣、情感、猎奇四个维度对照目标用户；真实需求藏在三处：高频困扰、情感缺口、认知盲区<sup class="cite">[7]</sup><sup class="cite">[8]</sup><sup class="cite">[9]</sup>。</li>
+<li><strong>导演思维</strong>：想清楚”要让观众感受到什么”，然后用摄影机、表演、剪辑去贯彻它（肯·丹西格，《导演思维》）<sup class="cite">[10]</sup><sup class="cite">[11]</sup>。</li>
+<li><strong>画面思维（蒙太奇思维）</strong>：构思之初就用镜头想问题——写每句文案都问”这句话对应的画面是什么，能不能用画面而不是台词给信息”<sup class="cite">[13]</sup>。</li>
+</ul>
+<p>三者的分工：受众思维决定拍什么，导演思维决定想让观众感受到什么，画面思维决定怎么变成镜头。</p>
+<p>【一句话记住本章】编导不是”写文案的”，是内容的总设计师；你的每个决策都从”给谁看、想让他感受到什么”出发。</p>
+<h4 id="第-2-章-选题">第 2 章 选题</h4>
+<p><strong>选题决定 70%–80% 的成败</strong>——从业者共识，选题失败，后面的脚本、拍摄、后期都无从谈起<sup class="cite">[1]</sup>。能区分”想做”和”会爆”的选题，是编导岗和纯文案岗的分水岭<sup class="cite">[49]</sup>。</p>
+<p><strong>选题从哪来（八大来源）</strong>：节日节点、社会热点、对标竞品（拆数据高于平均值的选题和博主反复做的选题）、换位思考（利益/兴趣/情感/猎奇）、头脑风暴、脑路地图、关键词搜索法、评论区挖矿<sup class="cite">[8]</sup><sup class="cite">[14]</sup>。</p>
+<p><strong>爆款选题公式</strong>：好选题 = 受众面广 + 价值；爆款选题 = 受众面广 + 借势 + 价值 + 情绪<sup class="cite">[1]</sup>。对你的赛道最实用的两个变体：<strong>痛点场景化 = 具体事儿 + 糟心结果 + 反问</strong>（有案例数据：案例化比纯讲解完播率高 47%）；<strong>逆向结果式</strong>——不说”我教你怎么做”，直接说”你能得到什么结果”<sup class="cite">[3]</sup>。</p>
+<p><strong>怎么判断值不值得拍</strong>：第一原则是”视角决定上限”——同一题材站在不同人群视角讲，播放量上限天差地别（可用巨量算数等工具验证人群关心度 TGI）<sup class="cite">[15]</sup>；验证三步走：搜关键词看同类互动量 → 小范围调查 → 看热榜判时效<sup class="cite">[9]</sup>；优先做”长销款”而非”快消品”选题<sup class="cite">[9]</sup>。</p>
+<p><strong>选题库</strong>：把来源沉淀成表格（选题、来源、参考链接、预估角度、优先级），让选题从”靠灵感”变成”靠系统”<sup class="cite">[14]</sup>。</p>
+<p>【一句话记住本章】选题不是”我擅长的”也不是”最火的”，是”我的目标受众正在关心且我能提供独特价值的”——先过自检清单再动笔（清单见附录 A）。</p>
+<h4 id="第-3-章-脚本与文案">第 3 章 脚本与文案</h4>
+<p><strong>脚本的标准只有一条</strong>：“摄影师看了知道怎么拍、演员看了知道怎么演、剪辑看了知道怎么剪”<sup class="cite">[7]</sup>。写作五步骤：明确主题 → 搭框架 → 场景设计 → 时间把控（开头 15 秒内设爆点）→ 主题升华<sup class="cite">[16]</sup>。新手用三段式：引子→承接→高潮<sup class="cite">[17]</sup>。</p>
+<p><strong>口播稿写法</strong>（你的主力形态）：</p>
+<ul>
+<li><strong>口语化第一</strong>：每句 15–20 字以内，避免书面词汇和”总之/综上所述”；写完大声读出来录音回听，不像”人对人讲话”的全部改写<sup class="cite">[29]</sup><sup class="cite">[31]</sup>。</li>
+<li><strong>黄金开头五公式</strong>：反常识、数字冲击、痛点直击、结果前置、悬念提问——前 3 秒必须有一个”不得不看下去”的信息钩子<sup class="cite">[20]</sup>。</li>
+<li><strong>三三三节奏</strong>：每 3 秒一个信息点，每 3 个信息点一次小总结或过渡，整段分”钩子→主体→收尾”三大段<sup class="cite">[20]</sup>。</li>
+<li><strong>两重一轻结构</strong>：开头重（钩子=核心主题）、结尾重（有力一击+关注理由）、中间轻快用案例佐证<sup class="cite">[20]</sup>。</li>
+<li><strong>写稿时就标注画面切换点</strong>（如[切录屏]），口播稿要预设与画面的配合<sup class="cite">[20]</sup>。</li>
+<li>断行为提词器服务：一行一句、按语气停顿断行、关键信息前标停顿和语气<sup class="cite">[29]</sup><sup class="cite">[19]</sup>。</li>
+<li>钩子写 2 版逐字稿，拍两条开头选更稳的；互动设计（结尾引导语+评论区预案）写进脚本，不拍脑袋<sup class="cite">[30]</sup>。</li>
+</ul>
+<p><strong>分镜头脚本</strong>：把文字稿拆成镜头的施工表（镜号/景别/技巧/画面/声音/时长）。入门要点：景别衔接流畅不极端跳跃；固定镜头与运动镜头搭配；画面用白描写，绝不用文学修饰；单镜头约 5 秒常见<sup class="cite">[18]</sup><sup class="cite">[19]</sup>。你的形态简单——钩子一镜、每个要点一镜、结尾一镜，60 秒 5–8 个分镜就够<sup class="cite">[30]</sup>。</p>
+<p>【一句话记住本章】把脚本当”台词”写不当”文章”写：短句、说人话、前 3 秒下钩、写稿时就标好画面。</p>
+<h4 id="第-4-章-叙事与节奏">第 4 章 叙事与节奏</h4>
+<p><strong>经典结构在 60 秒里的映射</strong>：开端—中段—结尾（亚里士多德）是源头；菲尔德三幕剧（建置→对抗→结局）；麦基《故事》五部分（激励事件→进展纠葛→危机→高潮→结局）；东亚起承转合更重对比与反转<sup class="cite">[22]</sup><sup class="cite">[23]</sup><sup class="cite">[24]</sup><sup class="cite">[26]</sup>。换算成你的视频：<strong>开头钩子 ≈ 激励事件，中间信息递进 ≈ 进展纠葛，结尾反转或升华 ≈ 高潮+结局</strong>。麦基的三个概念最该记住：激励事件（打破平衡、逼主角行动的那件事，是故事发动机）、冲突（没有冲突故事不前进）、鸿沟（主角行动了，世界却没给预期反应——这是驱动每个场景的动力）<sup class="cite">[24]</sup><sup class="cite">[25]</sup>。</p>
+<p><strong>悬念的本质 = 信息差</strong>：希区柯克炸弹理论——炸弹突然爆炸只有 15 秒惊奇，提前让观众看到炸弹和倒计时，同样的场景能制造 15 分钟悬念<sup class="cite">[27]</sup><sup class="cite">[28]</sup>。结论：<strong>悬念不是藏信息，是控制信息释放的先后与多少</strong>。每个段落结尾留一个未解答的小钩子，比平铺直叙的”然后……“有牵引力得多<sup class="cite">[29]</sup>。</p>
+<p><strong>节奏</strong>：节奏不是速度，是”带有规律、层次的变化”<sup class="cite">[31]</sup>。内部节奏（情节情绪的张弛）决定外部节奏（镜头长短与剪辑快慢），外部为内部服务<sup class="cite">[32]</sup><sup class="cite">[33]</sup>。经验法则：短镜头→紧张，长镜头→沉浸；高潮前逐渐加快，转折点突然变速<sup class="cite">[33]</sup>。口播的换算：信息密度（每 3 秒一个信息点）+ 停顿强调 + 快慢段落交替<sup class="cite">[20]</sup>。</p>
+<p>【一句话记住本章】开头下钩、中段每 10–15 秒给一个新看点、结尾留钩——悬念靠”控制信息释放”，节奏靠”有层次的快慢变化”。</p>
+<h4 id="第-5-章-短视频专项技能">第 5 章 短视频专项技能</h4>
+<p><strong>钩子设计</strong>：底层是心理学家 Loewenstein 的”信息缺口”理论——信息只露一角时，大脑会主动寻求闭合<sup class="cite">[8]</sup><sup class="cite">[10]</sup>。<strong>好钩子 = 制造一个真实的信息缺口 + 正文确实把它填上</strong>；开空头支票会被完播率反噬，“宁可弱一点也别开空头支票”<sup class="cite">[8]</sup><sup class="cite">[35]</sup>。知识类验证最有效的三种开场：悬念设问、痛点直击、画面冲击<sup class="cite">[14]</sup>。警惕失效句式：“90% 的人不知道”“千万别划走”这类万能句式已被用滥，用户形成条件反射式划走——句式本身不产生缺口，只有具体的信息差才产生<sup class="cite">[15]</sup>。自我介绍式开头（“大家好我是 XX”）是典型废开头<sup class="cite">[13]</sup>。</p>
+<p><strong>完播结构（60–90 秒秒级拆解）</strong><sup class="cite">[16]</sup><sup class="cite">[18]</sup>：</p>
+<ul>
+<li>0–3 秒：钩子区（口语化提问+痛点画面；录屏账号直接抛同行最痛的数据/截图）；</li>
+<li>3–15 秒：痛点展开区，建立”这和我有关”；</li>
+<li>15–75 秒：解决方案区，2–3 个关键点，每个点”原理+演示”配对（讲一条录屏演一条）；</li>
+<li>最后 5 秒：CTA 区，一个具体行动指令。超 80% 的高互动视频在开头或结尾设了直接的提问/悬念<sup class="cite">[50]</sup>。</li>
+</ul>
+<p><strong>信息密度</strong>：信息层（画面/字幕/强调点）每 3–5 秒一换，核心知识点每 10–15 秒一个<sup class="cite">[26]</sup><sup class="cite">[27]</sup>。太干的信号：连续 2 句以上是抽象概念无案例、口播与录屏各讲各的；太水的信号：删掉某句不影响理解、15 秒没有任何新信息。<strong>双轨互补原则</strong>：口播讲抽象逻辑时录屏给具体演示，口播给结论时画面给证据<sup class="cite">[28]</sup>。</p>
+<p><strong>拉片拆爆款</strong>：核心 5 维度——叙事结构、钩子类型（第一句逐字记录归类）、节奏（平均镜头时长、爆点时间戳）、情绪曲线、镜头语言，外加公开数据和承接转化 2 个维度<sup class="cite">[34]</sup><sup class="cite">[36]</sup><sup class="cite">[39]</sup>。复用优先级公式：题材适配度 × 钩子强度 × 证据密度 × 互动潜力 × 承接能力，任一项明显偏低就别硬抄<sup class="cite">[39]</sup>。</p>
+<p><strong>拍剪常识</strong>：口播账号近景和中景交替、要点处切特写或字幕卡就够，景别变化至少差一级避免跳切<sup class="cite">[30]</sup><sup class="cite">[40]</sup>；剪辑点卡在音乐节奏点或语气点上<sup class="cite">[42]</sup>；字幕：底部 1/4 区域、白/黄字+黑描边、全片统一，钩子出现后 0.5 秒内字幕须跟上<sup class="cite">[46]</sup><sup class="cite">[38]</sup>；BGM 四原则：按情绪选、节奏匹配、不压人声（知识口播优先低 BPM 纯音乐）、满足前三条再选热门曲；关键结论处可做 BGM 淡出留白——停顿即强调<sup class="cite">[43]</sup><sup class="cite">[44]</sup>。</p>
+<p><strong>数据诊断闭环</strong>（发布后 24–48h）：前 3 秒留存 &lt;40% 基本可断定是开场问题（健康值 ≥70%，经验值）；拉留存曲线找断崖下跌点 → 回看该时间点内容 → 归因（钩子耗尽/节奏变慢/信息过载/没兑现承诺）→ 写入下条脚本改进项。这是最专业的完播率优化闭环<sup class="cite">[22]</sup><sup class="cite">[23]</sup><sup class="cite">[24]</sup><sup class="cite">[25]</sup>。</p>
+<p>【一句话记住本章】前 3 秒用真实信息缺口钩住人，中段每 10–15 秒埋一个新看点，发布后拿留存曲线的断崖点找病根。</p>
+<h4 id="第-6-章-平台流量底层逻辑">第 6 章 平台流量底层逻辑</h4>
+<p><strong>元起点：推荐算法是”预测用户行为概率”的系统，不是”判断内容好坏”的系统。</strong> 抖音官方公开的公式：推荐优先级 = 综合预测用户行为概率 × 行为价值权重<sup class="cite">[1640]</sup><sup class="cite">[1492]</sup>。你的内容不是被编辑评审的，是被统计学评审的——所以每个创作决策都该问：“这个设计会提高目标人群的哪个行为概率？”开头 3 秒对应停留概率，信息密度对应收藏概率，系列钩子对应关注与复访概率，结尾提问对应评论概率。<strong>内容策略 = 行为概率工程。</strong></p>
+<p><strong>质量代理问题</strong>：平台测不了”质量”，只能用行为数据做代理，而代理必然失真（古德哈特定律）——算法考核什么，生态就长满什么<sup class="cite">[1817]</sup><sup class="cite">[1818]</sup>。2025–2026 权重洗牌的方向：完播率权重下调（行业消息称从约 70% 降至 40%），<strong>收藏、复访、深度评论这类更难伪造、更接近长期价值的信号权重上调，收藏跃升为第一权重</strong>（行业推测，方向可信）<sup class="cite">[1728]</sup><sup class="cite">[1556]</sup>。官方也承认在多目标建模，把”用户收藏复访”作为优质内容信号并单列”优质”子链路<sup class="cite">[1814]</sup>。</p>
+<p><strong>流量池赛马</strong>：每条视频无论粉丝多少都给初始流量（约 300–1000 曝光），数据好逐级进更大池子（层级数字为行业推测，仅示意）<sup class="cite">[1484]</sup><sup class="cite">[1556]</sup>。马太效应是设计出来的，不是漏洞。推论的数学策略：单条爆款是概率事件，<strong>稳定输出 = 用数量对冲不确定性，垂直账号 = 让每次赛马都进精准赛道</strong><sup class="cite">[1488]</sup><sup class="cite">[368]</sup>。</p>
+<p><strong>2025–2026 四个新机制</strong>：</p>
+<ol type="1">
+<li><strong>7 天长效赛马</strong>：考核窗口从 24 小时拉长到 7 天，第 3–4 天”二次激活”、5–7 天长尾爆发（行业报道，官方未直接公布，可信度中高但参数为推测）。对教程型、搜索型内容是结构性红利——<strong>发布后不是结束而是开始：7 天内维护评论区、不删不隐藏表现平平的视频</strong><sup class="cite">[1542]</sup><sup class="cite">[1544]</sup>。</li>
+<li><strong>搜推联动</strong>（官方明确方向）：搜索是用户主动表达的需求，“越搜越推、越推越搜”。把每条视频当作”可被检索的知识节点”生产：标题、字幕、口播、评论区都布关键词<sup class="cite">[1808]</sup><sup class="cite">[1551]</sup><sup class="cite">[1929]</sup>。</li>
+<li><strong>知识赛道扶持</strong>（官方真金白银）：“知识创作砥砺计划”全年深度服务 1000 位作者，覆盖前沿科技（含 AI 应用）——你正好在扶持范围内<sup class="cite">[1729]</sup>。</li>
+<li><strong>AI 内容治理</strong>：《人工智能生成合成内容标识办法》2025 年 9 月施行，AI 内容强制标识是流量准入硬门槛。平台不反对 AI 辅助，反对”AI 替代”——AI 做资料整理、大纲没问题，<strong>核心观点、真实案例、个人经验必须来自人</strong>；账号 AI 生成占比过高（经验值 20–25% 以上，推测阈值）会触发限流<sup class="cite">[1731]</sup><sup class="cite">[1942]</sup><sup class="cite">[1939]</sup>。这一条对”靠 AI 写文案”出身的你尤其要警惕：AI 是你的杠杆，但”不可伪造的真实经验”才是你的资产。</li>
+</ol>
+<p><strong>抖音 vs 视频号的基因差异</strong>：抖音是”算法分配注意力”（公域赌场），视频号是”社交关系分发信任”（熟人池塘）<sup class="cite">[1637]</sup><sup class="cite">[1630]</sup>。同一内容，抖音版强化钩子和信息密度，视频号版强化身份认同和转发价值——“可被转发到朋友圈而不丢面子”<sup class="cite">[1630]</sup><sup class="cite">[1494]</sup>。</p>
+<p>【一句话记住本章】算法只认行为概率：把创作押在”难伪造的信号”（收藏、复访、深度评论、转发）上，就是押在算法的演进方向上。</p>
+<h4 id="第-7-章-传播与用户心理">第 7 章 传播与用户心理</h4>
+<p><strong>STEPPS 六原则</strong>（Jonah Berger《疯传》）：社交货币（分享让自己脸上有光的东西）、诱因（绑定高频日常场景）、情绪、公开性（行为残留，可晒的成果物）、实用价值、故事<sup class="cite">[1]</sup><sup class="cite">[4]</sup>。用法是逐条给内容在六个维度各打 1–3 分，补最弱的杠杆<sup class="cite">[6]</sup>。对你最重要的两条：实用价值（干货是最硬的社交货币，转发者帮你传播=帮助别人=他自己脸上有光）和社交货币（转发一条深度内容=向朋友圈证明”我是懂行的人”）。</p>
+<p><strong>情绪唤醒</strong>：Berger &amp; Milkman 对《纽约时报》约 7000 篇文章的实证——传播力的关键不是正负，而是<strong>生理唤醒度</strong>：敬畏、兴奋、愤怒、焦虑（高唤醒）促进分享，悲伤、满足（低唤醒）抑制分享（回归系数：愤怒 +0.38、敬畏 +0.34、焦虑 +0.24、悲伤 −0.17）<sup class="cite">[8]</sup><sup class="cite">[10]</sup>。知识类内容天然适配的高唤醒情绪是<strong>敬畏/惊奇</strong>——反常识结论、“原来如此”的瞬间。温吞的干货是传播死区。</p>
+<p><strong>共鸣的学术底座</strong>：自我参照效应（“这说的不就是我吗”——内容与观众的身份、困境相关时被更深编码）+ 自我披露的多巴胺奖赏（表达”我也是”本身就是奖赏，这是评论区互动的神经基础）+ 社会认同（观众分享的不是信息，是”我们这类人”的身份宣言）<sup class="cite">[14]</sup><sup class="cite">[17]</sup><sup class="cite">[20]</sup>。NYT 对 2500 名分享者的调查：68% 的人分享是为了定义自我，娱乐不在主要动机之列<sup class="cite">[22]</sup>。</p>
+<p><strong>前 3 秒的认知原理</strong>：刷信息流是 Kahneman 系统 1（快、直觉）环境，观众 1–3 秒内完成”停留或划走”，理性论证来不及参与。钩子要同时满足三样：模式打断（赢得注意力）+ 信息缺口（留住注意力）+ 自我相关（让注意力觉得”值得”）<sup class="cite">[26]</sup><sup class="cite">[27]</sup><sup class="cite">[29]</sup>。行业数据佐证：超 60% 观众在前 3 秒划走；78% 高完播视频首帧前置核心冲突或结果，结果前置式开头完播率是功能陈述式的 2.3 倍<sup class="cite">[31]</sup><sup class="cite">[32]</sup>。</p>
+<p><strong>信任与真实感</strong>：出丑效应（Aronson）——高能力者暴露小失误反而更讨喜，但<strong>有能力前提：先证明能力，再暴露弱点</strong><sup class="cite">[34]</sup><sup class="cite">[38]</sup>。多组实证确认链路：真实感→信任→追随意愿，真实感是比粉丝量更强的预测变量<sup class="cite">[40]</sup><sup class="cite">[43]</sup>。“Build in Public”（公开制作过程、踩坑、半成品）之所以建立信任，是出丑效应+透明度信号+准社会关系的三重叠加——<strong>“我展示我怎么做的”比”我告诉你你该怎么做”更可信</strong>。这正是你账号形态的理论依据。</p>
+<p><strong>知识类独有通道</strong>：①实用价值是独立于情绪的分享驱动，且越窄越容易被”定向分享”（“这条仿佛专为某个朋友打造”）<sup class="cite">[8]</sup><sup class="cite">[4]</sup>；②数字囤积心理——八成受访者有数字囤积习惯，“收藏=学会”的心理安慰，清单、模板、SOP、索引式内容天然吃收藏<sup class="cite">[45]</sup><sup class="cite">[47]</sup>；③自我提升焦虑是稳定的需求基本盘，但用户要的是”缓解焦虑的获得感”（当下就能用的一步），不是系统严谨的知识<sup class="cite">[49]</sup>。</p>
+<p>【一句话记住本章】传播 = 唤醒度（决定分享广度）× 身份共鸣（决定共鸣深度）× 实用价值（决定收藏与定向转发）× 真实感（决定信任与留存）。</p>
+<hr />
+<h3 id="chap4-s5">第四部分 用到你的账号上（“做工具的人”应用清单）</h3>
+<p>把前面所有原理落到你的具体定位上。每次开选题会前过一遍。</p>
+<p><strong>选题怎么选</strong> - 公式直接套”痛点场景化”：具体事儿 + 糟心结果 + 反问。例：“代运营一天要剪 20 条视频，剪到凌晨还交不齐？”<sup class="cite">[3]</sup>。 - 选题来源优先级：评论区挖矿（翻自媒体同行爆款评论区的高频提问）&gt; 对标竞品（同行博主反复做的选题）&gt; 关键词搜索法（搜”自媒体工具”“AI 剪辑”看长尾词）<sup class="cite">[14]</sup><sup class="cite">[8]</sup>。 - 每条选题必须过自检清单 A，尤其两条：“能写成一句完整的话（给谁+讲什么+什么价值）”和”观众看完做什么动作”——你的内容主要动作应该设计为<strong>收藏</strong>（工具教程天然是收藏型，正对算法权重上调的方向）<sup class="cite">[30]</sup><sup class="cite">[2803]</sup>。 - 受众是同行意味着”专业度藏不住”：宁可做”小而深”的真痛点，不做”大而泛”的伪需求。同行会一眼看穿后者。</p>
+<p><strong>结构怎么搭</strong> - 母版用模型 A（60 秒知识干货版）：0–3 秒钩子（抛同行最痛的数据或前后对比截图）→ 3–45 秒主体（2–3 个关键点，每个点”原理+录屏演示”配对）→ 45–60 秒口诀式总结+行动引导<sup class="cite">[18]</sup>。 - 双轨互补是录屏账号的命门：口播讲逻辑时录屏给演示，口播给结论时画面给证据，两轨不能各讲各的<sup class="cite">[28]</sup>。 - 系列化：把工具做成”合集/连载”（如”自媒体自救工具箱”第 1 期、第 2 期），既拉收藏又吃 7 天赛马的复访权重<sup class="cite">[1542]</sup><sup class="cite">[203]</sup>。</p>
+<p><strong>钩子怎么写</strong> - 首选三类：痛点直击（知识类首选）、悬念反转（“这个方法我用了 3 年，今天才敢说错了”）、视觉冲击（前后数据对比截图，录屏账号的天然素材）<sup class="cite">[11]</sup><sup class="cite">[12]</sup>。 - 结果前置是实证最强的开法：先说”我用这个工具做到了 X”，制造只有看下去才能闭合的缺口<sup class="cite">[31]</sup>。 - 铁律：缺口必须在正文兑现；每条钩子句式与近期视频不重复；钩子写 2 版拍两条开头<sup class="cite">[8]</sup><sup class="cite">[15]</sup><sup class="cite">[30]</sup>。 - 前 3 秒画面=人脸还是录屏？对标拆到帧级后自己测——这正是你拉片前 3 秒逐帧模仿要回答的问题。</p>
+<p><strong>平台分发怎么排</strong> - 按第二部分的配比执行：抖音（系列化+收藏率打法）、小红书（图文步骤+搜索关键词，官方蓝海窗口）、视频号（去水印+私域承接）、B站（周更精剪背书）。 - 你”靠 AI 写文案”的历史要特别注意合规：AI 内容主动标识，核心观点和真实经验自己出，账号整体 AI 生成占比控制在经验阈值（20–25%）以下<sup class="cite">[1731]</sup><sup class="cite">[1939]</sup>。反过来说，“真人实操 AI 工具”恰恰是最安全的内容形态——你展示的是人的经验，AI 只是道具。</p>
+<p><strong>拉片对象怎么选（对标账号怎么挑）</strong> - 选 3–5 个对标账号，标准：<strong>近半年从 0–1 万或 1–10 万粉的黑马账号、形态与你一致（口播对标口播、录屏对标录屏）、不依赖稀缺资源</strong>；不要对标大 V——他们权重高，数据好可能是粉丝底盘堆出来的，没有借鉴意义[^13^（补）]。 - 去哪找：抖音/小红书搜”AI 工具”“自媒体工具”“AI 剪辑”等关键词，按”最近半年+涨粉快”筛；B 站参考全网粉丝前十的 AI 创作者（Genji 是真想教会你、跟李沐学 AI、老麦的工具库等）的<strong>内容形态</strong>而非选题<sup class="cite">[3039]</sup>。 - 每个账号拆 5–10 条跑赢其日常数据的爆款，3–5 个账号合计 20–40 条是见效区间——低于这个量看不出稳定套路，高于这个量收益递减[^12^（补）]。 - 拆完填进套路卡：3 类钩子句式、1–2 个结构模板、高频选题方向、结尾互动话术。复刻时”换肉不换骨”：结构和节奏沿用，选题、案例、表达全换自己的[^12^（补）]。</p>
+<p><strong>心态兜底</strong> - 你的内容形态（做工具=build in public）在传播学上是信任建设的最优解之一：展示踩坑、失败、半成品，在能力已被证明的前提下持续积累信任[^36^（心）][^43^（心）]。顺序铁律：先证明能力，再暴露弱点。 - 怕被同行笑话？记住出丑效应的前提：先证明能力。所以开号第一批视频要挑你最有把握的工具案例，先把”这人真会做”立住，之后再坦然展示”这期翻车了”——那反而是涨信任的内容[^38^（心）]。</p>
+<hr />
+<h3 id="chap4-s6">附录</h3>
+<h4 id="附录一术语表人话版按需查阅">附录一：术语表（人话版，按需查阅）</h4>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>术语</th>
+<th>人话解释</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>景别</td>
+<td>取景范围：远景（看环境）→全景（全貌）→中景（对话常用）→近景（看表情）→特写（强调细节情绪）<sup class="cite">[34]</sup></td>
+</tr>
+<tr class="even">
+<td>运镜</td>
+<td>摄影机运动：推/拉/摇/移/跟/升降/甩<sup class="cite">[35]</sup></td>
+</tr>
+<tr class="odd">
+<td>镜头角度</td>
+<td>平视（自然）、俯视（显渺小/交代全局）、仰视（显高大/压迫感）<sup class="cite">[36]</sup></td>
+</tr>
+<tr class="even">
+<td>长镜头</td>
+<td>一段不切断的连续拍摄（一般超 10 秒），保真实感与沉浸感<sup class="cite">[37]</sup></td>
+</tr>
+<tr class="odd">
+<td>空镜头</td>
+<td>没有人只有景物的镜头，交代环境、调节节奏、“借景抒情”<sup class="cite">[38]</sup></td>
+</tr>
+<tr class="even">
+<td>蒙太奇</td>
+<td>镜头的组接；两个镜头接起来产生单个镜头没有的新含义（1+1&gt;2）。分叙事蒙太奇（讲故事）和表现蒙太奇（表意：对比/隐喻/心理/抒情）<sup class="cite">[39]</sup><sup class="cite">[40]</sup></td>
+</tr>
+<tr class="odd">
+<td>蒙太奇思维</td>
+<td>写脚本拍素材时就想好”这些镜头将来怎么接、接起来产生什么意思”<sup class="cite">[40]</sup></td>
+</tr>
+<tr class="even">
+<td>节奏</td>
+<td>有规律的强弱快慢变化。内部节奏（剧情情绪张弛）决定外部节奏（镜头长短快慢）<sup class="cite">[31]</sup><sup class="cite">[32]</sup></td>
+</tr>
+<tr class="odd">
+<td>留白</td>
+<td>不把信息和情绪塞满，留空间让观众自己想象回味</td>
+</tr>
+<tr class="even">
+<td>轴线/180 度法则</td>
+<td>两个角色连成假想线，机位保持同侧拍，否则观众搞混空间关系<sup class="cite">[33]</sup></td>
+</tr>
+<tr class="odd">
+<td>跳切</td>
+<td>角度变化太小的两个镜头硬接，画面”跳了一下”，通常要避免</td>
+</tr>
+<tr class="even">
+<td>声画关系</td>
+<td>声画同步（看到什么听到什么）/声画对位（声音画面相反，制造张力）</td>
+</tr>
+<tr class="odd">
+<td>分镜头脚本</td>
+<td>把文字脚本拆成一个个镜头的施工表（镜号/景别/技巧/画面/声音/时长）<sup class="cite">[19]</sup></td>
+</tr>
+<tr class="even">
+<td>激励事件</td>
+<td>开头打破主角平衡、逼他行动的那件事——故事的发动机<sup class="cite">[24]</sup></td>
+</tr>
+<tr class="odd">
+<td>人物弧光</td>
+<td>角色从头到尾经历的内在转变；好故事里主角一定要”变”<sup class="cite">[26]</sup></td>
+</tr>
+<tr class="even">
+<td>潜台词</td>
+<td>台词表面意思之下真正想表达的东西</td>
+</tr>
+<tr class="odd">
+<td>麦高芬</td>
+<td>推动剧情的关键物件/目标，本身是什么不重要（希区柯克）<sup class="cite">[42]</sup></td>
+</tr>
+<tr class="even">
+<td>钩子（Hook）</td>
+<td>开头几秒内让观众”不得不看下去”的信息点<sup class="cite">[20]</sup></td>
+</tr>
+<tr class="odd">
+<td>完播率</td>
+<td>看完视频的观众占比；3 秒跳出率、5 秒完播率是其关键子指标</td>
+</tr>
+<tr class="even">
+<td>拉片</td>
+<td>逐镜头拆解优秀作品（景别、运镜、剪辑、声音、结构），编导的基本功<sup class="cite">[43]</sup></td>
+</tr>
+<tr class="odd">
+<td>STEPPS</td>
+<td>《疯传》六原则：社交货币/诱因/情绪/公开性/实用价值/故事[^1^（心）]</td>
+</tr>
+<tr class="even">
+<td>信息缺口</td>
+<td>Loewenstein 理论：已知与想知道之间的缺口产生剥夺感，驱动人寻求答案[^29^（心）]</td>
+</tr>
+<tr class="odd">
+<td>出丑效应</td>
+<td>高能力者暴露小失误反而更讨喜（有能力前提）[^34^（心）]</td>
+</tr>
+</tbody>
+</table>
+<h4 id="附录二全部自检清单建议打印">附录二：全部自检清单（建议打印）</h4>
+<p><strong>A. 选题自检（写脚本前）</strong><sup class="cite">[1]</sup><sup class="cite">[6]</sup><sup class="cite">[30]</sup> - [ ] 能写成”给谁 + 讲什么 + 什么价值”的一句完整的话 - [ ] 有同领域被验证过的爆款参照 - [ ] 受众面够宽，不冷门 - [ ] 有借势点（热点/话题/热门 BGM） - [ ] 至少一个情绪点（好奇/反常识/焦虑/共鸣） - [ ] 说得出观众看完该做的动作（收藏/评论/关注） - [ ] 与人设匹配</p>
+<p><strong>B. 钩子自检（拍摄前）</strong><sup class="cite">[8]</sup><sup class="cite">[30]</sup><sup class="cite">[13]</sup><sup class="cite">[38]</sup><sup class="cite">[15]</sup> - [ ] 第一句是逐字稿，制造了具体的信息缺口（非万能句式） - [ ] 缺口在正文中能兑现，不是空头支票 - [ ] 前 3 秒无自我介绍、无背景铺垫 - [ ] 钩子画面/录屏与文案同步，字幕 0.5 秒内跟上 - [ ] 准备了 2 版钩子拍两条开头 - [ ] 与本账号近期视频钩子句式不重复</p>
+<p><strong>C. 结构与完播自检（剪辑前）</strong><sup class="cite">[16]</sup><sup class="cite">[17]</sup><sup class="cite">[26]</sup><sup class="cite">[50]</sup><sup class="cite">[28]</sup><sup class="cite">[30]</sup> - [ ] 0–3 秒钩子 / 3–15 秒痛点展开 / 中段方案 / 最后 5 秒 CTA 完整 - [ ] 中段每 10–15 秒有一个新看点/转折 - [ ] 每 3–5 秒画面/字幕/强调点有变化 - [ ] 结尾有互动钩子（提问/悬念/行动指令） - [ ] 删掉不影响理解的句子已全部删除 - [ ] 60 秒视频分镜/段落 5–8 个</p>
+<p><strong>D. 脚本语言自检（录制前）</strong><sup class="cite">[29]</sup><sup class="cite">[31]</sup><sup class="cite">[19]</sup> - [ ] 每句 ≤15–20 字，读出来像”人对人讲话” - [ ] 无书面词汇、无”总之/综上所述” - [ ] 关键信息前标了停顿点，语气/情绪节点有标注 - [ ] 语气词符合人设且不过量 - [ ] 过了敏感词检查，无绝对化表述</p>
+<p><strong>E. 拍摄剪辑自检（发布前）</strong><sup class="cite">[30]</sup><sup class="cite">[40]</sup><sup class="cite">[42]</sup><sup class="cite">[46]</sup><sup class="cite">[43]</sup><sup class="cite">[6]</sup><sup class="cite">[47]</sup> - [ ] 景别切换至少差一级、无跳切；要点处有特写或字幕卡 - [ ] 剪辑点卡在音乐节奏点或语气点上 - [ ] 字幕：底部 1/4 区域、白/黄字+黑描边、全片统一 - [ ] BGM：调性匹配、不压人声、关键结论处有留白 - [ ] 画面清晰稳定、不看字幕能听清人声 - [ ] 手机静音看一遍：仅靠画面+字幕能看懂 70%</p>
+<p><strong>F. 发布后复盘自检（24–48h 后）</strong><sup class="cite">[22]</sup><sup class="cite">[23]</sup><sup class="cite">[24]</sup><sup class="cite">[36]</sup><sup class="cite">[33]</sup> - [ ] 3 秒留存 &lt;40% 则重查钩子（健康值 ≥70%，经验值） - [ ] 找到留存曲线断崖点，归因并写入下条改进项 - [ ] 评论高频问题记入下期选题/置顶回复素材 - [ ] 与同时长大盘留存对比找差距时间点 - [ ] 数据好的视频当天拉片归档进方法库 - [ ] 7 天考核期内不删不隐藏表现平平的视频，持续维护评论区<sup class="cite">[1542]</sup></p>
+<h4 id="附录三书单与免费资源">附录三：书单与免费资源</h4>
+<p><strong>读书顺序</strong>（每周 2–3 个晚上，按此顺序）[^18^（补）][^6^（补）]：</p>
+<ol type="1">
+<li><strong>《认识电影》</strong>（贾内梯）——多来源公认的”入门神书”，建立视听语言整体认知，可当工具书检索；</li>
+<li><strong>《救猫咪》</strong>（布莱克·斯奈德）——节拍表，短视频节奏可直接套用；</li>
+<li><strong>《故事》</strong>（罗伯特·麦基）——激励事件/冲突/鸿沟/人物弧光，深入叙事底层；</li>
+<li><strong>《荣誉》</strong>（苏牧）——北电拉片课配套教材，精确到分秒的截图解析，学”拉片方法本身”最佳。</li>
+</ol>
+<p>选读：《电影剧本写作基础》（悉德·菲尔德，三幕框架）、《大师镜头》系列（拍摄前翻查）、陆绍阳《视听语言》（薄教材速过概念）、《短视频编导全能手》（短视频专项工具书）、《爆款小红书》（吕白，平台向拆解方法）。</p>
+<p><strong>免费课程/账号</strong>[^19^（补）][^20^（补）]：</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>资源</th>
+<th>平台</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>中国大学 MOOC《影视视听语言》（浙江传媒学院）</td>
+<td>慕课</td>
+<td>★首选，免费零门槛体系完整，2 周内刷完</td>
+</tr>
+<tr class="even">
+<td>导演尚茫《从零开始做导演》（20 课时）</td>
+<td>B站</td>
+<td>职业导演出品，建立导演思维，1 个月刷完</td>
+</tr>
+<tr class="odd">
+<td>陈导电影工作室《学习拉片的思路与概念》</td>
+<td>B站</td>
+<td>拉片入门单课，Day 1 下午用</td>
+</tr>
+<tr class="even">
+<td>辐射星球Jeffrey《从文字到分镜》</td>
+<td>B站</td>
+<td>练”文字转分镜”基本功</td>
+</tr>
+<tr class="odd">
+<td>影视飓风 / Oeasy / doyoudo</td>
+<td>B站</td>
+<td>拍摄剪辑技术顶流 UP 主</td>
+</tr>
+<tr class="even">
+<td>公众号”十号宿管大爷1037 Film”</td>
+<td>微信</td>
+<td>免费拆解 USC 编剧体系（三幕结构、人物弧光）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>付费课提示</strong>：短视频编导付费课市场良莠不齐、营销软文占比高。建议先用免费资源+拉片练 1 个月（8 周节奏跑完一轮），确认具体短板后再决定是否付费，且只补单项[^5^（补）]。</p>
+<hr />
+<p><em>本手册由旧版《编导知识手册》重编而成。正文 <sup class="cite">[N]</sup> 引用编号对应调研底稿：biandao_dim01（编导基础认知）、biandao_dim02（短视频专项技能）、biandao_dim03（平台机制）、biandao_dim04（传播心理，文中标”（心）“）、platform_dim01（平台对比）、platform_dim02（补课路径，文中标”（补）“）。数据可信度以底稿标注为准：官方口径与学术论文为高可信，行业实测为方向性参考，推测性数字均需用自有后台数据校准。</em></p>
+<hr />
+
+
+
+<div class="chapter-head" id="chap5">
+  <div class="chapter-no">第 五 部 分</div>
+  <h1>账号起号可行性与策略报告</h1>
+  <div class="chapter-bar"></div>
+</div>
+<blockquote>
+<p>写给你这个”做过编导、会 vibeCoding、想做工具的人”的起号方案。所有结论来自前期 10 个维度的调研与交叉验证，引用编号沿用调研原文（如 表示维度 1 调研的第 6 号来源， 表示交叉验证第 3 条），来源清单和证据强度见文末第七节与附录。</p>
+</blockquote>
+<hr />
+<h3 id="chap5-s1">一、一页结论</h3>
+<p><strong>方向成立，按计划 7 月底开号。</strong> “编导方法论 × 现场用 AI 做出可交付的网页工具 × 服务自媒体同行”这个交叉定位，调研未发现任何直接对标者：搜索”编导转行 AI 博主”“做工具的博主·定制变现”零结果，编导人设账号存在但没有一个定位”做工具的人”。同时，“公开做东西”（Build in Public）这种内容形态正处平台级红利期，B站已把它做成官方赛事，零粉账号首条演示视频拿过 270 万播放。</p>
+<p><strong>但有 5 处必须调整：</strong></p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>原计划</th>
+<th>建议调整为</th>
+<th>依据</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>卖”定制网页工具”</td>
+<td>卖”结果”。2000-3000 元档必须按”诊断+工作流搭建+集成+培训+维护”的完整解决方案打包，话术从”我会做工具”改成”我帮你把这件事省掉”</td>
+<td>淘宝 0.01-99 元的现成工作流模板销量数千，工具本身已白菜价，客户只为结果付 2000+</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>个人博主是主力客户</td>
+<td>团队优先于个人。代运营/中小团队常年为工具付数百到数千元，5000+ 团队单比个人 2000 元单更容易成交；94.9% 长尾博主月入不足 3000，对工具付费极度敏感</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>8 周检查点 = 月收入≥3000</td>
+<td>主指标改为”起量信号”三选一（单条播放破 5000 / 粉丝破千 / 跑通内容模型），收入指标改为”首个可变现信号”（第一条咨询私信/首单）；增设第 12 周（10 月中）去留检查点</td>
+<td>0-3000 粉阶段月收入基线只有 0-100 元；行业共识起号约 3 个月，9 月中恰处”起量前夜”，数据平平不是失败信号</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>前 10 条不看数据</td>
+<td>放宽到前 15-20 条。数据反馈从第 20 条起才有意义，账号权重跃升临界点在 30-50 条；隔日更 8 周约 28 条，正好卡在临界点下沿</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>抖音+视频号双平台</td>
+<td>加 B站为第三阵地。同样”AI 整活/演示”形态，林亦 B站 114 万粉 vs 抖音 13 万粉；B站放 3-8 分钟开发连载长视频</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="chap5-s2">二、市场验证：你的定位有没有坑</h3>
+<h4 id="空白是真的而且落在交叉带上">2.1 空白是真的，而且落在交叉带上</h4>
+<p>AI 博主赛道已被盘出”四分法”：工具测评与科普、AIGC 创作、虚拟人/数字人、硬核技术开发。你的定位不在这四格里任何一格的正中央，而是三者的交叉：懂选题/拆片/脚本结构的编导方法论，加上现场做出能用的网页工具，受众是有付费能力的自媒体同行。最接近的三类邻居都差一块：</p>
+<ul>
+<li>独立开发类（花叔、刘小排r）：确实用 AI 做产品，但面向开发者/出海人群，不碰自媒体同行的内容生产场景；</li>
+<li>Coze 工作流教程类（大熊老师等）：做演示，但目的是引流卖课，工具是模板复用而非按需定制；</li>
+<li>自媒体教学类：懂方法论，但只口播，不做工具交付。</li>
+</ul>
+<h4 id="同质化雷区绕着走一个都别碰">2.2 同质化雷区（绕着走，一个都别碰）</h4>
+<ol type="1">
+<li><strong>工具盘点/测评</strong>：头部（秋芝2046，全网近 250 万粉）已占住”选品权威”心智，且这类账号已撞上商单天花板；</li>
+<li><strong>提示词合集</strong>：平台批量治理对象，小红书 2025 上半年处置虚假低质 AIGC 笔记 60 万篇；</li>
+<li><strong>“保姆级教程+引流卖课”</strong>：供给过剩、信任透支，“割韭菜”报道频发；</li>
+<li><strong>AI 数字人批量起号</strong>：抖音 2025 年 5 月专项治理 + 9 月 1 日 AI 内容标识新规，红利窗口已关；</li>
+<li><strong>“最 X 的不是 A 是 B”式钩子</strong>：已被收进爆款钩子模板库批量生产，观众看到直接划走——你的反感是对的，调研证实了。</li>
+</ol>
+<h4 id="三个真实威胁">2.3 三个真实威胁</h4>
+<ul>
+<li><strong>平台免费工具在吞噬痛点</strong>：新榜×扣子官方出了”小红书账号分析智能体”，蝉妈妈把对标拆解做成内置功能。你做的定制工具必须做到”平台工具不愿做的个性化深度”，否则被零成本替代；</li>
+<li><strong>做工具的门槛在降</strong>：零代码工具让”会用 AI 写代码”不再稀缺，护城河要落在编导方法论+行业理解+服务关系上；</li>
+<li><strong>卖课信任危机外溢</strong>：受众对”AI 教学账号”警惕性上升。对策：不挂课、直接送工具、明码标价做定制，和收徒卖课划清界限。</li>
+</ul>
+<p><strong>好消息</strong>：平台治理打击的是低质 AI 流水线内容，而”真人口播+真实录屏”恰好是合规友好的形态。</p>
+<hr />
+<h3 id="chap5-s3">三、变现验证：每一档定价的市场实证</h3>
+<p>先说总判断：<strong>阶梯结构被市场验证，但每一档的卖法要校准。核心三句话：2000-3000 元必须按完整解决方案打包、团队优先于个人、卖结果不卖工具。</strong></p>
+<h4 id="你的阶梯-vs-市场实证">3.1 你的阶梯 vs 市场实证</h4>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>你的档位</th>
+<th>市场对应价格带（实证）</th>
+<th>判断</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>几百元小单</td>
+<td>单次咨询 69/99/199 元；付费专栏小课 49-199 元；训练营 199-999 元</td>
+<td>✅ 成立。建议产品化为三选一：1v1 诊断咨询 / 单次交付物（工具+报告）/ 小型打卡营。第一笔收入普遍来自”最小可交付服务”而非课程</td>
+</tr>
+<tr class="even">
+<td>2000-3000 定制</td>
+<td>落在市场真空带：高于模板价（9.9-99 元）两三个数量级，又低于半定制开发底价（8000-30000 元）和小程序模板（3000-5000 元）</td>
+<td>✅ 成立，但<strong>必须打包卖</strong>（见 3.2）</td>
+</tr>
+<tr class="odd">
+<td>5000+ 团队单</td>
+<td>B端代运营基础套餐 3000-1.5 万/月，5000+ 是合理入门档</td>
+<td>✅ 成立，门槛不是定价而是案例背书</td>
+</tr>
+<tr class="even">
+<td>远期订阅</td>
+<td>付费社群/星球年费 88-799 元常见，是”低维护、低投诉”的现金流形态</td>
+<td>✅ 方向正确，但必须有固定更新节奏+答疑，否则沦为潜水群</td>
+</tr>
+</tbody>
+</table>
+<p>补充一个市场标准公式供对齐：同行的产品阶梯是”引流品 9.9-19.9 → 主力品 299-999 → 高客单 1999-10000+“，且几乎所有成功案例都不是直接卖几百元服务，而是先用 9.9 元资料包做付费筛选。建议你在”几百元小单”前面加一层 9.9-49 元引流品（比如打包好的小工具+使用说明）。</p>
+<h4 id="为什么-2000-3000-必须按完整解决方案打包">3.2 为什么 2000-3000 必须按”完整解决方案”打包</h4>
+<p>负面证据非常硬：淘宝上 Coze 工作流成品模板卖 0.01-99 元，多个链接 1000+ 到 5000+ 人付款；扣子官方 9.9 元/月就能导入别人的现成工作流。也就是说，<strong>任何”标准化工具”都会被免费/白菜价供给降维打击</strong>。客户掏 3000 元买的从来不是那个网页，而是”需求诊断 + 按你流程定制搭建 + 接进你现有工作流 + 教会你用 + 后续维护”这一整条链。价格锚点要锚在”人力”上——一个运营人力成本 1-1.5 万/月，你的工具只要”省 0.5 个人”，账就算得过来。</p>
+<h4 id="为什么团队优先于个人">3.3 为什么团队优先于个人</h4>
+<ul>
+<li>团队已在为工具付费：蝉妈妈专业版年卡约 1780 元（淘宝单链接 200+ 人付款）、企业版 6800-12800 元、VIP 35800 元/年；剪映 SVIP 499-599 元/年明确定位”企业/MCN/电商团队”；蚁小二全能版 4988 元/年；</li>
+<li>B端付费逻辑天然更强：AI SaaS 里 B端 50% 用订阅制、仅 7% 免费，C端 43% 仍免费——“B端需求明确，降本增效就能成交”；</li>
+<li>个人端：94.9% 长尾账号月入不足 3000 元，对工具支付上限很低，对”结果/陪跑/圈层”支付上限才高。</li>
+</ul>
+<p>落地含义：内容面向同行大众做流量，接单时优先瞄 5-20 人的工作室/代运营/中小 MCN；冷启动期给 3-5 个同行免费或低价做，换可展示的案例——这个人群的成交发生在私域信任链里，案例是唯一硬通货。</p>
+<h4 id="红线卖方必守">3.4 红线（卖方必守）</h4>
+<p>不用”月入过万”“保证回本”话术（虚假收益承诺占网课维权投诉 51%）；私域成交给书面服务说明+退款规则；前几单宁可不赚钱也要成交换好评。</p>
+<hr />
+<h3 id="chap5-s4">四、起号思路规划方案</h3>
+<p>这部分是报告主体，按”拿来就能做”的标准写。</p>
+<h4 id="账号搭建注册后-1-天内完成">4.1 账号搭建（注册后 1 天内完成）</h4>
+<p><strong>底层设置（风控红线，非玄学）</strong>：一机一号一卡，常用手机+常用网络注册；实名认证；绑定头条/西瓜/微信；完善基础资料。</p>
+<p><strong>五要素（用户进主页 3 秒内看懂你是干嘛的）</strong>：</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>要素</th>
+<th>要求</th>
+<th>给”做工具的人”的具体示例</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>昵称</td>
+<td>好记好搜、带领域词（名称+领域）</td>
+<td>「阿X做工具」「编导老X造工具」「X哥的工具铺」——植入”工具”关键词，利于搜索抓取</td>
+</tr>
+<tr class="even">
+<td>头像</td>
+<td>真人半身像优先（知识类信任感强），800×800 以上</td>
+<td>你本人的口播形象照，色调和背景图统一</td>
+</tr>
+<tr class="odd">
+<td>简介</td>
+<td>公式=我是谁+给什么+为什么信我，埋 2-3 个关键词</td>
+<td>示例：「编导转行，专门给自媒体人做提效小工具｜每期现场用 AI 做一个，成品免费拿｜接定制」</td>
+</tr>
+<tr class="even">
+<td>背景图</td>
+<td>账号广告牌：更新承诺或福利钩子</td>
+<td>示例：「隔日晚 8 点更新｜评论区扣”工具”领本期成品」</td>
+</tr>
+<tr class="odd">
+<td>合集/置顶</td>
+<td>起号期不急，第 10 条后设置；合集要 1 万粉才开通，提前按系列规划</td>
+<td>见 4.4 搜索打法</td>
+</tr>
+</tbody>
+</table>
+<p><strong>禁忌</strong>：粉丝不到 1 万，简介/背景图不留微信、QQ（系统检测导流会限流）；不频繁改昵称简介；不碰极限词和二维码。</p>
+<p><strong>顺手做掉的官方动作</strong>：创作者服务中心设置创作者标签；PC端”重点关心”添加 10 个同赛道账号（3000 粉以上）；创作灵感里填 3 个”关联视频搜索”关键词。</p>
+<h4 id="冷启动机制与前-10-20-条排布">4.2 冷启动机制与前 10-20 条排布</h4>
+<p><strong>先破除几个迷信</strong>（都有官方或实证口径）：</p>
+<ul>
+<li>不需要”养号”。官方 2020 年就辟谣：你刷什么构成的是用户标签，你发什么决定的才是创作者标签，两者无关。注册后像真人一样正常用 1-3 天即可；</li>
+<li>打标签只能靠四类信息：视频内容（权重最高）&gt; 文案 &gt; 话题 &gt; 账号资料；</li>
+<li>2026 年算法从”24 小时赛马”变为”7 天长效赛马”，收藏率、复访权重超过点赞；新增”内容裁判机制”——新视频先推给该领域懂行人验证。<strong>这对面向同行的知识类账号是重大利好</strong>，同时意味着”抄对标起号”基本失效。</li>
+</ul>
+<p><strong>三条铁律：</strong></p>
+<ol type="1">
+<li><strong>第 1 条直接上干货，不发自我介绍。</strong> 系统用前 3-5 条判断账号垂直度，“我来了”式视频是浪费标签塑造黄金期；</li>
+<li><strong>前 5 条定标签</strong>：选题、形式、目标人群高度一致，标题/字幕/口播反复出现核心关键词（“自媒体工具”“AI 提效”“编导”），话题按”3 个核心词+2 个长尾词”组合；</li>
+<li><strong>学费期放宽到 15-20 条，别删视频。</strong> 理由：数据反馈从第 20 条起才有意义，权重跃升临界点在 30-50 条；且 7 天长效赛马上慢热视频第 4-5 天可能起量，“前 3 天数据差就删”会误杀。学费期不看绝对值，但要看 2 秒跳出/5 秒完播的结构找问题。</li>
+</ol>
+<p><strong>前 10 条排布表</strong>（改编自已验证的起号 SOP，适配你的定位）：</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>条数</th>
+<th>类型</th>
+<th>目的</th>
+<th>示例选题</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>第 1 条</td>
+<td>轻量钩子款：1 个痛点+现场做出工具，15-30 秒</td>
+<td>冷启动，测开场</td>
+<td>「找对标账号还在手动翻？我现场做了个工具，输入名字直接出拆解报告」</td>
+</tr>
+<tr class="even">
+<td>第 2-3 条</td>
+<td>垂直干货款，同形式同人群</td>
+<td>强化标签</td>
+<td>「给口播编导做的提词器小工具，能按你的语速自动断句」</td>
+</tr>
+<tr class="odd">
+<td>第 4 条</td>
+<td>清单/合集款（收藏导向）</td>
+<td>2026 算法收藏权重最高，拉收藏</td>
+<td>「我做编导这几年攒的工具栈，全在这了」</td>
+</tr>
+<tr class="even">
+<td>第 5 条</td>
+<td>差异化人设款</td>
+<td>立人设：为什么是你</td>
+<td>「我帮别人做了几年号，现在轮到给自己做了——顺便把过程都拍下来」（对标李右溪路径）</td>
+</tr>
+<tr class="odd">
+<td>第 6-8 条</td>
+<td>对标复刻款：热点宝低粉爆款结构 × 你的选题</td>
+<td>找”最小爆款单元”</td>
+<td>蹭 AI 工具上升热点</td>
+</tr>
+<tr class="even">
+<td>第 9 条</td>
+<td>互动款</td>
+<td>拉评论（评论质量计入权重）</td>
+<td>「选题库生成器和标题诊断器，你们先要哪个？评论区投票」</td>
+</tr>
+<tr class="odd">
+<td>第 10 条</td>
+<td>阶段性最强款：复用数据最好的结构</td>
+<td>配合 DOU+ 放大</td>
+<td>前 9 条冠军结构再拍一条</td>
+</tr>
+</tbody>
+</table>
+<p><strong>发布前先把前 3-5 条拍好再开始发</strong>，保证垂直一致、不断更。选题库按 60% 基础款+30% 热点款+10% 实验款配置。</p>
+<h4 id="视频内容结构60-90-秒逐秒模板">4.3 视频内容结构（60-90 秒逐秒模板）</h4>
+<p><strong>生死线数据（来自抖音电商官方《2025 中小商家内容经营指南》）</strong>：2 秒跳出率 &lt;30%、5 秒完播率 &gt;60%、整体完播率 &gt;25%、点赞率 3%+。2 秒跳出率高于 40% 的视频，进第二级流量池的概率不足 10%——所以开场是全部。</p>
+<p><strong>总原则：结果前置。</strong> “先看效果再教方法”显著优于铺垫式：开头 3 秒直接放录屏成品，再倒回来讲过程。脚本骨架用知识类标准四段式：<strong>痛点设问 → 解决方案（录屏演示）→ 案例验证 → 行动指令</strong>。</p>
+<p><strong>逐秒结构（可直接套）：</strong></p>
+<ul>
+<li><strong>【0-3 秒】效果前置+一句话实证。</strong> 画面直接放录屏成品，不用脸开场、不说”大家好”。口播示例：「这个对标拆解工具，输入账号名，10 秒出一份报告——我刚做的，给你看怎么做的。」</li>
+<li><strong>【3-10 秒】痛点锚定。</strong> 「你手动拆一个对标账号要多久？翻 30 条视频、截图、做表，一小时没了。」字幕同步打出核心价值词（标红）。</li>
+<li><strong>【10-55 秒】录屏分步演示（信息密度主战场）。</strong> 分 3-4 步、每步只讲一个信息点；保留打字/生成等待的真实过程（可 1.5-2 倍速）；每步之间一句过渡反问；语速 280-300 字/分、去气口。</li>
+<li><strong>【55-70 秒】避坑点+干货峰值。</strong> 「最容易翻车的是第二步，提示词别用默认的」——信息差型钩子放中后段稳住完播；放一张可暂停截图的提示词/参数清单（拉复播和截图收藏）。</li>
+<li><strong>【结尾 5-15 秒】互动引导三选一</strong>（别干喊”点赞关注”）：
+<ul>
+<li>填空式：「你拆一个对标账号要多久？评论区写个数字」；</li>
+<li>选边式：「选题你靠灵感还是靠工具？评论区站个队」；</li>
+<li>资源钩子：「这期工具的链接放评论区置顶，扣”工具”领」。</li>
+</ul></li>
+</ul>
+<p><strong>录屏制作的三个硬要求：</strong></p>
+<ol type="1">
+<li><strong>画中画真人小窗</strong>：屏幕操作主画面+你的真人小窗（剪映画中画+智能抠像即可，或腾讯会议零成本录制）。实测真人出镜比数字人播放高 14%、完播高 4 个百分点，且与 AI 数字人号形成区隔；</li>
+<li><strong>鼠标高亮三件套</strong>：鼠标高亮+点击波纹、聚光灯（照亮讲解区域）、局部放大（讲小字细节），让观众跟上操作轨迹；</li>
+<li><strong>音画同步</strong>：口播节奏和录屏操作节奏严格对剪，嘴上说”一键生成”画面却在转圈=可信度直接掉。</li>
+</ol>
+<p><strong>时长策略</strong>：60-90 秒是主战场（教程类 58 秒内完播率最高，超 120 秒完播率普遍掉 40%+）；每 3-5 条短视频插一条 3-10 分钟深度教程，挂合集、加章节标记，吃抖音知识赛道扶持（30 分钟以上中长视频总量同比+207%，平台有专项流量）。</p>
+<p><strong>钩子的创作原则</strong>：你的钩子不来自句式，来自”只有你知道的一手信息”——实测数据（“我测了 7 个工具，3 个是智商税”）、行业内幕（“同行都在抄的提示词有个致命坑”）、真实代价（“这条流程我踩了两周坑才跑通”）。这是 2025 年”真实感+信息密度”算法偏好下，唯一不会被模板化的路径。避开：“最 X 的不是 A 是 B”、“90% 的人都做错了”、“大家好今天给大家分享”、结尾干喊关注。</p>
+<h4 id="发布与运营">4.4 发布与运营</h4>
+<p><strong>频率</strong>：隔日更压在”低活跃”红线之上（周更 3-4 条为底线），不伤权重，但必须满足三条——固定到具体时刻、30 天内零断更、非发布日保持账号活跃（刷同领域内容+留有意义的评论 15-30 分钟）。断更超 1 个月有”僵尸号”风险。</p>
+<p><strong>时段</strong>：知识类共识区间是工作日早 7:30-9:00、晚 18:30-22:00；有数据称知识类 21:00-23:00 完播率提升 40%。但”晚 8 点后该不该发”存在来源矛盾，处理方式：<strong>固定时段+自己 A/B 测</strong>——第 1-2 周同类视频分别在 7:30/12:00/18:30/21:30 发，比前 1 小时数据，锁定自己的黄金时段后不再换。</p>
+<p><strong>评论区（设计出来的，不是等来的）：</strong></p>
+<ul>
+<li>视频内埋填空式/选边式钩子（见 4.3 结尾话术），比”评论区聊聊”参与率高 10 倍；</li>
+<li>发布后立刻置顶两条评论：一条补充信息（“这个工具目前支持抖音和小红书，B站的还在做”）、一条提问（“你们还想让它自动拆什么？”），各 ≤30 字；</li>
+<li>前 30 分钟回复前 20 条评论，提问类优先、尽量秒回——“作者回复”被算法识别为高价值互动信号；</li>
+<li>每周导出评论高频词，TOP 问题直接做成下期选题；置顶”有 XX 问题留言，下期现场做”——这同时是 Build in Public 共创；</li>
+<li>合规：不说”加微信”“扫码”，用”看主页”替代。</li>
+</ul>
+<p><strong>搜索流量（知识类最强长尾杠杆，3 个月后搜索占比可达 50%+）</strong>：</p>
+<ul>
+<li>标题公式：[核心关键词前置，前 5 字内]+[数字/悬念]+[价值承诺]，15-30 字。示例：「对标拆解工具：输入账号名，10 秒出报告（附成品）」；核心词从抖音搜索下拉框+巨量算数挖月搜 1000-5000 的长尾词；</li>
+<li>字幕含目标关键词（剪映生成后人工校对）；</li>
+<li><strong>系列统一前缀</strong>：从第 1 条起所有视频按系列命名（如「自媒体工具铺 01/02/03」），1 万粉当天开通合集、归拢存量视频——合集是”先埋种子、后收获”的搜索资产，系列内容搜索排名平均提升 28%；</li>
+<li>话题：1-2 个精准大流量话题+1-2 个细分话题。</li>
+</ul>
+<p><strong>同城：不开。</strong> 纯知识类勾同城会把冷启动流量浪费在非目标人群上，稀释标签。</p>
+<p><strong>视频号的特别动作</strong>：视频号冷启动靠私域撬动（好友点♡→朋友♡页→公域测试），每条发布后定向分享给相关好友/群求点♡（非群发），这是官方机制下的标准打法。</p>
+<h4 id="dou-小额测试策略">4.5 DOU+ 小额测试策略</h4>
+<p>定位：<strong>花钱买数据模型，不是买播放</strong>。</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>项目</th>
+<th>执行标准</th>
+<th>依据</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>起投时机</td>
+<td>第 4-5 条开始投（门槛：已发 ≥3 条且至少 1 条完播率 &gt;50%），选数据最好的那条</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>单条金额</td>
+<td>100-300 元小额测试；超 500 元系统倾向推泛流量、稀释精准度</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>投放目标</td>
+<td>「点赞评论量」，<strong>不选”粉丝量”</strong>（招海王粉、污染标签）</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>定向</td>
+<td>系统智能推荐+达人相似粉双开；关掉地域/年龄等手动标签</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>达人相似怎么选</td>
+<td>同领域、近期新起号、作品少、粉丝几万级的账号；<strong>不选几百万粉大号</strong>；每个对标投 2-3 次即换</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>时长</td>
+<td>24 小时（越长流量越精准）</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>投后判断（等满 24h）</td>
+<td>完播 &gt;45%、互动率 &gt;3%、转粉率 &gt;0.8% 三项全达标 → 追投+复制模板；任一不达标 → 停投改内容</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>止损线</td>
+<td>消耗到 30-50 元时看数据：完播 &lt;20%、点赞 &lt;3% → 立即止损</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>月度预算</td>
+<td>起号期 1000-2000 元/月；跑出自然爆款相的再追加 300-500 元放大</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>注意：这套打法的核心来源是 2023 年投放复盘，2024-2025 资料沿用未推翻，属<strong>行业经验共识非官方规则</strong>，实操以 DOU+ 当前后台选项为准。</p>
+<h4 id="平台组合抖音主阵地-视频号-b站">4.6 平台组合：抖音主阵地 + 视频号 + B站</h4>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>平台</th>
+<th>角色</th>
+<th>内容形态</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>抖音</td>
+<td>主阵地</td>
+<td>60-90 秒快节奏版，隔日更</td>
+<td>同行主阵地；官方”知识创作砥砺计划”专项流量扶持知识类内容；AI 工具实操教学是平台盖章的上升赛道</td>
+</tr>
+<tr class="even">
+<td>视频号</td>
+<td>侧翼+私域</td>
+<td>同内容直接同步（官方授权分发不算搬运）+私域点♡撬动</td>
+<td>同行向 AI 内容是明显洼地（现有 AI 内容集中在面向中老年的语录号/国学号）；分成计划门槛仅 100 粉</td>
+</tr>
+<tr class="odd">
+<td>B站</td>
+<td>第三阵地</td>
+<td>每周 1 条 3-8 分钟 Build in Public 开发连载长视频</td>
+<td>“AI 创造公开赛”已把 Build in Public 制度化：零粉账号首条演示 270 万播放、千粉内 UP 主占投币榜超七成；同形态内容 B站远强于抖音（林亦 B站 114 万粉 vs 抖音 13 万粉）</td>
+</tr>
+</tbody>
+</table>
+<p>B站长视频做法：把”做一个工具的全过程”做成系列（需求从评论区来→现场写→翻车→改→交付），观众即用户，弹幕评论直接参与迭代——这是已验证的最强涨粉+获客双引擎。三平台分发边际成本低，但形态要微调：抖音 60-90 秒快节奏、视频号同步、B站长视频。</p>
+<hr />
+<h3 id="chap5-s5">五、编导前辈案例库</h3>
+<p>这条赛道上没人靠”我很专业”起号，成功账号秀的都是结果和过程。逐个看：</p>
+<p><strong>李右溪——最贴脸的对标。</strong> 甲骨文研究生，毕业后找不到对口工作，在杭州新媒体公司当短视频编导帮达人做号；轮到自己时在朋友家搭个简易设备、把衣柜改成书柜当背景就开拍，第二条视频《一个甲骨文专业毕业生的独白》10.6 万赞爆火。<strong>启示</strong>：“白天给别人当编导、晚上给自己起号”的身份不用藏，它本身就是选题。</p>
+<p><strong>导演小策（张策）——编导出走单干的天花板。</strong> 学兽医出身，月薪 3000 的小公司”名义上的编导”，被朱一旦以 6000 月薪招去后一手包办策划/编剧/配音，做出全网千万粉的《朱一旦的枯燥生活》；2020 年离职单干，全网争论”离开平台什么都不是”，他不辩解，用《七姑八姨》等新作品把账号做到破百万粉，后来自创 MCN。<strong>启示</strong>：编导的价值锚点永远是”你做出过什么”，不是资历多完整。</p>
+<p><strong>房琪——“不够专业”被写成励志主线。</strong> 两次高考落榜、三本编导，央视外景主持辞职做旅行自媒体；早期视频播放量只有十几个，给 12 家景区打电话被拒 12 次，熬到”腾格里沙漠等日出”90 万赞起量，一年内 0 到 700 万粉，现在 2000 万+。<strong>启示</strong>：前期播放量两位数是常态；“专业不够好”的叙事可以直接变成涨粉资产。</p>
+<p><strong>小呆说视——你的定位教科书。</strong> 2020 年从 0 冷启动做运营教学号，以萌新姿态公开摸索，踩坑过程直接做成内容；用”帮人诊断账号”的方式半年帮 300 多位创作者看号——诊断既是内容又是获客，半年做成抖音官方合作讲师。<strong>启示</strong>：不是专家也能教，“我先蹚路、把坑画出来”就是价值。你免费给同行做工具换案例，就是同一个动作。</p>
+<p><strong>张同学——被质疑”太专业”的标准回应。</strong> 两个月涨粉 1600 万后被扒”剪辑节奏专业、机位多元、绝非小白能做”，连科班导演都下场质疑。他没吵架，专门拍一条视频完整还原自己一个人用手机+支架拍摄、手机剪辑的全流程，质疑变二次传播，人民网评反而点赞。<strong>启示</strong>：见下面专节。</p>
+<p><strong>反面教材组（李一舟/透透糖/海参哥/大蓝）</strong>——“教做号”顶流被批量治理，翻车共性完全一致：<strong>人设包装超过真实能力、课程交付跟不上</strong>。李一舟 199 元 AI 课卖 25 万套约 5000 万，2024 年被全网下架。</p>
+<h4 id="怕被同行笑话怎么办">怕被同行笑话怎么办</h4>
+<p>你自觉编导不够专业、怕被同行笑话。用案例回答，四条：</p>
+<ol type="1">
+<li><p><strong>这个行业里，“不专业”出身的人反而是多数派。</strong> 房琪三本编导、张策学兽医的、95 后编导李新铭学工程造价的（自述”我不懂还不会百度吗，就这样学”）、谢无敌搞家装设计的。同行的鄙视真实存在，但李新铭的经历说明：炮火对准的是”短视频编导”整个工种，不是你个人——行业红利属于先下场的人。</p></li>
+<li><p><strong>笑话的靶子是”装”，不是”嫩”。</strong> 李一舟、透透糖们被全网锤，是因为自称”教父”“第一”却交付空心课。你只要以”边学边做、记录过程”起手，就不在任何人的火力范围内——<strong>没人能锤一个不说自己厉害的人</strong>。人设不要超过交付，这是唯一的安全线。</p></li>
+<li><p><strong>被质疑时的最佳动作是”打开后台晒过程”，不是解释。</strong> 张同学的回应方式就是拍一条”我怎么一个人做完这条视频”。这套动作和你的定位完全同构：<strong>录屏演示=交付过程全公开=天然免疫”割韭菜”质疑</strong>。卖课账号的信任危机源于”人设&gt;交付”，而你每条视频都在公开展示交付，这是你最深的护城河。</p></li>
+<li><p><strong>把”不够专业”直接写成选题。</strong> 房琪把落榜、被拒、播放量十几做成”不放弃”人设；李右溪把”找不到对口工作只能当编导”做成爆款独白。你的”自觉不专业”不是要藏的缺陷，是起号期最好的选题库：「我编导水平也就那样，但我做的这个工具确实能省你两小时」——这句话本身就是一条视频的开场。</p></li>
+</ol>
+<hr />
+<h3 id="chap5-s6">六、对你现有 8 周执行表的调整建议</h3>
+<p>以下每条都标了”建议调整为 XX”。<strong>这些只是建议，需你本人确认后再动表。</strong></p>
+<ol type="1">
+<li><strong>第 1 条视频</strong>：建议调整为直接上工具干货（痛点+现场做出工具），删掉自我介绍式首发。系统用前 3-5 条定标签，首发自我介绍是浪费黄金期。</li>
+<li><strong>学费期</strong>：建议调整为”前 15-20 条不看绝对数据”（原”前 10 条”）。数据反馈第 20 条起才有意义，权重跃升临界点在 30-50 条，隔日更 8 周约 28 条正卡在临界点下沿。同时加一条纪律：任何视频发满 7 天前不删（7 天长效赛马，慢热第 4-5 天可能起量）。</li>
+<li><strong>8 周检查点指标</strong>：建议调整为”起量信号”三选一——a) 抖音有 ≥1 条播放破 5000（或视频号破 1000 收到推荐通知）且近 5 条均值明显高于前 15 条；b) 单平台粉丝 ≥1000（视频号 ≥500）；c) 跑通明确内容模型（能说出哪类选题数据是均值 2 倍以上）。原”月收入≥3000”改为”首个可变现信号”（第一条咨询私信/首单/开通分成计划）。</li>
+<li><strong>增设第 12 周（10 月中）第二检查点</strong>：建议调整为 8 周点只用于调内容，12 周点才用于决定去留。9 月中恰处”起量前夜”，数据平平就判失败，恰好死在临界点。</li>
+<li><strong>平台组合</strong>：建议调整为增加 B站分发——每周 1 条 3-8 分钟”做工具全过程”长视频，报名 B站 AI 类官方活动吃 Build in Public 红利。</li>
+<li><strong>DOU+ 预算</strong>：建议调整为列入明确预算线——第 4-5 条起投，单条 100-300 元，月预算 1000-2000 元，止损线”消耗 30-50 元时完播 &lt;20% 或点赞 &lt;3% 即停”。</li>
+<li><strong>接单话术与定价</strong>：建议调整为——几百元小单前加一层 9.9-49 元引流品；2000-3000 档按”诊断+搭建+集成+培训+维护”完整解决方案打包报价；接单优先级改为团队&gt;个人；冷启动期 3-5 个同行免费/低价单换案例。</li>
+</ol>
+<hr />
+<h3 id="chap5-s7">七、证据强度说明</h3>
+<p>这份报告的结论分四档，请按档位使用：</p>
+<p><strong>A 档：平台官方口径/权威媒体（可当规则用）</strong> - 抖音推荐算法原理（神经网络预测行为概率、多目标建模、探索流量 15-20%）——抖音官方 2025 年 3 月公开； - 生死线数据（2 秒跳出 &lt;30%、5 秒完播 &gt;60%）——抖音电商官方《2025 中小商家内容经营指南》； - “养号是玄学、刷视频不打创作者标签”——抖音官方辟谣； - 抖音”知识创作砥砺计划”专项流量（科技日报）；视频号分成计划 100 粉门槛（官方文档）；合集 1 万粉开通（官方规则）； - AI 内容标识新规、抖音 AI 起号专项治理（新华网/中国企业家）； - B站 AI 创造公开赛数据（极目新闻/同花顺等多源交叉）。</p>
+<p><strong>B 档：实证数据（在售商品/第三方数据/公开报道，可当事实用）</strong> - 蝉妈妈/剪映/蚁小二定价与销量、淘宝 Coze 模板 0.01-99 元销量数千； - 代运营报价结构（人力 1-1.5 万/月、月费 3000-1.5 万）； - 生财有术年费 2000-3365 元、7.5 万+ 会员、续费率 65-70%； - 94.9% 长尾账号月入 &lt;3000 元； - 编导案例库（房琪、张策、李右溪、张同学、小呆说视等）均为公开报道，多源可查。</p>
+<p><strong>C 档：MCN/操盘手经验共识（方向可信、数字当区间参考）</strong> - DOU+ 打法（100-300 元/点赞评论量/达人相似/止损线）——核心来源是 2023 年”18 万投放复盘”，2024-2025 沿用未推翻，非官方规则； - 流量池分级（S/A/B/C）、初始池 500-1000、晋级阈值等数字； - 发布时段表、“前 5 条定标签”、“30 分钟回评论”等运营手法； - 知识类 3 个月后搜索占比 50%+（海克财经数据，单源转述）。</p>
+<p><strong>D 档：个人自述/软文（弱证据，只当故事听）</strong> - 部分接单收入、学员收益账目（如”9.9 元电子书 3 天卖 1000 份”）——自述无法独立核验； - 个别涨粉/变现个案（小红书博主月订阅 168 元、7000 粉变现 1 万+等）。</p>
+<p><strong>三个诚实声明：</strong> 1. “自媒体同行是否愿意为定制网页工具付费”在公开信息中<strong>无直接数据</strong>——这是整个方向唯一未被外部验证的假设，所以方案里安排了几百元小单和 3-5 个免费换案例的动作，就是用来自己验证它的； 2. 交叉验证文件中标注的冲突区（晚 8 点后是否该发、DOU+ 发布即投还是验证后投）没有标准答案，处理方式统一为”小额测试、用自己账号数据裁决”； 3. 本报告引用的维度 2（接单市场）调研原件未在交付目录中，其结论以交叉验证文件的转述为准；如需逐条核对原始来源，请补查该文件。</p>
+<hr />
+<hr />
+<blockquote>
+<p>本文所有结论的原始来源，见调研存档目录 /mnt/agents/output/research/（qihang_dim01~10.md 及交叉验证文件），需要核对时去那里查。</p>
+</blockquote>
+
+
+</body></html>
