@@ -2,12 +2,12 @@ export type TaskKind = 'video' | 'account' | 'remake';
 export type TaskStatus = 'queued' | 'running' | 'completed' | 'failed';
 
 export interface SourceMetrics {
-  views: number;
-  likes: number;
-  comments: number;
-  shares: number;
-  collects: number;
-  publishedAt: string;
+  views: number | null;
+  likes: number | null;
+  comments: number | null;
+  shares: number | null;
+  collects: number | null;
+  publishedAt: string | null;
 }
 
 export interface VideoSource {
@@ -16,7 +16,8 @@ export interface VideoSource {
   title: string;
   author: string;
   duration: string;
-  coverTone: 'red' | 'green' | 'blue';
+  coverTone?: 'red' | 'green' | 'blue';
+  coverUrl?: string;
   metrics: SourceMetrics;
 }
 
@@ -109,6 +110,7 @@ export interface AccountReport {
     videos: number;
     promise: string;
   };
+  promise: string;
   pillars: Array<{ name: string; ratio: number; note: string }>;
   timeline: Array<{ phase: string; range: string; action: string; signal: string }>;
   hookPatterns: string[];
@@ -116,6 +118,7 @@ export interface AccountReport {
   transferable: Array<{ rule: string; evidence: string; boundary: string }>;
   risks: string[];
   testTopics: Array<{ title: string; reason: string; priority: '优先' | '备选' }>;
+  boundary?: string;
 }
 
 export interface TaskRecord {
@@ -138,4 +141,54 @@ export interface RuntimeSettings {
   maxConcurrent: number;
   douyinCookie: string;
   prompts: Record<string, string>;
+  apiKeyConfigured?: boolean;
+  douyinCookieConfigured?: boolean;
+}
+
+export interface AnalysisRecord {
+  id: string;
+  kind: 'video' | 'account';
+  source: string;
+  title: string;
+  status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
+  progress: number;
+  step: string;
+  detail: string;
+  metadata: Record<string, unknown> | null;
+  report: VideoBreakdown | AccountReport | null;
+  coverage: Record<string, number> | null;
+  error: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GeneratedTopic {
+  id: string;
+  analysisId: string;
+  profileId: string;
+  position: number;
+  title: string;
+  angle: string;
+  hook: string;
+  reason: string;
+  inheritedMechanism: string;
+  adaptation: string;
+}
+
+export interface DirectorScript {
+  title: string;
+  openingHook: string;
+  duration: string;
+  fullCopy: string;
+  segments: Array<{ time: string; task: string; copy: string; shooting: string; rhythm: string }>;
+  cta: string;
+  productionNotes: string[];
+}
+
+export interface GeneratedScript {
+  id: string;
+  topicId: string;
+  status: 'queued' | 'running' | 'completed' | 'failed';
+  data: DirectorScript | null;
+  error: string | null;
 }

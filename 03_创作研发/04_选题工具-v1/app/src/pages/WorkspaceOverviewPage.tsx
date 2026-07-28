@@ -1,61 +1,83 @@
-import { ArrowRight, FileSearch, Plus, Search, UsersRound } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { ArrowRight, FileSearch, LoaderCircle, Plus, Search, Trash2, UsersRound } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { api } from '../api';
 import { ProductHeader } from '../components/ProductHeader';
+import type { AnalysisRecord } from '../types';
 
 type RecordKind = 'video' | 'account';
 
-interface WorkspaceRecord {
-  id: string;
-  kind: RecordKind;
-  title: string;
-  source: string;
-  createdAt: string;
-  summary: string;
+function statusLabel(status: AnalysisRecord['status']) {
+  return ({ queued: '排队中', running: '处理中', completed: '已完成', failed: '失败', cancelled: '已取消' } as const)[status];
 }
-
-const records: WorkspaceRecord[] = [
-  { id: 'video-01', kind: 'video', title: '一条视频，拆出 20 个能直接拍的选题', source: '@内容实验室 · 单条视频', createdAt: '今天 16:40', summary: '结果前置、真实过程举证，以及可计数的选题交付。' },
-  { id: 'account-01', kind: 'account', title: '内容实验室 · 账号全景研究', source: '50 条作品 · 账号研究', createdAt: '昨天 22:18', summary: '从工具实测到公开实验，梳理账号的内容方向与起量路径。' },
-  { id: 'video-02', kind: 'video', title: '为什么 AI 写的选题总有一股 AI 味', source: '@创作方法局 · 单条视频', createdAt: '07-25 19:20', summary: '对比 AI 直接生成与编导判断介入后的内容差异。' },
-  { id: 'account-02', kind: 'account', title: '餐饮老板说 · 账号方向研究', source: '50 条作品 · 账号研究', createdAt: '07-24 14:08', summary: '识别门店实拍、老板口播和顾客反馈三类稳定内容。' },
-];
 
 export function WorkspaceOverviewPage() {
   const navigate = useNavigate();
+  const [records, setRecords] = useState<AnalysisRecord[]>([]);
   const [filter, setFilter] = useState<'all' | RecordKind>('all');
   const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [deletingId, setDeletingId] = useState('');
+
+  const load = async () => {
+    try {
+      setRecords(await api.analyses.list());
+      setError('');
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : '读取历史记录失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    if (!records.some((record) => record.status === 'queued' || record.status === 'running')) return;
+    const timer = window.setInterval(() => void load(), 2400);
+    return () => window.clearInterval(timer);
+  }, [records]);
 
   const visibleRecords = useMemo(() => records.filter((record) => {
     const matchesKind = filter === 'all' || record.kind === filter;
-    const matchesQuery = `${record.title}${record.source}${record.summary}`.includes(query.trim());
+    const matchesQuery = `${record.title}${record.source}${record.detail}`.toLowerCase().includes(query.trim().toLowerCase());
     return matchesKind && matchesQuery;
-  }), [filter, query]);
+  }), [records, filter, query]);
 
-  const openRecord = (record: WorkspaceRecord) => navigate('/workspace/result', { state: { kind: record.kind, recordId: record.id } });
-  const recent = records[0];
+  const openRecord = (record: AnalysisRecord) => navigate(`/workspace/result/${record.id}`);
+  const deleteRecord = async (record: AnalysisRecord) => {
+    if (!window.confirm(`删除“${record.title}”及其选题和脚本？此操作无法撤销。`)) return;
+    setDeletingId(record.id);
+    try {
+      await api.analyses.remove(record.id);
+      setRecords((items) => items.filter((item) => item.id !== record.id));
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : '删除记录失败');
+    } finally {
+      setDeletingId('');
+    }
+  };
+  const recent = visibleRecords[0] || records[0];
 
   return (
     <div className="workspace-overview-v3">
       <ProductHeader />
       <main className="workspace-overview-v3-main">
         <header className="workspace-overview-v3-heading">
-          <div>
-            <span className="workspace-eyebrow-v3">WORKSPACE / 工作台</span>
-            <h1>创作记录 <small>0{records.length}</small></h1>
-          </div>
+          <div><span className="workspace-eyebrow-v3">WORKSPACE / 工作台</span><h1>创作记录 <small>{String(records.length).padStart(2, '0')}</small></h1></div>
           <Link to="/"><Plus size={17} /> 新建拆解</Link>
         </header>
 
-        <section className="recent-record-v3">
-          <div className="recent-record-v3-label">RECENT / 最近一次</div>
-          <button type="button" onClick={() => openRecord(recent)}>
-            <span className="record-symbol-v3"><FileSearch size={21} /></span>
-            <span className="recent-record-v3-copy"><small>{recent.source}</small><strong>{recent.title}</strong><p>{recent.summary}</p></span>
-            <span className="recent-record-v3-time">{recent.createdAt}</span>
-            <ArrowRight size={20} />
-          </button>
-        </section>
+        {recent ? (
+          <section className="recent-record-v3">
+            <div className="recent-record-v3-label">RECENT / 最近一次</div>
+            <button type="button" onClick={() => openRecord(recent)}>
+              <span className={`record-symbol-v3 record-symbol-v3--${recent.kind}`}>{recent.kind === 'video' ? <FileSearch size={21} /> : <UsersRound size={21} />}</span>
+              <span className="recent-record-v3-copy"><small>{recent.kind === 'video' ? '单条视频' : '账号研究'} · {statusLabel(recent.status)}</small><strong>{recent.title}</strong><p>{recent.detail}</p></span>
+              <span className="recent-record-v3-time">{new Date(recent.updatedAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+              <ArrowRight size={20} />
+            </button>
+          </section>
+        ) : null}
 
         <section className="records-section-v3">
           <header>
@@ -69,13 +91,19 @@ export function WorkspaceOverviewPage() {
           </header>
 
           <div className="records-list-v3">
+            {loading ? <div className="empty-state">正在读取本地历史…</div> : null}
+            {!loading && error ? <div className="empty-state empty-state--danger">{error}</div> : null}
+            {!loading && visibleRecords.length === 0 ? <div className="empty-state">还没有符合条件的分析记录。</div> : null}
             {visibleRecords.map((record) => (
-              <button type="button" key={record.id} onClick={() => openRecord(record)}>
-                <span className={`record-symbol-v3 record-symbol-v3--${record.kind}`}>{record.kind === 'video' ? <FileSearch size={19} /> : <UsersRound size={19} />}</span>
-                <span className="record-copy-v3"><small>{record.kind === 'video' ? '单条视频' : '账号研究'}</small><strong>{record.title}</strong><p>{record.summary}</p></span>
-                <span className="record-meta-v3"><strong>{record.createdAt}</strong><small>{record.source}</small></span>
-                <ArrowRight size={18} />
-              </button>
+              <article className="record-row-v3" key={record.id}>
+                <button className="record-open-v3" type="button" onClick={() => openRecord(record)}>
+                  <span className={`record-symbol-v3 record-symbol-v3--${record.kind}`}>{record.kind === 'video' ? <FileSearch size={19} /> : <UsersRound size={19} />}</span>
+                  <span className="record-copy-v3"><small>{record.kind === 'video' ? '单条视频' : '账号研究'} · {statusLabel(record.status)}</small><strong>{record.title}</strong><p>{record.detail}</p></span>
+                  <span className="record-meta-v3"><strong>{record.progress}%</strong><small>{new Date(record.createdAt).toLocaleDateString('zh-CN')}</small></span>
+                  <ArrowRight size={18} />
+                </button>
+                <button className="record-delete-v3" type="button" title="删除记录" aria-label={`删除 ${record.title}`} disabled={deletingId === record.id} onClick={() => void deleteRecord(record)}>{deletingId === record.id ? <LoaderCircle className="spin" size={16} /> : <Trash2 size={16} />}</button>
+              </article>
             ))}
           </div>
         </section>

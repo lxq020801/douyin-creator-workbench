@@ -17,6 +17,10 @@
 **/secrets/
 **/cookies/
 **/credentials/
+**/data/
+**/__pycache__/
+**/.pytest_cache/
+**/.venv/
 
 # JavaScript and test output
 **/node_modules/
@@ -39,4 +43,3 @@ animation-lab/**/.style-lab-bundle/
 videos/**/renders/
 videos/**/snapshots/
 videos/**/rendered-frames/
-

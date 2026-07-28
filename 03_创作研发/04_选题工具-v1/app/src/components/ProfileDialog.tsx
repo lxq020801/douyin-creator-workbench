@@ -1,5 +1,6 @@
 import { ArrowLeft, ArrowRight, Check, Plus, Sparkles, UserRoundCheck } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { api } from '../api';
 import { useAppStore } from '../store/AppStore';
 import type { AccountProfile } from '../types';
 import { Modal } from './Modal';
@@ -32,6 +33,9 @@ export function ProfileDialog({ open, title = '选择复刻到哪个账号', ini
   const [description, setDescription] = useState('');
   const [createStep, setCreateStep] = useState<'describe' | 'followup' | 'card'>(initialProfile ? 'card' : 'describe');
   const [followup, setFollowup] = useState('');
+  const [followupQuestion, setFollowupQuestion] = useState('');
+  const [answers, setAnswers] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState(emptyDraft);
 
   const selected = useMemo(() => profiles.find((profile) => profile.id === selectedId), [profiles, selectedId]);
@@ -57,19 +61,51 @@ export function ProfileDialog({ open, title = '选择复刻到哪个账号', ini
     setCreateStep('describe');
     setDescription('');
     setFollowup('');
+    setFollowupQuestion('');
+    setAnswers([]);
     setDraft(emptyDraft);
   }, [open, initialProfile]);
 
-  const startIntake = () => {
-    if (description.trim().length < 24) {
+  const applyIntake = (result: Awaited<ReturnType<typeof api.profiles.intake>>) => {
+    if (result.status === 'followup') {
+      setFollowupQuestion(result.question);
       setCreateStep('followup');
       return;
     }
-    setDraft((value) => ({ ...value, name: description.includes('编导') ? 'AI 编导实验' : '新账号资料' }));
-    setCreateStep('card');
+    if (result.draft) {
+      const { originalDescription: _originalDescription, inferredFields: _inferredFields, ...card } = result.draft;
+      setDraft(card);
+      setCreateStep('card');
+    }
   };
 
-  const confirmNewProfile = () => {
+  const startIntake = async () => {
+    setBusy(true);
+    try {
+      applyIntake(await api.profiles.intake(description, []));
+    } catch (error) {
+      notify(error instanceof Error ? error.message : '资料整理失败', 'danger');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitFollowup = async () => {
+    const nextAnswers = [...answers, followup.trim()];
+    setBusy(true);
+    try {
+      const result = await api.profiles.intake(description, nextAnswers);
+      setAnswers(nextAnswers);
+      setFollowup('');
+      applyIntake(result);
+    } catch (error) {
+      notify(error instanceof Error ? error.message : '资料整理失败', 'danger');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const confirmNewProfile = async () => {
     const profile: AccountProfile = {
       id: initialProfile?.id || `profile-${Date.now()}`,
       name: draft.name,
@@ -84,10 +120,16 @@ export function ProfileDialog({ open, title = '选择复刻到哪个账号', ini
       inferredFields: initialProfile?.inferredFields || ['目标受众', '持续价值'],
       updatedAt: '刚刚',
     };
-    if (initialProfile) updateProfile(profile);
-    else addProfile(profile);
-    notify(initialProfile ? '账号资料已更新' : '账号资料已保存');
-    onSelect(profile);
+    setBusy(true);
+    try {
+      const saved = initialProfile ? await updateProfile(profile) : await addProfile(profile);
+      notify(initialProfile ? '账号资料已更新' : '账号资料已保存');
+      onSelect(saved);
+    } catch (error) {
+      notify(error instanceof Error ? error.message : '账号资料保存失败', 'danger');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const close = () => {
@@ -145,16 +187,16 @@ export function ProfileDialog({ open, title = '选择复刻到哪个账号', ini
                 <p>{exampleDescription}</p>
                 <button className="text-button" type="button" onClick={() => setDescription(exampleDescription)}>使用这个示例</button>
               </div>
-              <button className="button button--primary" type="button" disabled={!description.trim()} onClick={startIntake}><Sparkles size={17} /> AI 整理资料</button>
+              <button className="button button--primary" type="button" disabled={!description.trim() || busy} onClick={() => void startIntake()}><Sparkles size={17} /> {busy ? '正在整理…' : 'AI 整理资料'}</button>
             </div>
           ) : null}
 
           {createStep === 'followup' ? (
             <div className="intake-stage">
               <div className="intake-step-label">02 / 必要追问</div>
-              <div className="assistant-message"><Sparkles size={18} /><p>我已经知道你大概要做什么了。为了让后面的复刻结果更可执行，你现在最容易拿到哪些拍摄素材？还有没有明确不能做的形式？</p></div>
+              <div className="assistant-message"><Sparkles size={18} /><p>{followupQuestion}</p></div>
               <textarea className="large-textarea" value={followup} onChange={(event) => setFollowup(event.target.value)} placeholder="例如：可以真人出镜和录屏，但没有团队，暂时不做复杂外拍……" />
-              <button className="button button--primary" type="button" disabled={!followup.trim()} onClick={() => setCreateStep('card')}><Sparkles size={17} /> 生成资料卡</button>
+              <button className="button button--primary" type="button" disabled={!followup.trim() || busy} onClick={() => void submitFollowup()}><Sparkles size={17} /> {busy ? '正在整理…' : '继续生成资料卡'}</button>
             </div>
           ) : null}
 
@@ -176,7 +218,7 @@ export function ProfileDialog({ open, title = '选择复刻到哪个账号', ini
               </div>
               <div className="modal-footer modal-footer--flush">
                 <button className="button button--ghost" type="button" onClick={() => initialProfile ? close() : setCreateStep('describe')}>{initialProfile ? '取消' : '重新描述'}</button>
-                <button className="button button--primary" type="button" onClick={confirmNewProfile}><Check size={17} /> {initialProfile ? '保存修改' : '确认并使用'}</button>
+                <button className="button button--primary" type="button" disabled={busy} onClick={() => void confirmNewProfile()}><Check size={17} /> {initialProfile ? '保存修改' : '确认并使用'}</button>
               </div>
             </div>
           ) : null}

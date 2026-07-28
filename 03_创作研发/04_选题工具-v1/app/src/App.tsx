@@ -11,7 +11,7 @@ export function App() {
       <Route element={<AppShell />}>
         <Route index element={<WorkbenchPage />} />
         <Route path="workspace" element={<WorkspaceOverviewPage />} />
-        <Route path="workspace/result" element={<UnifiedWorkspacePage />} />
+        <Route path="workspace/result/:id" element={<UnifiedWorkspacePage />} />
         <Route path="admin/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

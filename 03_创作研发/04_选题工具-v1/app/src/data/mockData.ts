@@ -106,6 +106,7 @@ export const researchVideos: ResearchVideo[] = [
 ];
 
 export const sampleAccountReport: AccountReport = {
+  promise: '把复杂的内容方法变成创作者可以直接执行的工作流。',
   account: { name: '内容实验室', handle: 'content_lab', followers: 482000, videos: 186, promise: '把复杂的内容方法变成创作者可以直接执行的工作流。' },
   pillars: [
     { name: '工具实测', ratio: 38, note: '真实操作、结果前置，是账号稳定流量来源。' },
@@ -145,20 +146,23 @@ export const defaultSettings: RuntimeSettings = {
   apiKey: '',
   baseUrl: 'https://ark.cn-beijing.volces.com/api/v3',
   model: 'doubao-seed-1-6-vision-250815',
-  timeout: 180,
-  videoFps: 0.5,
+  timeout: 900,
+  videoFps: 1,
   maxConcurrent: 3,
   douyinCookie: '',
   prompts: {
     videoBreakdown: '你是一名严谨的短视频编导。拆解视频内容与平台数据证据，区分事实、推断与未知信息。',
-    videoRemake: '只在用户确认账号资料后进行结构迁移。保留机制，不复制原作者表达和事实。',
+    videoTopics: '只在用户确认账号资料后进行结构迁移。生成20个不同选题，保留机制，不复制原作者表达和事实。',
     profileIntake: '把用户自然语言整理成最小可用的内容生产上下文；缺失信息只追问一到两轮。',
-    accountSummary: '结合全量元数据与逐条深拆报告，输出内容地图、起量路径、爆款与常态差异及可迁移动作。',
+    accountSummary: '结合50条元数据与最多30条逐条深拆报告，输出当前样本范围内的内容地图、起量路径、爆款与常态差异及可迁移动作。',
+    accountTopics: '基于账号综合报告和目标资料生成20个可执行选题。',
+    scriptGeneration: '把选题写成包含台词、画面提示、节奏和结尾互动的编导可拍稿。',
     globalFacts: '不得虚构播放量、来源或用户经历。证据不足时明确标记待确认。',
   },
 };
 
-export function compactNumber(value: number) {
+export function compactNumber(value: number | null | undefined) {
+  if (value === null || value === undefined) return '—';
   if (value >= 10000) return `${(value / 10000).toFixed(value >= 100000 ? 1 : 2).replace(/\.0$/, '')}万`;
   return value.toLocaleString('zh-CN');
 }

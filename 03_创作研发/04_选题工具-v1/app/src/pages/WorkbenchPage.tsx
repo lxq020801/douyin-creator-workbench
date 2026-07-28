@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProductHeader } from '../components/ProductHeader';
 import { sampleAccountUrl, sampleVideoUrl } from '../data/mockData';
+import { api } from '../api';
 
 type IntakeMode = 'video' | 'account';
 
@@ -24,6 +25,7 @@ export function WorkbenchPage() {
   const [mode, setMode] = useState<IntakeMode>('video');
   const [url, setUrl] = useState('');
   const [headlineIndex, setHeadlineIndex] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
 
   const headlines = headlineSets[mode];
   const headline = headlines[headlineIndex];
@@ -38,9 +40,17 @@ export function WorkbenchPage() {
     return () => window.clearInterval(rotation);
   }, [mode]);
 
-  const start = () => {
+  const start = async () => {
     if (!url.trim()) return;
-    navigate('/workspace/result', { state: { kind: mode, source: url.trim() } });
+    setSubmitting(true);
+    try {
+      const analysis = await api.analyses.create(mode, url.trim());
+      navigate(`/workspace/result/${analysis.id}`);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : '任务创建失败');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const isVideo = mode === 'video';
@@ -84,12 +94,12 @@ export function WorkbenchPage() {
             <input
               value={url}
               onChange={(event) => setUrl(event.target.value)}
-              onKeyDown={(event) => event.key === 'Enter' && start()}
+              onKeyDown={(event) => { if (event.key === 'Enter') void start(); }}
               placeholder={isVideo ? '粘贴抖音视频链接或分享文案' : '粘贴抖音账号主页链接'}
               aria-label={isVideo ? '抖音视频链接' : '抖音账号主页链接'}
             />
-            <button type="button" disabled={!url.trim()} onClick={start}>
-              {isVideo ? '开始拆解' : '采集 50 条视频'} <ArrowRight size={18} />
+            <button type="button" disabled={!url.trim() || submitting} onClick={() => void start()}>
+              {submitting ? '任务创建中…' : isVideo ? '开始拆解' : '采集 50 条视频'} <ArrowRight size={18} />
             </button>
           </div>
           <div className="home-v2-intake-note">
