@@ -7,6 +7,18 @@ from app.db import Analysis, Profile, Script, SessionLocal, Topic
 from app.jobs import _update_analysis
 
 
+def test_analysis_requires_complete_runtime_settings(monkeypatch):
+    async def incomplete_settings(_db):
+        from app.schemas import RuntimeSettingsIn
+        return RuntimeSettingsIn()
+
+    monkeypatch.setattr(main_module, "get_runtime_settings", incomplete_settings)
+    with TestClient(main_module.app) as client:
+        response = client.post("/api/analyses/video", json={"source": "https://v.douyin.com/example/"})
+        assert response.status_code == 409
+        assert response.json()["detail"] == "请先在设置页配置：API Key、模型名称、抖音 Cookie"
+
+
 def test_settings_are_masked_and_profile_crud(monkeypatch):
     monkeypatch.setattr(main_module, "enqueue", lambda *args, **kwargs: "job-test")
     with TestClient(main_module.app) as client:

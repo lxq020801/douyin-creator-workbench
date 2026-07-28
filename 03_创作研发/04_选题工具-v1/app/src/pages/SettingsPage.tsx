@@ -22,6 +22,7 @@ export function SettingsPage() {
   const [tab, setTab] = useState<'model' | 'crawler' | 'video' | 'prompts'>('model');
   const [promptKey, setPromptKey] = useState<(typeof promptTabs)[number]['key']>('videoBreakdown');
   const [showSecret, setShowSecret] = useState(false);
+  const [testing, setTesting] = useState<'model' | 'cookie' | null>(null);
   const [testState, setTestState] = useState<{ type: 'model' | 'cookie'; message: string; ok: boolean } | null>(null);
   const modelReady = Boolean(draft.apiKey.trim() && draft.baseUrl.trim() && draft.model.trim());
 
@@ -38,11 +39,16 @@ export function SettingsPage() {
 
   const testConnection = async (type: 'model' | 'cookie') => {
     setTestState(null);
+    setTesting(type);
     try {
+      const saved = await saveSettings(draft);
+      setDraft(saved);
       const result = type === 'model' ? await api.settings.testModel() : await api.settings.testCookie();
       setTestState({ type, message: result.message, ok: result.ok });
     } catch (error) {
       setTestState({ type, message: error instanceof Error ? error.message : '检测失败', ok: false });
+    } finally {
+      setTesting(null);
     }
   };
 
@@ -67,7 +73,7 @@ export function SettingsPage() {
                 <label><span>模型名称</span><input value={draft.model} onChange={(event) => setDraft({ ...draft, model: event.target.value })} /></label>
                 <label><span>请求超时（秒）</span><input type="number" value={draft.timeout} onChange={(event) => setDraft({ ...draft, timeout: Number(event.target.value) })} /></label>
               </div>
-              <div className="settings-actions-row"><button className="button button--ghost button--sm" type="button" disabled={!modelReady} onClick={() => void testConnection('model')}><Wifi size={15} /> 测试模型连接</button>{testState?.type === 'model' ? <StatusBadge tone={testState.ok ? 'green' : 'warning'}>{testState.message}</StatusBadge> : null}</div>
+              <div className="settings-actions-row"><button className="button button--ghost button--sm" type="button" disabled={!modelReady || testing !== null} onClick={() => void testConnection('model')}><Wifi size={15} /> {testing === 'model' ? '正在保存并测试…' : '保存并测试模型'}</button>{testState?.type === 'model' ? <StatusBadge tone={testState.ok ? 'green' : 'warning'}>{testState.message}</StatusBadge> : null}</div>
               <div className="connection-note"><Cpu size={18} /><div><strong>统一配置</strong><p>本地所有分析任务使用这里的模型配置；API Key 由后端加密保存，前端只显示掩码。</p></div></div>
             </div>
           ) : null}
@@ -77,7 +83,7 @@ export function SettingsPage() {
               <div className="settings-section-heading"><div><span>DOUYIN ACCESS</span><h2>抖音 Cookie</h2></div><StatusBadge tone={draft.douyinCookie ? 'green' : 'warning'}>{draft.douyinCookie ? '已配置' : '等待配置'}</StatusBadge></div>
               <label><span>Web Cookie</span><textarea className="settings-textarea settings-textarea--cookie" value={draft.douyinCookie} onChange={(event) => setDraft({ ...draft, douyinCookie: event.target.value })} placeholder="sessionid=...; msToken=..." /></label>
               <div className="cookie-status-grid"><div><span>当前长度</span><strong>{draft.douyinCookie.length}</strong></div><div><span>保存方式</span><strong>后端加密</strong></div><div><span>配置来源</span><strong>管理员手动粘贴</strong></div></div>
-              <div className="settings-actions-row"><button className="button button--ghost button--sm" type="button" disabled={!draft.douyinCookie.trim()} onClick={() => void testConnection('cookie')}><Wifi size={15} /> 检测 Cookie</button>{testState?.type === 'cookie' ? <StatusBadge tone={testState.ok ? 'green' : 'warning'}>{testState.message}</StatusBadge> : null}</div>
+              <div className="settings-actions-row"><button className="button button--ghost button--sm" type="button" disabled={!draft.douyinCookie.trim() || testing !== null} onClick={() => void testConnection('cookie')}><Wifi size={15} /> {testing === 'cookie' ? '正在保存并检测…' : '保存并检测 Cookie'}</button>{testState?.type === 'cookie' ? <StatusBadge tone={testState.ok ? 'green' : 'warning'}>{testState.message}</StatusBadge> : null}</div>
               <div className="connection-note"><Cookie size={18} /><div><strong>手动配置</strong><p>本地版不迁移浏览器自动同步；任务会继续验证 Cookie 是否真的能读取视频和主页。</p></div></div>
             </div>
           ) : null}

@@ -191,6 +191,17 @@ async def profile_intake(payload: IntakeRequest, db: AsyncSession = Depends(get_
 
 
 async def _create_analysis(kind: str, payload: AnalysisCreate, db: AsyncSession) -> AnalysisOut:
+    runtime = await get_runtime_settings(db)
+    missing: list[str] = []
+    if not runtime.apiKey:
+        missing.append("API Key")
+    if not runtime.model:
+        missing.append("模型名称")
+    if not runtime.douyinCookie:
+        missing.append("抖音 Cookie")
+    if missing:
+        raise HTTPException(status_code=409, detail=f"请先在设置页配置：{'、'.join(missing)}")
+
     row = Analysis(kind=kind, source=payload.source.strip(), detail="任务已进入后台队列")
     db.add(row)
     await db.commit()
