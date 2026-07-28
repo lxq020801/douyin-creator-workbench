@@ -1,0 +1,11 @@
+{
+  "name": "hyperframes",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes hyperframes@0.7.71 preview",
+    "check": "npx --yes hyperframes@0.7.71 check",
+    "render": "HYPERFRAMES_BROWSER_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' npx --yes hyperframes@0.7.71 render",
+    "publish": "npx --yes hyperframes@0.7.71 publish"
+  }
+}

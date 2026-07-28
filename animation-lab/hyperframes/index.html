@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1920">
+    <title>HyperFrames Vertical Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "PingFang SC";
+        src: local("PingFang SC");
+      }
+      @font-face {
+        font-family: "Microsoft YaHei";
+        src: local("Microsoft YaHei");
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+      }
+      body {
+        color: #171915;
+        font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+      #root {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+      }
+      #hf-demo {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        padding: 132px 84px 120px;
+        background: #f3f5ef;
+      }
+      .topbar,
+      .progress-row {
+        display: flex;
+        align-items: center;
+      }
+      .topbar {
+        justify-content: space-between;
+      }
+      .lab-tag {
+        padding: 13px 22px;
+        border-radius: 6px;
+        background: #171915;
+        color: #fff;
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .format-label,
+      .footer {
+        color: #575c53;
+        font-size: 28px;
+        font-weight: 600;
+      }
+      .hero {
+        margin-top: 150px;
+      }
+      .eyebrow {
+        color: #e94f37;
+        font-size: 34px;
+        font-weight: 800;
+      }
+      h1 {
+        max-width: 860px;
+        margin-top: 34px;
+        font-size: 118px;
+        font-weight: 900;
+        line-height: 1.04;
+      }
+      h1 span {
+        color: #e94f37;
+      }
+      .tool-card {
+        margin-top: 116px;
+        padding: 58px 54px 52px;
+        border: 3px solid #171915;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 18px 18px 0 #b8df4a;
+      }
+      .card-label {
+        color: #6b7067;
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .progress-row {
+        gap: 18px;
+        margin-top: 24px;
+        align-items: baseline;
+      }
+      #count {
+        font-size: 96px;
+        font-weight: 900;
+      }
+      .total {
+        color: #6b7067;
+        font-size: 32px;
+        font-weight: 700;
+      }
+      .progress-track {
+        height: 18px;
+        margin-top: 36px;
+        overflow: hidden;
+        border-radius: 5px;
+        background: #e5e8df;
+      }
+      #progress-fill {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 5px;
+        background: #00a9a5;
+        transform-origin: left center;
+      }
+      .footer {
+        position: absolute;
+        bottom: 120px;
+        left: 84px;
+      }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-no7k" id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080" data-height="1920">
+      <section data-hf-id="hf-o9hd" id="hf-demo" class="clip" data-start="0" data-duration="4" data-track-index="1">
+        <div data-hf-id="hf-mndw" class="topbar">
+          <div data-hf-id="hf-9fdr" class="lab-tag">ANIMATION LAB</div>
+          <div data-hf-id="hf-d5l7" class="format-label">9:16 / 30 FPS</div>
+        </div>
+
+        <div data-hf-id="hf-hie8" class="hero">
+          <div data-hf-id="hf-vuxj" id="eyebrow" class="eyebrow">HYPERFRAMES READY</div>
+          <h1 data-hf-id="hf-746c" id="headline">一次搞定 <span data-hf-id="hf-k9ox">20 个</span><br data-hf-id="hf-x5px">视频选题</h1>
+        </div>
+
+        <div data-hf-id="hf-oqac" id="tool-card" class="tool-card">
+          <div data-hf-id="hf-avn0" class="card-label">选题生成进度</div>
+          <div data-hf-id="hf-zmga" class="progress-row">
+            <span data-hf-id="hf-ijjt" id="count">0</span>
+            <span data-hf-id="hf-vq48" class="total">/ 20</span>
+          </div>
+          <div data-hf-id="hf-lxwj" class="progress-track">
+            <span data-hf-id="hf-9bxf" id="progress-fill"></span>
+          </div>
+        </div>
+
+        <div data-hf-id="hf-oeox" class="footer">AI × 编导工作流 · 本地测试样片</div>
+      </section>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.from("#eyebrow", { y: 42, opacity: 0, duration: 0.5, ease: "power3.out" }, 0);
+      tl.from("#headline", { y: 64, opacity: 0, duration: 0.67, ease: "power3.out" }, 0.27);
+      tl.from("#tool-card", { y: 84, opacity: 0, duration: 0.73, ease: "power3.out" }, 0.67);
+      tl.to("#count", { innerText: 20, snap: { innerText: 1 }, duration: 2.57, ease: "power1.inOut" }, 0.93);
+      tl.fromTo(
+        "#progress-fill",
+        { scaleX: 0.04 },
+        { scaleX: 1, duration: 2.57, ease: "power1.inOut" },
+        0.93,
+      );
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
