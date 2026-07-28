@@ -1,0 +1,42 @@
+# macOS and editors
+.DS_Store
+**/.DS_Store
+.idea/
+.vscode/
+*.swp
+*.log
+
+# Local secrets and credentials
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+**/.secrets/
+**/secrets/
+**/cookies/
+**/credentials/
+
+# JavaScript and test output
+**/node_modules/
+**/dist/
+**/build/
+**/out/
+**/coverage/
+**/.vite/
+**/.cache/
+**/.playwright-cli/
+**/output/playwright/
+**/*.tsbuildinfo
+
+# Local animation and video renders. Curated samples under
+# 03_创作研发/02_风格样片 remain versioned.
+animation-lab/**/renders/
+animation-lab/**/snapshots/
+animation-lab/**/.hyperframes/
+animation-lab/**/.style-lab-bundle/
+videos/**/renders/
+videos/**/snapshots/
+videos/**/rendered-frames/
+
