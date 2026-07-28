@@ -19,7 +19,7 @@ def test_analysis_requires_complete_runtime_settings(monkeypatch):
         assert response.json()["detail"] == "请先在设置页配置：API Key、模型名称、抖音 Cookie"
 
 
-def test_settings_are_masked_and_profile_crud(monkeypatch):
+def test_settings_are_visible_and_profile_crud(monkeypatch):
     monkeypatch.setattr(main_module, "enqueue", lambda *args, **kwargs: "job-test")
     with TestClient(main_module.app) as client:
         settings = client.get("/api/settings")
@@ -28,7 +28,8 @@ def test_settings_are_masked_and_profile_crud(monkeypatch):
         payload.update({"apiKey": "sk-test-secret", "model": "doubao-test", "douyinCookie": "sessionid=test-cookie-value"})
         saved = client.put("/api/settings", json=payload)
         assert saved.status_code == 200
-        assert "test-secret" not in saved.json()["apiKey"]
+        assert saved.json()["apiKey"] == "sk-test-secret"
+        assert saved.json()["douyinCookie"] == "sessionid=test-cookie-value"
         assert saved.json()["apiKeyConfigured"] is True
 
         profile_payload = {

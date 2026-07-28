@@ -11,7 +11,7 @@
 - 账号资料：一句话描述、最多两轮必要追问、资料卡确认、编辑和多份保存。
 - 工作台：真实历史、搜索、进度恢复、取消、失败重试和删除。
 - 产物操作：选题编辑、单选/多选/全选生成脚本、失败脚本单独重试、复制和报告长图导出。
-- 管理设置：模型、API、抖音 Cookie、运行参数和系统提示词统一配置；密钥在后端加密保存，接口只返回掩码。
+- 管理设置：模型、API、抖音 Cookie、运行参数和系统提示词统一配置；本地设置页直接显示当前保存值。
 
 自动化测试、前端构建、桌面与移动端布局以及 Docker 健康检查已经通过。真实抖音单条视频和账号主页的最终验收仍需在本机保存有效模型配置与 Cookie 后执行，因此当前不标记为正式发布版。
 
@@ -52,7 +52,7 @@ docker compose ps
 docker compose down
 ```
 
-不要使用 `docker compose down -v`，否则会删除 Redis 持久化卷。业务数据库和加密密钥保存在本地忽略目录 `data/`。
+不要使用 `docker compose down -v`，否则会删除 Redis 持久化卷。业务数据库和运行数据保存在本地忽略目录 `data/`。
 
 ## 架构
 
@@ -61,7 +61,7 @@ app/                 React + TypeScript + Vite 前端
 backend/app/         FastAPI API、任务、数据与模型调用
 backend/app/media/   抖音解析、下载、FFprobe、Ark Files/Responses
 backend/tests/       后端自动化测试
-data/                SQLite、加密密钥和运行时临时文件（不提交）
+data/                SQLite 和运行时临时文件（不提交）
 compose.yml          Redis、API、前端和 3 个 RQ Worker
 ```
 

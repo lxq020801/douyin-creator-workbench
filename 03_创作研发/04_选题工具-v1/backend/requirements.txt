@@ -8,7 +8,6 @@ greenlet==3.3.2
 aiosqlite==0.22.1
 redis==5.2.1
 rq==1.16.2
-cryptography==46.0.5
 openai==2.45.0
 python-multipart==0.0.22
 PyYAML==6.0.3

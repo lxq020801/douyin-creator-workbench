@@ -19,10 +19,6 @@ class AppSettings(BaseSettings):
     temp_retention_hours: int = 24
 
     @property
-    def secret_key_path(self) -> Path:
-        return self.data_dir / "secret.key"
-
-    @property
     def temp_dir(self) -> Path:
         return self.data_dir / "tmp"
 

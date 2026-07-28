@@ -2,15 +2,6 @@ import json
 
 from app.model_client import parse_json_text
 from app.schemas import TopicBatchModel
-from app.security import decrypt_secret, encrypt_secret, mask_secret
-
-
-def test_secret_roundtrip_and_masking():
-    encrypted = encrypt_secret("sk-a-real-secret-value")
-    assert "sk-a-real-secret-value" not in encrypted
-    assert decrypt_secret(encrypted) == "sk-a-real-secret-value"
-    assert mask_secret("sk-a-real-secret-value").startswith("sk-")
-    assert "real-secret" not in mask_secret("sk-a-real-secret-value")
 
 
 def test_json_parser_accepts_fenced_model_output():
