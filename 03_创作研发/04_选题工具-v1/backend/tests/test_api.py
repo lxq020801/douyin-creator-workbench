@@ -25,6 +25,9 @@ def test_settings_are_visible_and_profile_crud(monkeypatch):
         settings = client.get("/api/settings")
         assert settings.status_code == 200
         payload = settings.json()
+        assert len(payload["prompts"]["videoBreakdown"]) > 300
+        assert "四层固定拆解报告" in payload["prompts"]["videoBreakdown"]
+        assert len(payload["prompts"]["globalFacts"]) > 200
         payload.update({"apiKey": "sk-test-secret", "model": "doubao-test", "douyinCookie": "sessionid=test-cookie-value"})
         saved = client.put("/api/settings", json=payload)
         assert saved.status_code == 200

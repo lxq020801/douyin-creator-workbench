@@ -7,7 +7,7 @@ import { useAppStore } from '../store/AppStore';
 import type { RuntimeSettings } from '../types';
 
 const promptTabs = [
-  { key: 'videoBreakdown', label: '单条视频拆解' },
+  { key: 'videoBreakdown', label: '单条视频拆解 · 四层报告' },
   { key: 'videoTopics', label: '单条视频选题' },
   { key: 'profileIntake', label: '账号资料问诊' },
   { key: 'accountSummary', label: '账号打法汇总' },
@@ -103,7 +103,7 @@ export function SettingsPage() {
               <div className="settings-section-heading"><div><span>PROMPT REGISTRY</span><h2>系统提示词</h2></div><button className="button button--ghost button--sm" type="button" onClick={() => setDraft({ ...draft, prompts: { ...draft.prompts, [promptKey]: defaultSettings.prompts[promptKey] } })}><RotateCcw size={14} /> 恢复默认</button></div>
               <div className="prompt-workspace">
                 <div className="prompt-list">{promptTabs.map((item) => <button key={item.key} type="button" className={promptKey === item.key ? 'is-active' : ''} onClick={() => setPromptKey(item.key)}><FileText size={15} />{item.label}</button>)}</div>
-                <div className="prompt-editor"><div><strong>{promptTabs.find((item) => item.key === promptKey)?.label}</strong><span>{draft.prompts[promptKey].length} 字</span></div><textarea value={draft.prompts[promptKey]} onChange={(event) => setDraft({ ...draft, prompts: { ...draft.prompts, [promptKey]: event.target.value } })} /></div>
+                <div className="prompt-editor"><div><strong>{promptTabs.find((item) => item.key === promptKey)?.label}</strong><span>{draft.prompts[promptKey].length} 字</span></div><textarea value={draft.prompts[promptKey]} onChange={(event) => setDraft({ ...draft, prompts: { ...draft.prompts, [promptKey]: event.target.value } })} /><p className="prompt-runtime-note"><CheckCircle2 size={14} />这里保存的内容会直接参与真实模型请求。运行时还会自动拼接“全局事实规则”、视频与公开数据，以及当前任务的 JSON 输出结构。</p></div>
               </div>
             </div>
           ) : null}

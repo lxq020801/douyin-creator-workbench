@@ -26,26 +26,26 @@ class VideoSource(BaseModel):
 
 
 class VideoBeat(BaseModel):
-    timecode: str
-    originalCopy: str
-    role: str
-    emotion: str
-    visual: str
-    transition: str
+    timecode: str = ""
+    originalCopy: str = ""
+    role: str = ""
+    emotion: str = ""
+    visual: str = ""
+    transition: str = ""
 
 
 class EvidencePoint(BaseModel):
-    label: str
-    evidence: str
-    confidence: Literal["高", "中", "待验证"]
+    label: str = ""
+    evidence: str = ""
+    confidence: Literal["高", "中", "待验证"] = "待验证"
 
 
 class Hook(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    copy_text: str = Field(alias="copy")
-    mechanism: str
-    visualAction: str
+    copy_text: str = Field(default="", alias="copy")
+    mechanism: str = ""
+    visualAction: str = ""
 
 
 class Craft(BaseModel):
@@ -55,16 +55,97 @@ class Craft(BaseModel):
     captions: list[str]
 
 
+class AudienceSignal(BaseModel):
+    summary: str = ""
+    basis: list[str] = Field(default_factory=list)
+    confidence: Literal["高", "中", "待验证"] = "待验证"
+
+
+class VideoMetadataLayer(BaseModel):
+    category: str = ""
+    format: str = ""
+    visualStyle: str = ""
+    bgmStyle: str = ""
+    captionStyle: str = ""
+    tags: list[str] = Field(default_factory=list)
+    location: str = ""
+    keywords: list[str] = Field(default_factory=list)
+    audience: AudienceSignal = Field(default_factory=AudienceSignal)
+
+
+class HookAnalysis(BaseModel):
+    copy_text: str = Field(default="", alias="copy")
+    type: str = ""
+    emotion: str = ""
+    viewerTask: str = ""
+    evidence: str = ""
+
+
+class NarrativeStage(BaseModel):
+    timeRange: str = ""
+    function: str = ""
+    content: str = ""
+    evidence: str = ""
+
+
+class EmotionPoint(BaseModel):
+    point: str = ""
+    emotion: str = ""
+    trigger: str = ""
+    effect: str = ""
+
+
+class InteractionAnalysis(BaseModel):
+    prompts: list[str] = Field(default_factory=list)
+    commentTriggers: list[str] = Field(default_factory=list)
+    observedComments: list[str] = Field(default_factory=list)
+    note: str = ""
+
+
+class TrafficLogicLayer(BaseModel):
+    hook: HookAnalysis = Field(default_factory=HookAnalysis)
+    narrativeSummary: str = ""
+    narrativeStages: list[NarrativeStage] = Field(default_factory=list)
+    emotionCurve: list[EmotionPoint] = Field(default_factory=list)
+    interaction: InteractionAnalysis = Field(default_factory=InteractionAnalysis)
+
+
+class CommercialLayer(BaseModel):
+    valueType: str = ""
+    valueSupply: str = ""
+    conversionPath: str = ""
+    placement: str = ""
+    callToAction: str = ""
+    platformSignals: list[str] = Field(default_factory=list)
+    availabilityNote: str = ""
+
+
+class ReviewLayer(BaseModel):
+    strengths: list[str] = Field(default_factory=list)
+    shortcomings: list[str] = Field(default_factory=list)
+    improvements: list[str] = Field(default_factory=list)
+    formula: str = ""
+    transferable: list[str] = Field(default_factory=list)
+    nonCopyable: list[str] = Field(default_factory=list)
+    boundary: str = ""
+
+
 class VideoBreakdownModel(BaseModel):
-    summary: str
-    theme: str
-    hook: Hook
-    beats: list[VideoBeat]
-    craft: Craft
-    evidence: list[EvidencePoint]
-    transferable: list[str]
-    avoidCopying: list[str]
-    boundary: str
+    summary: str = ""
+    theme: str = ""
+    metadata: VideoMetadataLayer = Field(default_factory=VideoMetadataLayer)
+    trafficLogic: TrafficLogicLayer = Field(default_factory=TrafficLogicLayer)
+    commercial: CommercialLayer = Field(default_factory=CommercialLayer)
+    review: ReviewLayer = Field(default_factory=ReviewLayer)
+    # Legacy fields remain readable so reports created before the four-layer
+    # contract can still be opened and exported from the workbench.
+    hook: Hook = Field(default_factory=Hook)
+    beats: list[VideoBeat] = Field(default_factory=list)
+    craft: Craft = Field(default_factory=lambda: Craft(filming=[], editing=[], audio=[], captions=[]))
+    evidence: list[EvidencePoint] = Field(default_factory=list)
+    transferable: list[str] = Field(default_factory=list)
+    avoidCopying: list[str] = Field(default_factory=list)
+    boundary: str = ""
 
 
 class VideoBreakdown(VideoBreakdownModel):

@@ -36,10 +36,89 @@ export interface EvidencePoint {
   confidence: '高' | '中' | '待验证';
 }
 
+export interface AudienceSignal {
+  summary: string;
+  basis: string[];
+  confidence: '高' | '中' | '待验证';
+}
+
+export interface VideoMetadataLayer {
+  category: string;
+  format: string;
+  visualStyle: string;
+  bgmStyle: string;
+  captionStyle: string;
+  tags: string[];
+  location: string;
+  keywords: string[];
+  audience: AudienceSignal;
+}
+
+export interface HookAnalysis {
+  copy: string;
+  type: string;
+  emotion: string;
+  viewerTask: string;
+  evidence: string;
+}
+
+export interface NarrativeStage {
+  timeRange: string;
+  function: string;
+  content: string;
+  evidence: string;
+}
+
+export interface EmotionPoint {
+  point: string;
+  emotion: string;
+  trigger: string;
+  effect: string;
+}
+
+export interface InteractionAnalysis {
+  prompts: string[];
+  commentTriggers: string[];
+  observedComments: string[];
+  note: string;
+}
+
+export interface TrafficLogicLayer {
+  hook: HookAnalysis;
+  narrativeSummary: string;
+  narrativeStages: NarrativeStage[];
+  emotionCurve: EmotionPoint[];
+  interaction: InteractionAnalysis;
+}
+
+export interface CommercialLayer {
+  valueType: string;
+  valueSupply: string;
+  conversionPath: string;
+  placement: string;
+  callToAction: string;
+  platformSignals: string[];
+  availabilityNote: string;
+}
+
+export interface ReviewLayer {
+  strengths: string[];
+  shortcomings: string[];
+  improvements: string[];
+  formula: string;
+  transferable: string[];
+  nonCopyable: string[];
+  boundary: string;
+}
+
 export interface VideoBreakdown {
   source: VideoSource;
   summary: string;
   theme: string;
+  metadata?: VideoMetadataLayer;
+  trafficLogic?: TrafficLogicLayer;
+  commercial?: CommercialLayer;
+  review?: ReviewLayer;
   hook: {
     copy: string;
     mechanism: string;

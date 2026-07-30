@@ -38,7 +38,15 @@ async def get_runtime_settings(session: AsyncSession) -> RuntimeSettingsIn:
         elif key == "videoFps":
             values[key] = float(raw)
         elif key == "prompts":
-            values[key] = {**DEFAULT_PROMPTS, **json.loads(raw)}
+            saved_prompts = json.loads(raw)
+            # Upgrade the old placeholder prompts on first read. A custom
+            # prompt that is already substantial remains untouched.
+            upgraded = dict(saved_prompts)
+            for prompt_key, default in DEFAULT_PROMPTS.items():
+                current = str(saved_prompts.get(prompt_key, ""))
+                if not current.strip() or (prompt_key in {"videoBreakdown", "globalFacts"} and len(current) < 200):
+                    upgraded[prompt_key] = default
+            values[key] = {**DEFAULT_PROMPTS, **upgraded}
         else:
             values[key] = raw
     return RuntimeSettingsIn.model_validate(values)

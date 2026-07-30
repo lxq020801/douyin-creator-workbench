@@ -141,6 +141,7 @@ export function UnifiedWorkspacePage() {
   }
 
   const report = analysis.report;
+  const videoSource = analysis.kind === 'video' && report ? (report as VideoBreakdown).source : null;
   return (
     <div className="workspace-v2">
       <ProductHeader />
@@ -149,7 +150,7 @@ export function UnifiedWorkspacePage() {
         <div className="report-export-surface" ref={reportRef}>
           <header className="workspace-v2-heading">
             <div className="workspace-v2-label"><i /> {analysis.kind === 'video' ? 'SINGLE VIDEO / 单条拆解' : 'ACCOUNT STUDY / 账号研究'}</div>
-            <div className="workspace-v2-heading-row"><div><h1>{analysis.title}</h1><p>{analysis.kind === 'video' ? analysis.source : `采集 ${analysis.coverage?.collected || 0} 条 · 深拆 ${analysis.coverage?.completed || 0} 条`}</p></div><span className="workspace-v2-status"><Check size={15} /> 拆解完成</span></div>
+            <div className="workspace-v2-heading-row"><div><h1>{videoSource?.title || analysis.title}</h1><p>{videoSource ? `@${videoSource.author || '未获取作者'} · ${videoSource.duration || '时长未获取'}` : `采集 ${analysis.coverage?.collected || 0} 条 · 深拆 ${analysis.coverage?.completed || 0} 条`}</p></div><span className="workspace-v2-status"><Check size={15} /> 拆解完成</span></div>
           </header>
 
           {analysis.kind === 'video' && report ? <VideoReport report={report as VideoBreakdown} /> : null}
@@ -178,7 +179,57 @@ function FailureView({ analysis, onRetry }: { analysis: AnalysisRecord; onRetry:
 }
 
 function VideoReport({ report }: { report: VideoBreakdown }) {
-  return <div className="report-v2"><section className="source-v2"><div className="source-cover-v2"><span>VIDEO / {report.source.duration}</span><Film size={32} /><small>9:16 SOURCE</small></div><div className="source-copy-v2"><StatusBadge tone="blue">抖音视频</StatusBadge><h2>{report.source.title}</h2><p>@{report.source.author} · 发布于 {report.source.metrics.publishedAt || '未获取'}</p><a href={report.source.url} target="_blank" rel="noreferrer">查看原视频 <ExternalLink size={14} /></a></div><div className="metrics-v2"><Metric label="播放" value={compactNumber(report.source.metrics.views)} /><Metric label="点赞" value={compactNumber(report.source.metrics.likes)} /><Metric label="评论" value={compactNumber(report.source.metrics.comments)} /><Metric label="收藏" value={compactNumber(report.source.metrics.collects)} /></div></section><ReportSection index="01" kicker="EDITOR'S SUMMARY" title="编导结论"><p className="report-v2-lead">{report.summary}</p><div className="report-v2-theme"><strong>核心主题</strong><span>{report.theme}</span></div></ReportSection><ReportSection index="02" kicker="FIRST 3 SECONDS" title="前 3 秒，为什么能抓住人"><blockquote>{report.hook.copy}</blockquote><div className="report-v2-columns"><div><strong>作用机制</strong><p>{report.hook.mechanism}</p></div><div><strong>画面动作</strong><p>{report.hook.visualAction}</p></div></div></ReportSection><ReportSection index="03" kicker="STRUCTURE MAP" title="这条视频怎么往下走"><div className="timeline-v2">{report.beats.map((beat, index) => <article key={`${beat.timecode}-${index}`}><span>{beat.timecode}</span><i>{String(index + 1).padStart(2, '0')}</i><div><h3>{beat.role}</h3><p>{beat.originalCopy}</p><small>{beat.emotion} / {beat.visual}</small></div></article>)}</div></ReportSection><ReportSection index="04" kicker="EVIDENCE & TRANSFER" title="什么值得学，什么不能照抄"><div className="evidence-v2">{report.evidence.map((point) => <article key={point.label}><div><strong>{point.label}</strong><StatusBadge tone={point.confidence === '高' ? 'green' : 'blue'}>{point.confidence}</StatusBadge></div><p>{point.evidence}</p></article>)}</div><div className="transfer-v2"><div><strong><Check size={16} /> 可迁移</strong>{report.transferable.map((item) => <p key={item}>{item}</p>)}</div><div><strong><AlertTriangle size={16} /> 不建议照搬</strong>{report.avoidCopying.map((item) => <p key={item}>{item}</p>)}</div></div></ReportSection></div>;
+  const metadata = report.metadata || {
+    category: report.theme,
+    format: '未获取',
+    visualStyle: report.craft.filming.join('；'),
+    bgmStyle: report.craft.audio.join('；'),
+    captionStyle: report.craft.captions.join('；'),
+    tags: [], location: '', keywords: [],
+    audience: { summary: '暂未形成明确受众判断', basis: [], confidence: '待验证' as const },
+  };
+  const logic = report.trafficLogic || {
+    hook: { copy: report.hook.copy, type: '未标注', emotion: report.hook.mechanism, viewerTask: '', evidence: report.hook.visualAction },
+    narrativeSummary: '按视频实际内容推进。',
+    narrativeStages: report.beats.map((beat) => ({ timeRange: beat.timecode, function: beat.role, content: beat.originalCopy, evidence: `${beat.emotion}；${beat.visual}` })),
+    emotionCurve: report.beats.map((beat) => ({ point: beat.timecode, emotion: beat.emotion, trigger: beat.visual, effect: beat.transition })),
+    interaction: { prompts: [], commentTriggers: [], observedComments: [], note: '旧报告未保存互动字段。' },
+  };
+  const commercial = report.commercial || {
+    valueType: '未标注', valueSupply: '', conversionPath: '', placement: '', callToAction: '', platformSignals: [], availabilityNote: '旧报告未保存商业运营字段。',
+  };
+  const review = report.review || {
+    strengths: report.evidence.filter((point) => point.confidence !== '待验证').map((point) => point.label),
+    shortcomings: [], improvements: [], formula: '', transferable: report.transferable, nonCopyable: report.avoidCopying, boundary: report.boundary,
+  };
+  const hasItems = (items: string[]) => items.filter(Boolean).length > 0;
+  return <div className="report-v2 report-four-layer">
+    <section className="source-v2 source-v2--compact">
+      <div className="source-cover-v2 source-cover-v2--real">{report.source.coverUrl ? <img src={report.source.coverUrl} alt="视频封面" /> : <><Film size={30} /><small>9:16 SOURCE</small></>}<span>{report.source.duration || '—'}</span></div>
+      <div className="source-copy-v2"><StatusBadge tone="blue">抖音视频</StatusBadge><h2>{report.source.title}</h2><p>@{report.source.author || '未获取作者'} · 发布于 {report.source.metrics.publishedAt || '未获取'}</p><a href={report.source.url} target="_blank" rel="noreferrer">查看原视频 <ExternalLink size={14} /></a></div>
+      <div className="metrics-v2"><Metric label="播放" value={compactNumber(report.source.metrics.views)} /><Metric label="点赞" value={compactNumber(report.source.metrics.likes)} /><Metric label="评论" value={compactNumber(report.source.metrics.comments)} /><Metric label="收藏" value={compactNumber(report.source.metrics.collects)} /></div>
+    </section>
+
+    <ReportSection index="01" kicker="METADATA / 基础元数据" title="先看清这条视频的底子">
+      <div className="four-layer-summary"><div><strong>赛道</strong><span>{metadata.category || '未获取'}</span></div><div><strong>拍摄形式</strong><span>{metadata.format || '未获取'}</span></div><div><strong>定位与话题</strong><span>{[metadata.location, ...metadata.tags].filter(Boolean).join(' · ') || '未获取'}</span></div><div><strong>关键词</strong><span>{metadata.keywords.join('、') || '未获取'}</span></div></div>
+      <div className="metadata-details"><div><strong>画面与字幕</strong><p>{metadata.visualStyle || '未获取'}{metadata.captionStyle ? `；字幕：${metadata.captionStyle}` : ''}</p></div><div><strong>声音配置</strong><p>{metadata.bgmStyle || '未获取'}</p></div><div><strong>可能受众 <StatusBadge tone={metadata.audience.confidence === '高' ? 'green' : metadata.audience.confidence === '中' ? 'blue' : 'warning'}>{metadata.audience.confidence}</StatusBadge></strong><p>{metadata.audience.summary || '暂未形成明确判断'}</p>{hasItems(metadata.audience.basis) ? <small>依据：{metadata.audience.basis.join('；')}</small> : null}</div></div>
+    </ReportSection>
+
+    <ReportSection index="02" kicker="TRAFFIC LOGIC / 流量逻辑" title="它凭什么可能留住人">
+      <p className="report-v2-lead">{report.summary || logic.narrativeSummary}</p><div className="report-v2-theme"><strong>核心主题</strong><span>{report.theme || '未获取'}</span></div>
+      <div className="hook-analysis"><div className="hook-analysis-copy"><span>开篇钩子 · {logic.hook.type || '未标注'}</span><blockquote>{logic.hook.copy || '未获取原文或忠实概括'}</blockquote></div><div className="hook-analysis-details"><div><strong>观众任务 / 情绪</strong><p>{[logic.hook.viewerTask, logic.hook.emotion].filter(Boolean).join(' · ') || '未形成明确判断'}</p></div><div><strong>对应证据</strong><p>{logic.hook.evidence || '暂未获取'}</p></div></div></div>
+      <div className="narrative-block"><div className="subsection-heading"><strong>完整叙事流程</strong><span>{logic.narrativeSummary}</span></div><div className="narrative-stages">{logic.narrativeStages.map((stage, index) => <article key={`${stage.timeRange}-${index}`}><span>{stage.timeRange || `阶段 ${index + 1}`}</span><div><strong>{stage.function || '内容推进'}</strong><p>{stage.content}</p><small>{stage.evidence}</small></div></article>)}</div></div>
+      <div className="logic-columns"><div><div className="subsection-heading"><strong>情绪推进</strong><span>视频中可观察到的情绪变化</span></div>{logic.emotionCurve.length ? <ul className="compact-list">{logic.emotionCurve.map((point, index) => <li key={`${point.point}-${index}`}><b>{point.point || '节点'}</b><span>{point.emotion}：{point.trigger || point.effect}</span></li>)}</ul> : <p className="muted-note">未形成足够证据的情绪曲线。</p>}</div><div><div className="subsection-heading"><strong>互动设计</strong><span>{logic.interaction.note || '视频内可见的互动信号'}</span></div>{hasItems(logic.interaction.prompts) || hasItems(logic.interaction.commentTriggers) ? <ul className="compact-list">{[...logic.interaction.prompts, ...logic.interaction.commentTriggers].filter(Boolean).map((item, index) => <li key={`${item}-${index}`}><span>{item}</span></li>)}</ul> : <p className="muted-note">未发现明确的主动互动设计。</p>}{hasItems(logic.interaction.observedComments) ? <small className="observed-comments">观察到的留言：{logic.interaction.observedComments.join('；')}</small> : null}</div></div>
+    </ReportSection>
+
+    <ReportSection index="03" kicker="COMMERCIAL / 商业运营" title="它怎样提供价值并承接行动">
+      <div className="commercial-grid"><div><strong>价值供给</strong><p><StatusBadge tone="blue">{commercial.valueType || '未标注'}</StatusBadge> {commercial.valueSupply || '未获取'}</p></div><div><strong>转化链路</strong><p>{commercial.conversionPath || '未发现明确的转化链路'}</p></div><div><strong>植入与行动</strong><p>{[commercial.placement, commercial.callToAction].filter(Boolean).join('；') || '未发现明确设计'}</p></div></div><div className="platform-signals"><strong>可观察的平台适配信号</strong>{commercial.platformSignals.length ? <ul>{commercial.platformSignals.map((item) => <li key={item}>{item}</li>)}</ul> : <p>未发现足够证据，不对平台推荐机制下结论。</p>}</div><p className="boundary-inline">{commercial.availabilityNote || '商业判断仅基于视频中可观察到的表达，不代表实际成交结果。'}</p>
+    </ReportSection>
+
+    <ReportSection index="04" kicker="REVIEW / 复盘提炼" title="最后留下可复用的判断">
+      <div className="review-grid"><div><strong>做得好的地方</strong>{review.strengths.length ? <ul>{review.strengths.map((item) => <li key={item}>{item}</li>)}</ul> : <p>暂未形成明确判断。</p>}</div><div><strong>视频短板</strong>{review.shortcomings.length ? <ul>{review.shortcomings.map((item) => <li key={item}>{item}</li>)}</ul> : <p>暂未发现明显结构性问题。</p>}</div><div><strong>优化建议</strong>{review.improvements.length ? <ul>{review.improvements.map((item) => <li key={item}>{item}</li>)}</ul> : <p>当前没有必须优先修改的地方。</p>}</div></div><div className="formula-block"><span>通用爆款公式 / 内容模型</span><p>{review.formula || '暂未提炼出可验证的通用模型。'}</p></div><div className="transfer-v2"><div><strong><Check size={16} /> 可迁移底层逻辑</strong>{review.transferable.map((item) => <p key={item}>{item}</p>)}</div><div><strong><AlertTriangle size={16} /> 不可直接复制的条件</strong>{review.nonCopyable.map((item) => <p key={item}>{item}</p>)}</div></div><p className="boundary-inline">{review.boundary || report.boundary}</p>
+    </ReportSection>
+  </div>;
 }
 
 function AccountReport({ report, coverage }: { report: AccountReport; coverage: Record<string, number> | null }) {

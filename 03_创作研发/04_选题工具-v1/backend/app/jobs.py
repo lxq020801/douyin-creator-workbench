@@ -251,6 +251,10 @@ async def _analyze_account_sample(
 def _summary_inputs(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [{
         "source": report.get("source"), "summary": report.get("summary"), "theme": report.get("theme"),
+        "metadata": report.get("metadata"), "trafficLogic": report.get("trafficLogic"),
+        "commercial": report.get("commercial"), "review": report.get("review"),
+        # Keep legacy reports useful when an account contains samples created
+        # before the four-layer contract was introduced.
         "hook": report.get("hook"), "evidence": report.get("evidence"),
         "transferable": report.get("transferable"), "boundary": report.get("boundary"),
     } for report in reports]
