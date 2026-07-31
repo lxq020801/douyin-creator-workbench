@@ -8743,6 +8743,52 @@ body {
   font-size: 16px;
 }
 
+.remake-topic-toolbar .topic-select-all {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid var(--external-rule);
+  border-radius: 4px;
+  color: var(--ink);
+  background: transparent;
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.remake-topic-toolbar .topic-select-all:hover {
+  border-color: var(--ink);
+  background: var(--external-soft);
+}
+
+.remake-topic-toolbar .topic-select-all > span {
+  display: grid;
+  width: 14px;
+  height: 14px;
+  place-items: center;
+  border: 1px solid color-mix(in oklch, var(--ink) 45%, var(--paper));
+  border-radius: 2px;
+  color: var(--paper);
+  background: var(--paper);
+}
+
+.remake-topic-toolbar .topic-select-all svg {
+  opacity: 0;
+}
+
+.remake-topic-toolbar .topic-select-all.is-active > span {
+  border-color: var(--blue);
+  background: var(--blue);
+}
+
+.remake-topic-toolbar .topic-select-all.is-active svg {
+  opacity: 1;
+}
+
 .remake-direction,
 .remake-spread-summary {
   display: grid;

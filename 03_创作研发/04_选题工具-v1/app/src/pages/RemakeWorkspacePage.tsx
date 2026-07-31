@@ -212,7 +212,7 @@ function TopicPanel({ batch, selected, setSelected, onGenerateScripts, onUpdateT
   return <section className="remake-topic-workspace">
     <div className="remake-topic-toolbar">
       <div><span>TOPIC SELECTION</span><strong>选择要继续生成脚本的选题</strong></div>
-      <div className="topic-actions"><button className="topic-select-all" type="button" onClick={() => setSelected(allSelected ? [] : topics.map((topic) => topic.id))}>{allSelected ? '清空选择' : '全选'}</button><span>{selected.length} 个已选</span><button className="button button--primary button--sm" disabled={!selected.length || busy} type="button" onClick={onGenerateScripts}>{busy ? <LoaderCircle className="spin" size={15} /> : <WandSparkles size={15} />} 生成拍摄脚本</button></div>
+      <div className="topic-actions"><button className={`topic-select-all${allSelected ? ' is-active' : ''}`} type="button" aria-pressed={allSelected} title={allSelected ? '取消选择全部选题' : '选择全部选题'} onClick={() => setSelected(allSelected ? [] : topics.map((topic) => topic.id))}><span aria-hidden="true"><Check size={11} /></span>{allSelected ? '取消全选' : '全选'}</button><span>{selected.length} 个已选</span><button className="button button--primary button--sm" disabled={!selected.length || busy} type="button" onClick={onGenerateScripts}>{busy ? <LoaderCircle className="spin" size={15} /> : <WandSparkles size={15} />} 生成拍摄脚本</button></div>
     </div>
     {batch.direction ? <div className="remake-direction"><span>本轮迁移方向</span><p>{batch.direction.replaceAll('杂交', '迁移')}</p></div> : null}
 
