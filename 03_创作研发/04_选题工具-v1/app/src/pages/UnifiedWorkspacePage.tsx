@@ -8,6 +8,26 @@ import { compactNumber } from '../data/mockData';
 import { useAppStore } from '../store/AppStore';
 import type { AnalysisRecord, ExternalAccountReport, ExternalVideoBreakdown, VideoSource } from '../types';
 
+const EXPORT_PIXEL_RATIO = 3;
+const EXPORT_MAX_DIMENSION = 30_000;
+const EXPORT_MAX_PIXELS = 120_000_000;
+
+async function waitForReportImages(root: HTMLElement) {
+  const pendingImages = Array.from(root.querySelectorAll('img')).filter((image) => !image.complete);
+  await Promise.all(pendingImages.map((image) => new Promise<void>((resolve) => {
+    const finish = () => resolve();
+    image.addEventListener('load', finish, { once: true });
+    image.addEventListener('error', finish, { once: true });
+  })));
+}
+
+function getExportPixelRatio(element: HTMLElement) {
+  const { scrollWidth: width, scrollHeight: height } = element;
+  const dimensionLimit = EXPORT_MAX_DIMENSION / Math.max(width, height);
+  const pixelLimit = Math.sqrt(EXPORT_MAX_PIXELS / Math.max(width * height, 1));
+  return Math.max(1, Math.min(EXPORT_PIXEL_RATIO, dimensionLimit, pixelLimit));
+}
+
 export function UnifiedWorkspacePage() {
   const { id } = useParams<{ id: string }>();
   const { notify } = useAppStore();
@@ -36,7 +56,13 @@ export function UnifiedWorkspacePage() {
     setExporting(true);
     try {
       await document.fonts.ready;
-      const dataUrl = await toPng(reportRef.current, { backgroundColor: '#f6f5f0', cacheBust: true, pixelRatio: 2 });
+      await waitForReportImages(reportRef.current);
+      const pixelRatio = getExportPixelRatio(reportRef.current);
+      const dataUrl = await toPng(reportRef.current, {
+        backgroundColor: '#f6f5f0',
+        cacheBust: true,
+        pixelRatio,
+      });
       const link = document.createElement('a');
       link.download = `${analysis.title.replace(/[\\/:*?"<>|]/g, '-').slice(0, 80)}-拆解报告.png`;
       link.href = dataUrl;
