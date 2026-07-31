@@ -126,7 +126,7 @@ function AccountReportHeader({ report, coverage }: { report: ExternalAccountRepo
 function VideoReport({ report: data }: { report: ExternalVideoBreakdown }) {
   return <div className="report-v2 external-report">
     <ReportSection index="01" kicker="BREAKOUT JUDGMENT / 爆点判断" title="这条内容真正抓人的地方">
-      <p className="external-lead">{data.breakoutJudgment.coreAttraction}</p>
+      <p className="external-lead external-lead--judgment"><span>核心判断</span><span>{data.breakoutJudgment.coreAttraction}</span></p>
       <BreakoutDefinitionList items={[['内容切口', data.breakoutJudgment.entryPoint], ['观众处境', data.breakoutJudgment.viewerSituation], ['情绪价值', data.breakoutJudgment.emotionalValue]]} />
     </ReportSection>
     <ReportSection index="02" kicker="VIRAL SKELETON / 爆款骨架" title="整条视频怎样把人带到最后">
