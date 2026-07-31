@@ -102,8 +102,12 @@ function VideoReportHeader({ source }: { source: VideoSource }) {
       <div className="video-report-copy">
         <span className="video-platform-tag">抖音视频</span>
         <h1>{source.title}</h1>
-        <p className="video-report-byline">@{source.author || '未获取作者'}{publishedAt ? ` · ${publishedAt}` : ''}{source.duration ? ` · ${source.duration}` : ''}</p>
-        <div className="video-report-metrics" aria-label="视频互动数据">{metrics.map(([label, value]) => <span key={label}><small>{label}</small><strong>{compactNumber(value)}</strong></span>)}</div>
+        <div className="video-report-meta-row">
+          <span className="video-report-byline">@{source.author || '未获取作者'}</span>
+          {publishedAt ? <span>{publishedAt}</span> : null}
+          {source.duration ? <span>时长 {source.duration}</span> : null}
+          <div className="video-report-metrics" aria-label="视频互动数据">{metrics.map(([label, value]) => <span key={label}><small>{label}</small>{compactNumber(value)}</span>)}</div>
+        </div>
         <a href={source.url} target="_blank" rel="noreferrer">查看原视频 <ExternalLink size={14} /></a>
       </div>
     </div>
@@ -124,7 +128,7 @@ function VideoReport({ report: data }: { report: ExternalVideoBreakdown }) {
   return <div className="report-v2 external-report">
     <ReportSection index="01" kicker="BREAKOUT JUDGMENT / 爆点判断" title="这条内容真正抓人的地方">
       <p className="external-lead">{data.breakoutJudgment.coreAttraction}</p>
-      <DefinitionGrid items={[['内容切口', data.breakoutJudgment.entryPoint], ['观众处境', data.breakoutJudgment.viewerSituation], ['情绪价值', data.breakoutJudgment.emotionalValue]]} />
+      <BreakoutDefinitionList items={[['内容切口', data.breakoutJudgment.entryPoint], ['观众处境', data.breakoutJudgment.viewerSituation], ['情绪价值', data.breakoutJudgment.emotionalValue]]} />
     </ReportSection>
     <ReportSection index="02" kicker="VIRAL SKELETON / 爆款骨架" title="整条视频怎样把人带到最后">
       <div className="external-formula">{data.viralSkeleton.formula}</div>
@@ -173,6 +177,10 @@ function AccountReportView({ report: data }: { report: ExternalAccountReport }) 
 
 function DefinitionGrid({ items }: { items: Array<[string, string]> }) {
   return <dl className="external-definition-grid">{items.filter(([, value]) => Boolean(value)).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>;
+}
+
+function BreakoutDefinitionList({ items }: { items: Array<[string, string]> }) {
+  return <dl className="external-breakout-list">{items.filter(([, value]) => Boolean(value)).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>;
 }
 
 function ReportSection({ index, kicker, title, children }: { index: string; kicker: string; title: string; children: React.ReactNode }) {
