@@ -3,12 +3,31 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { ProductHeader } from '../components/ProductHeader';
-import type { AnalysisRecord } from '../types';
+import type { AnalysisRecord, ExternalVideoBreakdown, VideoSource } from '../types';
 
 type RecordKind = 'video' | 'account';
 
 function statusLabel(status: AnalysisRecord['status']) {
   return ({ queued: '排队中', running: '处理中', completed: '已完成', failed: '失败', cancelled: '已取消' } as const)[status];
+}
+
+function recordVideoSource(record: AnalysisRecord): Partial<VideoSource> | null {
+  if (record.kind !== 'video') return null;
+  const reportSource = record.report && 'source' in record.report
+    ? (record.report as ExternalVideoBreakdown).source
+    : null;
+  return reportSource || (record.metadata as Partial<VideoSource> | null);
+}
+
+function RecordVisual({ record, featured = false }: { record: AnalysisRecord; featured?: boolean }) {
+  const source = recordVideoSource(record);
+  if (source?.coverUrl) {
+    return <span className={`record-cover-v3${featured ? ' record-cover-v3--featured' : ''}`}>
+      <img src={source.coverUrl} alt="" />
+      {source.duration ? <small>{source.duration}</small> : null}
+    </span>;
+  }
+  return <span className={`record-symbol-v3 record-symbol-v3--${record.kind}`}>{record.kind === 'video' ? <FileSearch size={featured ? 21 : 19} /> : <UsersRound size={featured ? 21 : 19} />}</span>;
 }
 
 export function WorkspaceOverviewPage() {
@@ -71,7 +90,7 @@ export function WorkspaceOverviewPage() {
           <section className="recent-record-v3">
             <div className="recent-record-v3-label">RECENT / 最近一次</div>
             <button type="button" onClick={() => openRecord(recent)}>
-              <span className={`record-symbol-v3 record-symbol-v3--${recent.kind}`}>{recent.kind === 'video' ? <FileSearch size={21} /> : <UsersRound size={21} />}</span>
+              <RecordVisual record={recent} featured />
               <span className="recent-record-v3-copy"><small>{recent.kind === 'video' ? '单条视频' : '账号研究'} · {statusLabel(recent.status)}</small><strong>{recent.title}</strong><p>{recent.detail}</p></span>
               <span className="recent-record-v3-time">{new Date(recent.updatedAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
               <ArrowRight size={20} />
@@ -97,7 +116,7 @@ export function WorkspaceOverviewPage() {
             {visibleRecords.map((record) => (
               <article className="record-row-v3" key={record.id}>
                 <button className="record-open-v3" type="button" onClick={() => openRecord(record)}>
-                  <span className={`record-symbol-v3 record-symbol-v3--${record.kind}`}>{record.kind === 'video' ? <FileSearch size={19} /> : <UsersRound size={19} />}</span>
+                  <RecordVisual record={record} />
                   <span className="record-copy-v3"><small>{record.kind === 'video' ? '单条视频' : '账号研究'} · {statusLabel(record.status)}</small><strong>{record.title}</strong><p>{record.detail}</p></span>
                   <span className="record-meta-v3"><strong>{record.progress}%</strong><small>{new Date(record.createdAt).toLocaleDateString('zh-CN')}</small></span>
                   <ArrowRight size={18} />
