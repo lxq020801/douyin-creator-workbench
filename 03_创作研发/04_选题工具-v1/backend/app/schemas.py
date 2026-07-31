@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class SourceMetrics(BaseModel):
@@ -25,175 +25,111 @@ class VideoSource(BaseModel):
     metrics: SourceMetrics
 
 
-class VideoBeat(BaseModel):
-    timecode: str = ""
-    originalCopy: str = ""
-    role: str = ""
-    emotion: str = ""
-    visual: str = ""
-    transition: str = ""
+class BreakoutJudgment(BaseModel):
+    entryPoint: str = ""
+    viewerSituation: str = ""
+    emotionalValue: str = ""
+    coreAttraction: str = ""
 
 
-class EvidencePoint(BaseModel):
-    label: str = ""
-    evidence: str = ""
-    confidence: Literal["高", "中", "待验证"] = "待验证"
-
-
-class Hook(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-
-    copy_text: str = Field(default="", alias="copy")
-    mechanism: str = ""
-    visualAction: str = ""
-
-
-class Craft(BaseModel):
-    filming: list[str]
-    editing: list[str]
-    audio: list[str]
-    captions: list[str]
-
-
-class AudienceSignal(BaseModel):
-    summary: str = ""
-    basis: list[str] = Field(default_factory=list)
-    confidence: Literal["高", "中", "待验证"] = "待验证"
-
-
-class VideoMetadataLayer(BaseModel):
-    category: str = ""
-    format: str = ""
-    visualStyle: str = ""
-    bgmStyle: str = ""
-    captionStyle: str = ""
-    tags: list[str] = Field(default_factory=list)
-    location: str = ""
-    keywords: list[str] = Field(default_factory=list)
-    audience: AudienceSignal = Field(default_factory=AudienceSignal)
-
-
-class HookAnalysis(BaseModel):
-    copy_text: str = Field(default="", alias="copy")
-    type: str = ""
-    emotion: str = ""
-    viewerTask: str = ""
-    evidence: str = ""
-
-
-class NarrativeStage(BaseModel):
+class SkeletonStage(BaseModel):
     timeRange: str = ""
+    name: str = ""
     function: str = ""
-    content: str = ""
-    evidence: str = ""
 
 
-class EmotionPoint(BaseModel):
-    point: str = ""
-    emotion: str = ""
-    trigger: str = ""
-    effect: str = ""
-
-
-class InteractionAnalysis(BaseModel):
-    prompts: list[str] = Field(default_factory=list)
-    commentTriggers: list[str] = Field(default_factory=list)
-    observedComments: list[str] = Field(default_factory=list)
-    note: str = ""
-
-
-class TrafficLogicLayer(BaseModel):
-    hook: HookAnalysis = Field(default_factory=HookAnalysis)
-    narrativeSummary: str = ""
-    narrativeStages: list[NarrativeStage] = Field(default_factory=list)
-    emotionCurve: list[EmotionPoint] = Field(default_factory=list)
-    interaction: InteractionAnalysis = Field(default_factory=InteractionAnalysis)
-
-
-class CommercialLayer(BaseModel):
-    valueType: str = ""
-    valueSupply: str = ""
-    conversionPath: str = ""
-    placement: str = ""
-    callToAction: str = ""
-    platformSignals: list[str] = Field(default_factory=list)
-    availabilityNote: str = ""
-
-
-class ReviewLayer(BaseModel):
-    strengths: list[str] = Field(default_factory=list)
-    shortcomings: list[str] = Field(default_factory=list)
-    improvements: list[str] = Field(default_factory=list)
+class ViralSkeleton(BaseModel):
     formula: str = ""
-    transferable: list[str] = Field(default_factory=list)
-    nonCopyable: list[str] = Field(default_factory=list)
-    boundary: str = ""
+    stages: list[SkeletonStage] = Field(default_factory=list)
+
+
+class OpeningHook(BaseModel):
+    firstFrame: str = ""
+    openingLine: str = ""
+    supportingElements: list[str] = Field(default_factory=list)
+    audienceTrigger: str = ""
+    viewingExpectation: str = ""
+
+
+class CopyRetentionPoint(BaseModel):
+    excerpt: str = ""
+    function: str = ""
+    bridge: str = ""
+
+
+class AudiovisualPoint(BaseModel):
+    element: str = ""
+    design: str = ""
+    function: str = ""
+
+
+class ReplicableMethod(BaseModel):
+    name: str = ""
+    originalUse: str = ""
+    mustKeep: str = ""
+    replaceable: list[str] = Field(default_factory=list)
 
 
 class VideoBreakdownModel(BaseModel):
-    summary: str = ""
-    theme: str = ""
-    metadata: VideoMetadataLayer = Field(default_factory=VideoMetadataLayer)
-    trafficLogic: TrafficLogicLayer = Field(default_factory=TrafficLogicLayer)
-    commercial: CommercialLayer = Field(default_factory=CommercialLayer)
-    review: ReviewLayer = Field(default_factory=ReviewLayer)
-    # Legacy fields remain readable so reports created before the four-layer
-    # contract can still be opened and exported from the workbench.
-    hook: Hook = Field(default_factory=Hook)
-    beats: list[VideoBeat] = Field(default_factory=list)
-    craft: Craft = Field(default_factory=lambda: Craft(filming=[], editing=[], audio=[], captions=[]))
-    evidence: list[EvidencePoint] = Field(default_factory=list)
-    transferable: list[str] = Field(default_factory=list)
-    avoidCopying: list[str] = Field(default_factory=list)
-    boundary: str = ""
+    breakoutJudgment: BreakoutJudgment
+    viralSkeleton: ViralSkeleton
+    openingHook: OpeningHook
+    copyRetention: list[CopyRetentionPoint] = Field(min_length=3, max_length=5)
+    audiovisual: list[AudiovisualPoint] = Field(default_factory=list)
+    replicableMethods: list[ReplicableMethod] = Field(min_length=3, max_length=5)
 
 
 class VideoBreakdown(VideoBreakdownModel):
     source: VideoSource
 
 
-class AccountPillar(BaseModel):
-    name: str
-    ratio: int = Field(ge=0, le=100)
-    note: str
+class AccountStrategyOverview(BaseModel):
+    coreAudience: str = ""
+    coreValue: str = ""
+    attentionModel: str = ""
+    positioning: str = ""
+    monetizationLogic: str = ""
 
 
-class AccountTimeline(BaseModel):
-    phase: str
-    range: str
-    action: str
-    signal: str
+class ContentArea(BaseModel):
+    name: str = ""
+    role: str = ""
+    recurringPattern: str = ""
 
 
-class AccountComparison(BaseModel):
-    dimension: str
-    viral: str
-    normal: str
-    conclusion: str
+class TopicEngine(BaseModel):
+    source: str = ""
+    recurringTension: str = ""
+    generationLogic: str = ""
 
 
-class TransferRule(BaseModel):
-    rule: str
-    evidence: str
-    boundary: str
+class RepeatableMethod(BaseModel):
+    name: str = ""
+    method: str = ""
+    evidence: str = ""
 
 
-class TestTopic(BaseModel):
-    title: str
-    reason: str
-    priority: Literal["优先", "备选"]
+class AccountExpressionSystem(BaseModel):
+    characterRole: str = ""
+    copyTone: str = ""
+    onCameraState: str = ""
+    visualLanguage: str = ""
+    combinedEffect: str = ""
+
+
+class AccountTransferAsset(BaseModel):
+    name: str = ""
+    transferableMechanism: str = ""
+    dependencies: str = ""
 
 
 class AccountReportModel(BaseModel):
-    promise: str
-    pillars: list[AccountPillar]
-    timeline: list[AccountTimeline]
-    hookPatterns: list[str]
-    viralVsNormal: list[AccountComparison]
-    transferable: list[TransferRule]
-    risks: list[str]
-    testTopics: list[TestTopic]
-    boundary: str
+    strategyOverview: AccountStrategyOverview
+    contentMap: list[ContentArea] = Field(min_length=1)
+    topicEngine: list[TopicEngine] = Field(min_length=1)
+    repeatableMethods: list[RepeatableMethod] = Field(min_length=5, max_length=6)
+    expressionSystem: AccountExpressionSystem
+    transferableAssets: list[AccountTransferAsset] = Field(min_length=4, max_length=5)
 
 
 class AccountReport(AccountReportModel):
@@ -214,18 +150,18 @@ class RuntimeSettingsIn(BaseModel):
 class RuntimeSettingsOut(RuntimeSettingsIn):
     apiKeyConfigured: bool = False
     douyinCookieConfigured: bool = False
+    promptPackVersion: str = "external-rtf-v3"
 
 
 class ProfileData(BaseModel):
     name: str
-    industry: str
-    creatorIdentity: str
-    audience: str
-    valuePromise: str
-    formatsAndResources: str
-    constraints: str
+    creatorAndAccount: str
+    businessAndGoals: str
+    audienceAndAction: str
+    availableMaterials: str
+    productionConditions: str
+    toneAndBoundaries: str
     originalDescription: str = ""
-    inferredFields: list[str] = Field(default_factory=list)
 
 
 class ProfileOut(ProfileData):
@@ -233,15 +169,28 @@ class ProfileOut(ProfileData):
     updatedAt: str
 
 
+class IntakeAnswer(BaseModel):
+    question: str
+    answer: str
+
+
 class IntakeRequest(BaseModel):
-    description: str = Field(min_length=4, max_length=3000)
-    answers: list[str] = Field(default_factory=list, max_length=2)
+    description: str = Field(min_length=4, max_length=6000)
+    answers: list[IntakeAnswer] = Field(default_factory=list, max_length=8)
 
 
 class IntakeResponse(BaseModel):
     status: Literal["followup", "complete"]
     question: str = ""
     draft: ProfileData | None = None
+
+    @model_validator(mode="after")
+    def response_matches_status(self):
+        if self.status == "followup" and not self.question.strip():
+            raise ValueError("需要追问时必须返回一个具体问题")
+        if self.status == "complete" and self.draft is None:
+            raise ValueError("信息足够时必须返回完整资料卡")
+        return self
 
 
 class AnalysisCreate(BaseModel):
@@ -261,6 +210,7 @@ class AnalysisOut(BaseModel):
     report: dict[str, Any] | None = None
     coverage: dict[str, Any] | None = None
     error: str | None = None
+    promptVersion: str = "external-rtf-v3"
     createdAt: datetime
     updatedAt: datetime
 
@@ -271,31 +221,67 @@ class TopicGenerateRequest(BaseModel):
 
 class TopicData(BaseModel):
     title: str
-    angle: str
+    concept: str
     hook: str
-    reason: str
-    inheritedMechanism: str
-    adaptation: str
+    inheritedValue: str
+    profileConnection: str
+    fitReason: str = ""
+    accountRole: str = ""
 
 
 class TopicBatchModel(BaseModel):
+    direction: str
+    spreadSummary: str
     topics: list[TopicData] = Field(min_length=20, max_length=20)
+
+
+class FactualIssue(BaseModel):
+    path: str
+    claim: str
+    reason: str
+
+
+class FactualAudit(BaseModel):
+    passed: bool
+    issues: list[FactualIssue] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def result_matches_issues(self):
+        if self.passed and self.issues:
+            raise ValueError("审计通过时不能同时返回事实问题")
+        if not self.passed and not self.issues:
+            raise ValueError("审计未通过时必须返回具体事实问题")
+        return self
 
 
 class TopicOut(TopicData):
     id: str
     analysisId: str
     profileId: str
+    batchId: str
     position: int
+
+
+class TopicBatchOut(BaseModel):
+    id: str
+    analysisId: str
+    profileId: str
+    kind: Literal["video", "account"]
+    direction: str
+    spreadSummary: str
+    promptVersion: str
+    createdAt: datetime
+    topics: list[TopicOut]
 
 
 class TopicUpdate(BaseModel):
     title: str = Field(min_length=1, max_length=300)
-    angle: str = ""
+    concept: str = ""
     hook: str = ""
-    reason: str = ""
-    inheritedMechanism: str = ""
-    adaptation: str = ""
+    inheritedValue: str = ""
+    profileConnection: str = ""
+    fitReason: str = ""
+    accountRole: str = ""
 
 
 class ScriptBatchRequest(BaseModel):
@@ -307,24 +293,41 @@ class ScriptBatchRequest(BaseModel):
         return list(dict.fromkeys(value))
 
 
-class ScriptSegment(BaseModel):
+class OpeningHookScript(BaseModel):
+    line: str = ""
+    type: str = ""
+    viewerTrigger: str = ""
+    supportingCue: str = ""
+
+
+class ScriptRow(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    time: str
-    task: str
-    copy_text: str = Field(alias="copy")
-    shooting: str
-    rhythm: str
+    section: str = ""
+    spoken_copy: str = Field(default="", alias="copy")
+    purpose: str = ""
+    keyCue: str = ""
+
+
+class CaptionSoundCue(BaseModel):
+    content: str = ""
+    usage: str = ""
+
+
+class EndingInteraction(BaseModel):
+    endingLine: str = ""
+    commentPrompts: list[str] = Field(default_factory=list)
+    pinnedComment: str = ""
+    starterComments: list[str] = Field(default_factory=list)
 
 
 class DirectorScript(BaseModel):
-    title: str
-    openingHook: str
-    duration: str
-    fullCopy: str
-    segments: list[ScriptSegment]
-    cta: str
-    productionNotes: list[str]
+    videoIdea: str
+    openingHook: OpeningHookScript
+    scriptRows: list[ScriptRow] = Field(min_length=1)
+    captionAndSound: list[CaptionSoundCue] = Field(default_factory=list)
+    endingInteraction: EndingInteraction = Field(default_factory=EndingInteraction)
+    teleprompterCopy: str
 
 
 class ScriptOut(BaseModel):
@@ -333,6 +336,7 @@ class ScriptOut(BaseModel):
     status: Literal["queued", "running", "completed", "failed"]
     data: DirectorScript | None = None
     error: str | None = None
+    promptVersion: str = "external-rtf-v3"
 
 
 class ConnectionTestResult(BaseModel):

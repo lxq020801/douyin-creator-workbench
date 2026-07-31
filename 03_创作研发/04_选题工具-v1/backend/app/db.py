@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from typing import Any, AsyncIterator
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, event, select
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, event, inspect, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -60,6 +60,7 @@ class Analysis(Base):
     coverage_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     job_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    prompt_version: Mapped[str] = mapped_column(String(80), default="external-rtf-v3")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now, index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
 
@@ -77,10 +78,24 @@ class AccountSample(Base):
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
+class TopicBatch(Base):
+    __tablename__ = "topic_batches"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    workspace_id: Mapped[str] = mapped_column(String(36), default=settings.local_workspace_id, index=True)
+    analysis_id: Mapped[str] = mapped_column(ForeignKey("analyses.id", ondelete="CASCADE"), index=True)
+    profile_id: Mapped[str] = mapped_column(ForeignKey("profiles.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(20))
+    direction: Mapped[str] = mapped_column(Text)
+    spread_summary: Mapped[str] = mapped_column(Text)
+    prompt_version: Mapped[str] = mapped_column(String(80), default="external-rtf-v3")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now, index=True)
+
+
 class Topic(Base):
     __tablename__ = "topics"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
     workspace_id: Mapped[str] = mapped_column(String(36), default=settings.local_workspace_id, index=True)
+    batch_id: Mapped[str] = mapped_column(ForeignKey("topic_batches.id", ondelete="CASCADE"), index=True)
     analysis_id: Mapped[str] = mapped_column(ForeignKey("analyses.id", ondelete="CASCADE"), index=True)
     profile_id: Mapped[str] = mapped_column(ForeignKey("profiles.id", ondelete="CASCADE"), index=True)
     position: Mapped[int] = mapped_column(Integer)
@@ -97,6 +112,7 @@ class Script(Base):
     data_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     job_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    prompt_version: Mapped[str] = mapped_column(String(80), default="external-rtf-v3")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
 
@@ -114,11 +130,154 @@ def _enable_sqlite_foreign_keys(dbapi_connection, _connection_record) -> None:
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 
+def _profile_v1_to_external(value: dict[str, Any]) -> dict[str, Any]:
+    if "creatorAndAccount" in value:
+        return value
+    identity = str(value.get("creatorIdentity") or "").strip()
+    industry = str(value.get("industry") or "").strip()
+    promise = str(value.get("valuePromise") or "").strip()
+    constraints = str(value.get("constraints") or "").strip()
+    return {
+        "name": str(value.get("name") or "旧版账号资料"),
+        "creatorAndAccount": identity,
+        "businessAndGoals": "；".join(item for item in (industry, promise) if item),
+        "audienceAndAction": str(value.get("audience") or ""),
+        "availableMaterials": str(value.get("formatsAndResources") or ""),
+        "productionConditions": constraints,
+        "toneAndBoundaries": constraints,
+        "originalDescription": str(value.get("originalDescription") or ""),
+    }
+
+
+def _topic_v1_to_external(value: dict[str, Any]) -> dict[str, Any]:
+    if "concept" in value:
+        return value
+    return {
+        "title": str(value.get("title") or "旧版选题"),
+        "concept": str(value.get("angle") or ""),
+        "hook": str(value.get("hook") or ""),
+        "inheritedValue": str(value.get("inheritedMechanism") or ""),
+        "profileConnection": str(value.get("adaptation") or ""),
+        "fitReason": str(value.get("reason") or ""),
+        "accountRole": "",
+    }
+
+
+def _script_v1_to_external(value: dict[str, Any]) -> dict[str, Any]:
+    if "videoIdea" in value:
+        return value
+    segments = value.get("segments") if isinstance(value.get("segments"), list) else []
+    rows = []
+    for segment in segments:
+        if not isinstance(segment, dict):
+            continue
+        rows.append({
+            "section": str(segment.get("time") or ""),
+            "copy": str(segment.get("copy") or segment.get("copy_text") or ""),
+            "purpose": str(segment.get("task") or ""),
+            "keyCue": "；".join(
+                item for item in (str(segment.get("shooting") or ""), str(segment.get("rhythm") or "")) if item
+            ),
+        })
+    full_copy = str(value.get("fullCopy") or "")
+    if not rows and full_copy:
+        rows.append({"section": "完整文案", "copy": full_copy, "purpose": "旧版脚本内容", "keyCue": ""})
+    notes = value.get("productionNotes") if isinstance(value.get("productionNotes"), list) else []
+    return {
+        "videoIdea": "；".join(item for item in (str(value.get("title") or ""), str(value.get("duration") or "")) if item),
+        "openingHook": {
+            "line": str(value.get("openingHook") or ""),
+            "type": "",
+            "viewerTrigger": "",
+            "supportingCue": "",
+        },
+        "scriptRows": rows,
+        "captionAndSound": [{"content": str(note), "usage": "旧版执行提示"} for note in notes],
+        "endingInteraction": {
+            "endingLine": str(value.get("cta") or ""),
+            "commentPrompts": [],
+            "pinnedComment": "",
+            "starterComments": [],
+        },
+        "teleprompterCopy": full_copy,
+    }
+
+
+def _migrate_existing_database(sync_conn) -> None:
+    inspector = inspect(sync_conn)
+    tables = set(inspector.get_table_names())
+    if "analyses" in tables:
+        columns = {column["name"] for column in inspector.get_columns("analyses")}
+        if "prompt_version" not in columns:
+            sync_conn.exec_driver_sql(
+                "ALTER TABLE analyses ADD COLUMN prompt_version VARCHAR(80) NOT NULL DEFAULT 'legacy-v0.3'"
+            )
+    if "scripts" in tables:
+        columns = {column["name"] for column in inspector.get_columns("scripts")}
+        if "prompt_version" not in columns:
+            sync_conn.exec_driver_sql(
+                "ALTER TABLE scripts ADD COLUMN prompt_version VARCHAR(80) NOT NULL DEFAULT 'legacy-v0.3'"
+            )
+    if "topics" in tables:
+        columns = {column["name"] for column in inspector.get_columns("topics")}
+        if "batch_id" not in columns:
+            sync_conn.exec_driver_sql("ALTER TABLE topics ADD COLUMN batch_id VARCHAR(36)")
+
+    if {"topics", "topic_batches", "analyses"}.issubset(tables):
+        groups = sync_conn.exec_driver_sql(
+            "SELECT analysis_id, profile_id, MIN(created_at) FROM topics "
+            "WHERE batch_id IS NULL GROUP BY analysis_id, profile_id"
+        ).fetchall()
+        for analysis_id, profile_id, created_at in groups:
+            batch_id = uid()
+            kind_row = sync_conn.exec_driver_sql(
+                "SELECT kind FROM analyses WHERE id = ?", (analysis_id,)
+            ).fetchone()
+            kind = str(kind_row[0]) if kind_row else "video"
+            sync_conn.exec_driver_sql(
+                "INSERT INTO topic_batches "
+                "(id, workspace_id, analysis_id, profile_id, kind, direction, spread_summary, prompt_version, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    batch_id, settings.local_workspace_id, analysis_id, profile_id, kind,
+                    "旧版选题记录", "由升级前的选题记录自动归档", "legacy-v0.3", created_at or now(),
+                ),
+            )
+            sync_conn.exec_driver_sql(
+                "UPDATE topics SET batch_id = ? WHERE analysis_id = ? AND profile_id = ? AND batch_id IS NULL",
+                (batch_id, analysis_id, profile_id),
+            )
+        sync_conn.exec_driver_sql("CREATE INDEX IF NOT EXISTS ix_topics_batch_id ON topics (batch_id)")
+
+    for table, converter in (
+        ("profiles", _profile_v1_to_external),
+        ("topics", _topic_v1_to_external),
+        ("scripts", _script_v1_to_external),
+    ):
+        if table not in tables:
+            continue
+        rows = sync_conn.exec_driver_sql(
+            f"SELECT id, data_json FROM {table} WHERE data_json IS NOT NULL"
+        ).fetchall()
+        for row_id, raw in rows:
+            try:
+                before = json.loads(raw)
+                after = converter(before)
+            except (TypeError, ValueError, json.JSONDecodeError):
+                continue
+            if after != before:
+                sync_conn.exec_driver_sql(
+                    f"UPDATE {table} SET data_json = ? WHERE id = ?",
+                    (json.dumps(after, ensure_ascii=False), row_id),
+                )
+
+
 async def init_db() -> None:
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     settings.temp_dir.mkdir(parents=True, exist_ok=True)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(_migrate_existing_database)
 
 
 async def get_db() -> AsyncIterator[AsyncSession]:

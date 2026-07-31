@@ -3,8 +3,9 @@ import asyncio
 import json
 
 import app.main as main_module
-from app.db import Analysis, Profile, Script, SessionLocal, Topic
+from app.db import Analysis, Profile, Script, SessionLocal, Topic, TopicBatch
 from app.jobs import _update_analysis
+from app.settings_service import get_runtime_settings
 
 
 def test_analysis_requires_complete_runtime_settings(monkeypatch):
@@ -19,27 +20,50 @@ def test_analysis_requires_complete_runtime_settings(monkeypatch):
         assert response.json()["detail"] == "请先在设置页配置：API Key、模型名称、抖音 Cookie"
 
 
-def test_settings_are_visible_and_profile_crud(monkeypatch):
+def test_settings_hide_secrets_and_profile_crud(monkeypatch):
     monkeypatch.setattr(main_module, "enqueue", lambda *args, **kwargs: "job-test")
     with TestClient(main_module.app) as client:
         settings = client.get("/api/settings")
         assert settings.status_code == 200
         payload = settings.json()
         assert len(payload["prompts"]["videoBreakdown"]) > 300
-        assert "四层固定拆解报告" in payload["prompts"]["videoBreakdown"]
-        assert len(payload["prompts"]["globalFacts"]) > 200
+        assert "爆款骨架" in payload["prompts"]["videoBreakdown"]
+        assert len(payload["prompts"]["common"]) > 200
+        assert payload["promptPackVersion"] == "external-rtf-v3"
+        assert set(payload["prompts"]) == {
+            "common", "videoBreakdown", "accountSummary", "profileIntake",
+            "videoTopics", "accountTopics", "scriptGeneration",
+        }
+        defaults = client.get("/api/settings/prompts/defaults")
+        assert defaults.status_code == 200
+        assert defaults.json()["version"] == "external-rtf-v3"
         payload.update({"apiKey": "sk-test-secret", "model": "doubao-test", "douyinCookie": "sessionid=test-cookie-value"})
         saved = client.put("/api/settings", json=payload)
         assert saved.status_code == 200
-        assert saved.json()["apiKey"] == "sk-test-secret"
-        assert saved.json()["douyinCookie"] == "sessionid=test-cookie-value"
+        assert saved.json()["apiKey"] == ""
+        assert saved.json()["douyinCookie"] == ""
         assert saved.json()["apiKeyConfigured"] is True
+        assert saved.json()["douyinCookieConfigured"] is True
+
+        saved_payload = saved.json()
+        saved_payload["model"] = "doubao-test-updated"
+        preserved = client.put("/api/settings", json=saved_payload)
+        assert preserved.status_code == 200
+
+        async def read_runtime():
+            async with SessionLocal() as session:
+                return await get_runtime_settings(session)
+
+        runtime = asyncio.run(read_runtime())
+        assert runtime.apiKey == "sk-test-secret"
+        assert runtime.douyinCookie == "sessionid=test-cookie-value"
+        assert runtime.model == "doubao-test-updated"
 
         profile_payload = {
-            "name": "测试账号", "industry": "内容创作", "creatorIdentity": "编导",
-            "audience": "内容创作者", "valuePromise": "真实测试AI工具",
-            "formatsAndResources": "真人、录屏和动画", "constraints": "单人制作",
-            "originalDescription": "我是编导，做AI内容", "inferredFields": [],
+            "name": "测试账号", "creatorAndAccount": "编导运营的内容账号",
+            "businessAndGoals": "两个月涨粉一千", "audienceAndAction": "内容创作者关注账号",
+            "availableMaterials": "真人、录屏和动画", "productionConditions": "单人制作",
+            "toneAndBoundaries": "专业直接，不编造案例", "originalDescription": "我是编导，做AI内容",
         }
         created = client.post("/api/profiles", json=profile_payload)
         assert created.status_code == 200
@@ -59,22 +83,32 @@ def test_scripts_can_be_filtered_by_analysis_and_delete_cascades(monkeypatch):
     async def seed() -> tuple[str, str, str]:
         async with SessionLocal() as session:
             profile = Profile(name="筛选资料", data_json=json.dumps({
-                "name": "筛选资料", "industry": "AI", "creatorIdentity": "编导",
-                "audience": "创作者", "valuePromise": "提高效率",
-                "formatsAndResources": "录屏", "constraints": "单人",
-                "originalDescription": "测试", "inferredFields": [],
+                "name": "筛选资料", "creatorAndAccount": "AI编导账号",
+                "businessAndGoals": "提高效率", "audienceAndAction": "创作者关注",
+                "availableMaterials": "录屏", "productionConditions": "单人",
+                "toneAndBoundaries": "真实", "originalDescription": "测试",
             }, ensure_ascii=False))
             first = Analysis(kind="video", source="https://v.douyin.com/first/", status="completed")
             second = Analysis(kind="video", source="https://v.douyin.com/second/", status="completed")
             session.add_all([profile, first, second])
             await session.flush()
-            first_topic = Topic(analysis_id=first.id, profile_id=profile.id, position=1, data_json=json.dumps({
-                "title": "选题一", "angle": "角度", "hook": "钩子", "reason": "理由",
-                "inheritedMechanism": "机制", "adaptation": "迁移",
+            first_batch = TopicBatch(
+                analysis_id=first.id, profile_id=profile.id, kind="video",
+                direction="方向一", spread_summary="发散一",
+            )
+            second_batch = TopicBatch(
+                analysis_id=second.id, profile_id=profile.id, kind="video",
+                direction="方向二", spread_summary="发散二",
+            )
+            session.add_all([first_batch, second_batch])
+            await session.flush()
+            first_topic = Topic(batch_id=first_batch.id, analysis_id=first.id, profile_id=profile.id, position=1, data_json=json.dumps({
+                "title": "选题一", "concept": "角度", "hook": "钩子", "fitReason": "理由",
+                "inheritedValue": "机制", "profileConnection": "迁移", "accountRole": "",
             }, ensure_ascii=False))
-            second_topic = Topic(analysis_id=second.id, profile_id=profile.id, position=1, data_json=json.dumps({
-                "title": "选题二", "angle": "角度", "hook": "钩子", "reason": "理由",
-                "inheritedMechanism": "机制", "adaptation": "迁移",
+            second_topic = Topic(batch_id=second_batch.id, analysis_id=second.id, profile_id=profile.id, position=1, data_json=json.dumps({
+                "title": "选题二", "concept": "角度", "hook": "钩子", "fitReason": "理由",
+                "inheritedValue": "机制", "profileConnection": "迁移", "accountRole": "",
             }, ensure_ascii=False))
             session.add_all([first_topic, second_topic])
             await session.flush()
@@ -112,18 +146,24 @@ def test_batch_enqueue_failure_is_isolated_and_retryable(monkeypatch):
     async def seed() -> list[str]:
         async with SessionLocal() as session:
             profile = Profile(name="批量资料", data_json=json.dumps({
-                "name": "批量资料", "industry": "AI", "creatorIdentity": "编导",
-                "audience": "创作者", "valuePromise": "提高效率",
-                "formatsAndResources": "录屏", "constraints": "单人",
-                "originalDescription": "测试", "inferredFields": [],
+                "name": "批量资料", "creatorAndAccount": "AI编导账号",
+                "businessAndGoals": "提高效率", "audienceAndAction": "创作者关注",
+                "availableMaterials": "录屏", "productionConditions": "单人",
+                "toneAndBoundaries": "真实", "originalDescription": "测试",
             }, ensure_ascii=False))
             analysis = Analysis(kind="video", source="https://v.douyin.com/batch/", status="completed")
             session.add_all([profile, analysis])
             await session.flush()
+            batch = TopicBatch(
+                analysis_id=analysis.id, profile_id=profile.id, kind="video",
+                direction="批量方向", spread_summary="批量发散",
+            )
+            session.add(batch)
+            await session.flush()
             topics = [
-                Topic(analysis_id=analysis.id, profile_id=profile.id, position=index, data_json=json.dumps({
-                    "title": f"选题 {index}", "angle": "角度", "hook": "钩子", "reason": "理由",
-                    "inheritedMechanism": "机制", "adaptation": "迁移",
+                Topic(batch_id=batch.id, analysis_id=analysis.id, profile_id=profile.id, position=index, data_json=json.dumps({
+                    "title": f"选题 {index}", "concept": "角度", "hook": "钩子", "fitReason": "理由",
+                    "inheritedValue": "机制", "profileConnection": "迁移", "accountRole": "",
                 }, ensure_ascii=False))
                 for index in range(1, 3)
             ]

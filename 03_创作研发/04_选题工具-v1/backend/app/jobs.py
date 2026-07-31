@@ -13,6 +13,7 @@ from sqlalchemy import delete, select
 
 from .config import settings as app_settings
 from .db import AccountSample, Analysis, Profile, Script, SessionLocal, Topic
+from .factual_guard import factual_final
 from .media.douyin import download_account_video, download_single, fetch_account, fetch_single
 from .media.scripts.analyzer import AnalyzeResult, analyze_video
 from .model_client import ModelClient, parse_json_text
@@ -56,8 +57,11 @@ def _validated_video_output(text: str, runtime: RuntimeSettingsIn) -> VideoBreak
     try:
         return VideoBreakdownModel.model_validate(parse_json_text(text))
     except (ValidationError, ValueError, TypeError) as exc:
+        schema_json = json.dumps(VideoBreakdownModel.model_json_schema(), ensure_ascii=False)
         return ModelClient(runtime).json(
-            f"修复下面的视频拆解输出，使它成为符合要求的JSON。只返回JSON。\n校验错误：{exc}\n{text}",
+            "修复下面的视频拆解输出。保留原有专业内容，只修复字段与格式，"
+            "不要在没有视频的情况下重新分析。只返回JSON对象。\n"
+            f"目标JSON Schema：\n{schema_json}\n校验错误：\n{exc}\n原输出：\n{text}",
             VideoBreakdownModel,
         )
 
@@ -148,7 +152,7 @@ async def _run_video(analysis_id: str) -> None:
                 progress, step, detail = mapping[stage]
                 await _update_analysis(analysis_id, progress=progress, step=step, detail=detail)
 
-        prompt = video_breakdown_prompt(source_data, runtime.prompts)
+        prompt = video_breakdown_prompt(runtime.prompts)
         report, analysis_result = await _analyze_path(video_path, prompt, runtime, meta.aweme_id, on_progress)
         await asyncio.to_thread(_delete_remote_files, runtime, analysis_result)
         await _ensure_analysis_active(analysis_id)
@@ -161,6 +165,7 @@ async def _run_video(analysis_id: str) -> None:
             detail="拆解完成，可以生成对标选题",
             report_json=json.dumps(full_report, ensure_ascii=False),
             coverage_json=json.dumps({"collected": 1, "deepAnalyzed": 1, "failed": 0}, ensure_ascii=False),
+            prompt_version=app_settings.prompt_pack_version,
         )
 
 
@@ -224,7 +229,7 @@ async def _analyze_account_sample(
                         "collects": item.get("collect_count"), "publishedAt": item.get("published_at"),
                     },
                 }
-                prompt = video_breakdown_prompt(source_data, runtime.prompts)
+                prompt = video_breakdown_prompt(runtime.prompts)
                 report, result = await _analyze_path(path, prompt, runtime, str(item["video_id"]))
                 await asyncio.to_thread(_delete_remote_files, runtime, result)
                 await _ensure_analysis_active(analysis_id)
@@ -250,13 +255,13 @@ async def _analyze_account_sample(
 
 def _summary_inputs(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [{
-        "source": report.get("source"), "summary": report.get("summary"), "theme": report.get("theme"),
-        "metadata": report.get("metadata"), "trafficLogic": report.get("trafficLogic"),
-        "commercial": report.get("commercial"), "review": report.get("review"),
-        # Keep legacy reports useful when an account contains samples created
-        # before the four-layer contract was introduced.
-        "hook": report.get("hook"), "evidence": report.get("evidence"),
-        "transferable": report.get("transferable"), "boundary": report.get("boundary"),
+        "sourceId": (report.get("source") or {}).get("id"),
+        "breakoutJudgment": report.get("breakoutJudgment"),
+        "viralSkeleton": report.get("viralSkeleton"),
+        "openingHook": report.get("openingHook"),
+        "copyRetention": report.get("copyRetention"),
+        "audiovisual": report.get("audiovisual"),
+        "replicableMethods": report.get("replicableMethods"),
     } for report in reports]
 
 
@@ -326,9 +331,14 @@ async def _run_account(analysis_id: str) -> None:
         "metadata": items,
         "deep_reports": _summary_inputs(reports),
     }
-    report = await asyncio.to_thread(ModelClient(runtime).json, account_summary_prompt(payload, runtime.prompts), AccountReportModel)
+    report = await asyncio.to_thread(
+        ModelClient(runtime).json,
+        account_summary_prompt(payload, runtime.prompts),
+        AccountReportModel,
+        max_output_tokens=18000,
+    )
     await _ensure_analysis_active(analysis_id)
-    full_report = {**report.model_dump(by_alias=True), "account": {**profile, "promise": report.promise}}
+    full_report = {**report.model_dump(by_alias=True), "account": profile}
     await _update_analysis(
         analysis_id,
         status="completed",
@@ -337,6 +347,7 @@ async def _run_account(analysis_id: str) -> None:
         detail="账号研究完成，可以生成对标选题",
         report_json=json.dumps(full_report, ensure_ascii=False),
         coverage_json=json.dumps({"collected": len(items), "selected": len(selected), "completed": len(reports), "failed": failed_count}, ensure_ascii=False),
+        prompt_version=app_settings.prompt_pack_version,
     )
 
 
@@ -373,12 +384,22 @@ async def _run_script(script_id: str) -> None:
         topic_data = json.loads(topic.data_json)
         profile_data = profile.data()
     prompt = script_prompt(topic_data, profile_data, runtime.prompts)
-    result = await asyncio.to_thread(ModelClient(runtime).json, prompt, DirectorScript)
+    draft = await asyncio.to_thread(ModelClient(runtime).json, prompt, DirectorScript, max_output_tokens=16000)
+    result = await factual_final(
+        ModelClient(runtime),
+        "可拍脚本",
+        profile_data,
+        draft,
+        DirectorScript,
+        topic=topic_data,
+        max_output_tokens=16000,
+    )
     async with SessionLocal() as session:
         script = await session.get(Script, script_id)
         if script:
             script.status = "completed"
             script.data_json = result.model_dump_json(by_alias=True)
+            script.prompt_version = app_settings.prompt_pack_version
             await session.commit()
 
 

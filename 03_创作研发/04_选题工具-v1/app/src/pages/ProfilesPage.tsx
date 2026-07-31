@@ -24,18 +24,18 @@ export function ProfilesPage() {
           <article className="profile-card" key={profile.id}>
             <header>
               <span className={`profile-avatar profile-avatar--${profile.color}`}>{profile.name.slice(0, 1)}</span>
-              <div><h2>{profile.name}</h2><p>{profile.industry}</p></div>
+              <div><h2>{profile.name}</h2><p>{profile.businessAndGoals}</p></div>
               <StatusBadge tone="neutral">更新于 {profile.updatedAt}</StatusBadge>
             </header>
             <dl>
-              <div><dt>创作者身份</dt><dd>{profile.creatorIdentity}</dd></div>
-              <div><dt>目标受众</dt><dd>{profile.audience}</dd></div>
-              <div><dt>持续价值</dt><dd>{profile.valuePromise}</dd></div>
-              <div><dt>形式与资源</dt><dd>{profile.formatsAndResources}</dd></div>
-              <div><dt>现实限制</dt><dd>{profile.constraints}</dd></div>
+              <div><dt>创作者与账号</dt><dd>{profile.creatorAndAccount}</dd></div>
+              <div><dt>目标受众与期待行动</dt><dd>{profile.audienceAndAction}</dd></div>
+              <div><dt>真实可用素材</dt><dd>{profile.availableMaterials}</dd></div>
+              <div><dt>制作条件</dt><dd>{profile.productionConditions}</dd></div>
+              <div><dt>调性与边界</dt><dd>{profile.toneAndBoundaries}</dd></div>
             </dl>
             <footer>
-              <span>{profile.inferredFields.length ? `${profile.inferredFields.length} 项含 AI 推断` : '全部来自用户确认'}</span>
+              <span>全部来自用户确认</span>
               <div>
                 <button className="icon-button" type="button" aria-label="编辑资料" onClick={() => { setEditing(profile); setOpen(true); }}><Pencil size={16} /></button>
                 <button className="icon-button icon-button--danger" type="button" aria-label="删除资料" onClick={() => { removeProfile(profile.id); notify('资料已删除', 'info'); }}><Trash2 size={16} /></button>

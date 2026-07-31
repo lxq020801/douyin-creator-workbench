@@ -2,7 +2,7 @@ import { ArrowLeft, ArrowRight, Check, Plus, Sparkles, UserRoundCheck } from 'lu
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
 import { useAppStore } from '../store/AppStore';
-import type { AccountProfile } from '../types';
+import type { AccountProfile, IntakeAnswer } from '../types';
 import { Modal } from './Modal';
 import { StatusBadge } from './Common';
 
@@ -14,16 +14,16 @@ interface ProfileDialogProps {
   onSelect: (profile: AccountProfile) => void;
 }
 
-const exampleDescription = '我是一个有短视频编导经验的创作者，准备做 AI 工具实测账号，主要给编导和内容创作者看。我会真人出镜，也能录屏和做动画，但希望单条视频不要制作太久。';
+const exampleDescription = '我在柳州开了一家社区型的老牌螺蛳粉店，开了8年，主打传统骨汤螺蛳粉，还有卤味、炒螺这些小吃。店是自己的房子，没有加盟，就是夫妻店加两个员工。账号由我本人出镜，我是30多岁的柳州本地老板，说话比较直，不会演，想做得真实一点。我主要想吸引周边3公里的居民和来柳州旅游的游客，最终目标是到店消费，也想慢慢卖一些真空包装螺蛳粉。现阶段先把人设和门店口碑立起来，不急着硬推产品。我可以拍每天熬汤、卤味制作、顾客到店、顾客反馈、螺蛳粉冷知识、本地人的吃法，以及开店这些年的真实经历。拍摄就是手机，我老婆偶尔帮忙，不会复杂剪辑，每周更新2到3条，每条拍加剪大约2小时。账号想做成真实、接地气的本地老店老板，不搞夸张剧情，不贬低同行，不做9.9元低价引流，不承诺“最好吃”“第一”这类话。';
 
 const emptyDraft = {
   name: '新账号资料',
-  industry: 'AI 工具与内容创作',
-  creatorIdentity: '有短视频编导经验的内容创作者。',
-  audience: '想提高选题、文案和制作效率的编导与内容创作者。',
-  valuePromise: '用真实案例展示 AI 如何进入内容生产流程。',
-  formatsAndResources: '真人讲解、录屏和基础动画。',
-  constraints: '需要控制单条内容制作时间，保证可以持续更新。',
+  creatorAndAccount: '',
+  businessAndGoals: '',
+  audienceAndAction: '',
+  availableMaterials: '',
+  productionConditions: '',
+  toneAndBoundaries: '',
 };
 
 export function ProfileDialog({ open, title = '选择复刻到哪个账号', initialProfile, onClose, onSelect }: ProfileDialogProps) {
@@ -34,7 +34,7 @@ export function ProfileDialog({ open, title = '选择复刻到哪个账号', ini
   const [createStep, setCreateStep] = useState<'describe' | 'followup' | 'card'>(initialProfile ? 'card' : 'describe');
   const [followup, setFollowup] = useState('');
   const [followupQuestion, setFollowupQuestion] = useState('');
-  const [answers, setAnswers] = useState<string[]>([]);
+  const [answers, setAnswers] = useState<IntakeAnswer[]>([]);
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState(emptyDraft);
 
@@ -48,12 +48,12 @@ export function ProfileDialog({ open, title = '选择复刻到哪个账号', ini
       setDescription(initialProfile.originalDescription);
       setDraft({
         name: initialProfile.name,
-        industry: initialProfile.industry,
-        creatorIdentity: initialProfile.creatorIdentity,
-        audience: initialProfile.audience,
-        valuePromise: initialProfile.valuePromise,
-        formatsAndResources: initialProfile.formatsAndResources,
-        constraints: initialProfile.constraints,
+        creatorAndAccount: initialProfile.creatorAndAccount,
+        businessAndGoals: initialProfile.businessAndGoals,
+        audienceAndAction: initialProfile.audienceAndAction,
+        availableMaterials: initialProfile.availableMaterials,
+        productionConditions: initialProfile.productionConditions,
+        toneAndBoundaries: initialProfile.toneAndBoundaries,
       });
       return;
     }
@@ -73,7 +73,7 @@ export function ProfileDialog({ open, title = '选择复刻到哪个账号', ini
       return;
     }
     if (result.draft) {
-      const { originalDescription: _originalDescription, inferredFields: _inferredFields, ...card } = result.draft;
+      const { originalDescription: _originalDescription, ...card } = result.draft;
       setDraft(card);
       setCreateStep('card');
     }
@@ -91,7 +91,7 @@ export function ProfileDialog({ open, title = '选择复刻到哪个账号', ini
   };
 
   const submitFollowup = async () => {
-    const nextAnswers = [...answers, followup.trim()];
+    const nextAnswers = [...answers, { question: followupQuestion, answer: followup.trim() }];
     setBusy(true);
     try {
       const result = await api.profiles.intake(description, nextAnswers);
@@ -110,14 +110,13 @@ export function ProfileDialog({ open, title = '选择复刻到哪个账号', ini
       id: initialProfile?.id || `profile-${Date.now()}`,
       name: draft.name,
       color: initialProfile?.color || 'green',
-      industry: draft.industry,
-      creatorIdentity: draft.creatorIdentity,
-      audience: draft.audience,
-      valuePromise: draft.valuePromise,
-      formatsAndResources: draft.formatsAndResources,
-      constraints: draft.constraints,
+      creatorAndAccount: draft.creatorAndAccount,
+      businessAndGoals: draft.businessAndGoals,
+      audienceAndAction: draft.audienceAndAction,
+      availableMaterials: draft.availableMaterials,
+      productionConditions: draft.productionConditions,
+      toneAndBoundaries: draft.toneAndBoundaries,
       originalDescription: description || initialProfile?.originalDescription || '',
-      inferredFields: initialProfile?.inferredFields || ['目标受众', '持续价值'],
       updatedAt: '刚刚',
     };
     setBusy(true);
@@ -153,8 +152,8 @@ export function ProfileDialog({ open, title = '选择复刻到哪个账号', ini
                 <span className={`profile-avatar profile-avatar--${profile.color}`}>{profile.name.slice(0, 1)}</span>
                 <span className="profile-choice-main">
                   <strong>{profile.name}</strong>
-                  <small>{profile.industry}</small>
-                  <span>{profile.audience}</span>
+                  <small>{profile.businessAndGoals}</small>
+                  <span>{profile.audienceAndAction}</span>
                 </span>
                 <span className="profile-check">{selectedId === profile.id ? <Check size={16} /> : null}</span>
               </button>
@@ -178,12 +177,12 @@ export function ProfileDialog({ open, title = '选择复刻到哪个账号', ini
 
           {createStep === 'describe' ? (
             <div className="intake-stage">
-              <div className="intake-step-label">01 / 一句话描述</div>
-              <h3>告诉 AI 你是谁，以及准备做什么内容</h3>
-              <p>有帮助的信息包括：行业、身份、受众、内容形式、可用素材和现实限制。不需要按表格逐项回答。</p>
+              <div className="intake-step-label">01 / 一段自然描述</div>
+              <h3>告诉 AI 你是谁，以及真实能做什么</h3>
+              <p>尽量说清业务、目标、受众、素材、拍摄条件和不能做的事。AI 只会对真正影响后续创作的缺项追问。</p>
               <textarea className="large-textarea" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="例如：我是……，准备做……，主要给……看，我能提供……，但目前……" />
               <div className="example-box">
-                <div><strong>完整示例</strong><span>身份 · 行业 · 受众 · 形式 · 资源 · 限制</span></div>
+                <div><strong>完整示例</strong><span>业务 · 目标 · 受众 · 资源 · 制作条件 · 边界</span></div>
                 <p>{exampleDescription}</p>
                 <button className="text-button" type="button" onClick={() => setDescription(exampleDescription)}>使用这个示例</button>
               </div>
@@ -203,12 +202,12 @@ export function ProfileDialog({ open, title = '选择复刻到哪个账号', ini
           {createStep === 'card' ? (
             <div className="intake-stage">
               <div className="intake-step-label">03 / 核对资料卡</div>
-              <div className="intake-title-row"><div><h3>确认后才能用于复刻</h3><p>所有字段都可以手动调整。</p></div><StatusBadge tone="blue">2 项 AI 推断</StatusBadge></div>
+              <div className="intake-title-row"><div><h3>确认后才能用于对标杂交</h3><p>所有字段都来自你的描述和回答，也可以手动调整。</p></div><StatusBadge tone="green">待你确认</StatusBadge></div>
               <div className="profile-form-grid">
                 {Object.entries(draft).map(([key, value]) => (
                   <label key={key} className={key === 'name' ? '' : 'span-2'}>
-                    <span>{({ name: '资料名称', industry: '行业 / 业务', creatorIdentity: '创作者身份与可信依据', audience: '目标受众及具体问题', valuePromise: '持续提供的内容价值', formatsAndResources: '视频形式与可用素材', constraints: '制作与表达限制' } as Record<string, string>)[key]}</span>
-                    {key === 'name' || key === 'industry' ? (
+                    <span>{({ name: '资料名称', creatorAndAccount: '创作者与账号', businessAndGoals: '业务与内容目标', audienceAndAction: '目标受众与期待行动', availableMaterials: '真实可用创作素材', productionConditions: '创作能力与制作条件', toneAndBoundaries: '账号调性与内容边界' } as Record<string, string>)[key]}</span>
+                    {key === 'name' ? (
                       <input value={value} onChange={(event) => setDraft((item) => ({ ...item, [key]: event.target.value }))} />
                     ) : (
                       <textarea value={value} onChange={(event) => setDraft((item) => ({ ...item, [key]: event.target.value }))} />

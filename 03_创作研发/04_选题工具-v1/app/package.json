@@ -1,7 +1,7 @@
 {
   "name": "reference-frame",
   "private": true,
-  "version": "0.3.0-dev",
+  "version": "0.3.0-external",
   "type": "module",
   "scripts": {
     "dev": "vite --config vite.config.ts",

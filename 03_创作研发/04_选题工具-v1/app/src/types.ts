@@ -1,6 +1,3 @@
-export type TaskKind = 'video' | 'account' | 'remake';
-export type TaskStatus = 'queued' | 'running' | 'completed' | 'failed';
-
 export interface SourceMetrics {
   views: number | null;
   likes: number | null;
@@ -16,199 +13,127 @@ export interface VideoSource {
   title: string;
   author: string;
   duration: string;
-  coverTone?: 'red' | 'green' | 'blue';
   coverUrl?: string;
   metrics: SourceMetrics;
-}
-
-export interface VideoBeat {
-  timecode: string;
-  originalCopy: string;
-  role: string;
-  emotion: string;
-  visual: string;
-  transition: string;
-}
-
-export interface EvidencePoint {
-  label: string;
-  evidence: string;
-  confidence: '高' | '中' | '待验证';
-}
-
-export interface AudienceSignal {
-  summary: string;
-  basis: string[];
-  confidence: '高' | '中' | '待验证';
-}
-
-export interface VideoMetadataLayer {
-  category: string;
-  format: string;
-  visualStyle: string;
-  bgmStyle: string;
-  captionStyle: string;
-  tags: string[];
-  location: string;
-  keywords: string[];
-  audience: AudienceSignal;
-}
-
-export interface HookAnalysis {
-  copy: string;
-  type: string;
-  emotion: string;
-  viewerTask: string;
-  evidence: string;
-}
-
-export interface NarrativeStage {
-  timeRange: string;
-  function: string;
-  content: string;
-  evidence: string;
-}
-
-export interface EmotionPoint {
-  point: string;
-  emotion: string;
-  trigger: string;
-  effect: string;
-}
-
-export interface InteractionAnalysis {
-  prompts: string[];
-  commentTriggers: string[];
-  observedComments: string[];
-  note: string;
-}
-
-export interface TrafficLogicLayer {
-  hook: HookAnalysis;
-  narrativeSummary: string;
-  narrativeStages: NarrativeStage[];
-  emotionCurve: EmotionPoint[];
-  interaction: InteractionAnalysis;
-}
-
-export interface CommercialLayer {
-  valueType: string;
-  valueSupply: string;
-  conversionPath: string;
-  placement: string;
-  callToAction: string;
-  platformSignals: string[];
-  availabilityNote: string;
-}
-
-export interface ReviewLayer {
-  strengths: string[];
-  shortcomings: string[];
-  improvements: string[];
-  formula: string;
-  transferable: string[];
-  nonCopyable: string[];
-  boundary: string;
-}
-
-export interface VideoBreakdown {
-  source: VideoSource;
-  summary: string;
-  theme: string;
-  metadata?: VideoMetadataLayer;
-  trafficLogic?: TrafficLogicLayer;
-  commercial?: CommercialLayer;
-  review?: ReviewLayer;
-  hook: {
-    copy: string;
-    mechanism: string;
-    visualAction: string;
-  };
-  beats: VideoBeat[];
-  craft: {
-    filming: string[];
-    editing: string[];
-    audio: string[];
-    captions: string[];
-  };
-  evidence: EvidencePoint[];
-  transferable: string[];
-  avoidCopying: string[];
-  boundary: string;
 }
 
 export interface AccountProfile {
   id: string;
   name: string;
   color: 'red' | 'green' | 'blue';
-  industry: string;
-  creatorIdentity: string;
-  audience: string;
-  valuePromise: string;
-  formatsAndResources: string;
-  constraints: string;
+  creatorAndAccount: string;
+  businessAndGoals: string;
+  audienceAndAction: string;
+  availableMaterials: string;
+  productionConditions: string;
+  toneAndBoundaries: string;
   originalDescription: string;
-  inferredFields: string[];
   updatedAt: string;
 }
 
-export interface RemakeResult {
-  profileId: string;
-  profileName: string;
-  angle: string;
-  titleOptions: string[];
-  openingHook: string;
-  fullScript: string;
-  segments: Array<{
-    time: string;
-    task: string;
-    copy: string;
-    shooting: string;
-  }>;
-  cta: string;
-  inheritedMechanisms: string[];
-  adaptations: string[];
+export interface ExternalBreakoutJudgment {
+  entryPoint: string;
+  viewerSituation: string;
+  emotionalValue: string;
+  coreAttraction: string;
 }
 
-export interface ResearchVideo {
-  id: string;
-  title: string;
-  publishedAt: string;
-  likes: number;
-  comments: number;
-  shares: number;
-  status: 'waiting' | 'downloading' | 'analyzing' | 'completed';
-  sampleRole: '爆款' | '常态' | '早期' | '转折';
+export interface ExternalSkeletonStage {
+  timeRange: string;
+  name: string;
+  function: string;
 }
 
-export interface AccountReport {
-  account: {
-    name: string;
-    handle: string;
-    followers: number;
-    videos: number;
-    promise: string;
-  };
-  promise: string;
-  pillars: Array<{ name: string; ratio: number; note: string }>;
-  timeline: Array<{ phase: string; range: string; action: string; signal: string }>;
-  hookPatterns: string[];
-  viralVsNormal: Array<{ dimension: string; viral: string; normal: string; conclusion: string }>;
-  transferable: Array<{ rule: string; evidence: string; boundary: string }>;
-  risks: string[];
-  testTopics: Array<{ title: string; reason: string; priority: '优先' | '备选' }>;
-  boundary?: string;
+export interface ExternalViralSkeleton {
+  formula: string;
+  stages: ExternalSkeletonStage[];
 }
 
-export interface TaskRecord {
-  id: string;
-  kind: TaskKind;
-  title: string;
+export interface ExternalOpeningHook {
+  firstFrame: string;
+  openingLine: string;
+  supportingElements: string[];
+  audienceTrigger: string;
+  viewingExpectation: string;
+}
+
+export interface ExternalCopyRetentionPoint {
+  excerpt: string;
+  function: string;
+  bridge: string;
+}
+
+export interface ExternalAudiovisualPoint {
+  element: string;
+  design: string;
+  function: string;
+}
+
+export interface ExternalReplicableMethod {
+  name: string;
+  originalUse: string;
+  mustKeep: string;
+  replaceable: string[];
+}
+
+export interface ExternalVideoBreakdown {
+  source: VideoSource;
+  breakoutJudgment: ExternalBreakoutJudgment;
+  viralSkeleton: ExternalViralSkeleton;
+  openingHook: ExternalOpeningHook;
+  copyRetention: ExternalCopyRetentionPoint[];
+  audiovisual: ExternalAudiovisualPoint[];
+  replicableMethods: ExternalReplicableMethod[];
+}
+
+export interface ExternalAccountStrategyOverview {
+  coreAudience: string;
+  coreValue: string;
+  attentionModel: string;
+  positioning: string;
+  monetizationLogic: string;
+}
+
+export interface ExternalContentArea {
+  name: string;
+  role: string;
+  recurringPattern: string;
+}
+
+export interface ExternalTopicEngine {
   source: string;
-  status: TaskStatus;
-  progress: number;
-  createdAt: string;
-  detail: string;
+  recurringTension: string;
+  generationLogic: string;
+}
+
+export interface ExternalRepeatableMethod {
+  name: string;
+  method: string;
+  evidence: string;
+}
+
+export interface ExternalAccountExpressionSystem {
+  characterRole: string;
+  copyTone: string;
+  onCameraState: string;
+  visualLanguage: string;
+  combinedEffect: string;
+}
+
+export interface ExternalAccountTransferAsset {
+  name: string;
+  transferableMechanism: string;
+  dependencies: string;
+}
+
+export interface ExternalAccountReport {
+  account: Record<string, unknown>;
+  strategyOverview: ExternalAccountStrategyOverview;
+  contentMap: ExternalContentArea[];
+  topicEngine: ExternalTopicEngine[];
+  repeatableMethods: ExternalRepeatableMethod[];
+  expressionSystem: ExternalAccountExpressionSystem;
+  transferableAssets: ExternalAccountTransferAsset[];
 }
 
 export interface RuntimeSettings {
@@ -222,6 +147,7 @@ export interface RuntimeSettings {
   prompts: Record<string, string>;
   apiKeyConfigured?: boolean;
   douyinCookieConfigured?: boolean;
+  promptPackVersion?: string;
 }
 
 export interface AnalysisRecord {
@@ -234,9 +160,10 @@ export interface AnalysisRecord {
   step: string;
   detail: string;
   metadata: Record<string, unknown> | null;
-  report: VideoBreakdown | AccountReport | null;
+  report: ExternalVideoBreakdown | ExternalAccountReport | null;
   coverage: Record<string, number> | null;
   error: string | null;
+  promptVersion: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -245,23 +172,59 @@ export interface GeneratedTopic {
   id: string;
   analysisId: string;
   profileId: string;
+  batchId: string;
   position: number;
   title: string;
-  angle: string;
+  concept: string;
   hook: string;
-  reason: string;
-  inheritedMechanism: string;
-  adaptation: string;
+  inheritedValue: string;
+  profileConnection: string;
+  fitReason: string;
+  accountRole: string;
+}
+
+export interface TopicBatch {
+  id: string;
+  analysisId: string;
+  profileId: string;
+  kind: 'video' | 'account';
+  direction: string;
+  spreadSummary: string;
+  promptVersion: string;
+  createdAt: string;
+  topics: GeneratedTopic[];
+}
+
+export interface IntakeAnswer {
+  question: string;
+  answer: string;
 }
 
 export interface DirectorScript {
-  title: string;
-  openingHook: string;
-  duration: string;
-  fullCopy: string;
-  segments: Array<{ time: string; task: string; copy: string; shooting: string; rhythm: string }>;
-  cta: string;
-  productionNotes: string[];
+  videoIdea: string;
+  openingHook: {
+    line: string;
+    type: string;
+    viewerTrigger: string;
+    supportingCue: string;
+  };
+  scriptRows: Array<{
+    section: string;
+    copy: string;
+    purpose: string;
+    keyCue: string;
+  }>;
+  captionAndSound: Array<{
+    content: string;
+    usage: string;
+  }>;
+  endingInteraction: {
+    endingLine: string;
+    commentPrompts: string[];
+    pinnedComment: string;
+    starterComments: string[];
+  };
+  teleprompterCopy: string;
 }
 
 export interface GeneratedScript {
@@ -270,4 +233,5 @@ export interface GeneratedScript {
   status: 'queued' | 'running' | 'completed' | 'failed';
   data: DirectorScript | null;
   error: string | null;
+  promptVersion: string;
 }

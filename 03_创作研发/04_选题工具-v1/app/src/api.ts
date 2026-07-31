@@ -3,7 +3,9 @@ import type {
   AnalysisRecord,
   GeneratedScript,
   GeneratedTopic,
+  IntakeAnswer,
   RuntimeSettings,
+  TopicBatch,
 } from './types';
 
 class ApiError extends Error {
@@ -46,13 +48,14 @@ export const api = {
     save: (value: RuntimeSettings) => request<RuntimeSettings>('/api/settings', { method: 'PUT', body: JSON.stringify(value) }),
     testModel: () => request<{ ok: boolean; message: string; detail: Record<string, unknown> }>('/api/settings/test-model', { method: 'POST' }),
     testCookie: () => request<{ ok: boolean; message: string }>('/api/settings/test-cookie', { method: 'POST' }),
+    promptDefaults: () => request<{ version: string; prompts: Record<string, string> }>('/api/settings/prompts/defaults'),
   },
   profiles: {
     list: async () => (await request<ProfileWire[]>('/api/profiles')).map(withColor),
     create: async (value: AccountProfile) => withColor(await request<ProfileWire>('/api/profiles', { method: 'POST', body: JSON.stringify(value) })),
     update: async (value: AccountProfile) => withColor(await request<ProfileWire>(`/api/profiles/${value.id}`, { method: 'PUT', body: JSON.stringify(value) })),
     remove: (id: string) => request<void>(`/api/profiles/${id}`, { method: 'DELETE' }),
-    intake: (description: string, answers: string[]) => request<{ status: 'followup' | 'complete'; question: string; draft: Omit<AccountProfile, 'id' | 'color' | 'updatedAt'> | null }>('/api/profiles/intake', { method: 'POST', body: JSON.stringify({ description, answers }) }),
+    intake: (description: string, answers: IntakeAnswer[]) => request<{ status: 'followup' | 'complete'; question: string; draft: Omit<AccountProfile, 'id' | 'color' | 'updatedAt'> | null }>('/api/profiles/intake', { method: 'POST', body: JSON.stringify({ description, answers }) }),
   },
   analyses: {
     list: () => request<AnalysisRecord[]>('/api/analyses'),
@@ -63,8 +66,8 @@ export const api = {
     remove: (id: string) => request<void>(`/api/analyses/${id}`, { method: 'DELETE' }),
   },
   topics: {
-    list: (analysisId: string, profileId?: string) => request<GeneratedTopic[]>(`/api/analyses/${analysisId}/topics${profileId ? `?profileId=${profileId}` : ''}`),
-    generate: (analysisId: string, profileId: string) => request<GeneratedTopic[]>(`/api/analyses/${analysisId}/topics`, { method: 'POST', body: JSON.stringify({ profileId }) }),
+    list: (analysisId: string, profileId?: string) => request<TopicBatch | null>(`/api/analyses/${analysisId}/topics${profileId ? `?profileId=${profileId}` : ''}`),
+    generate: (analysisId: string, profileId: string) => request<TopicBatch>(`/api/analyses/${analysisId}/topics`, { method: 'POST', body: JSON.stringify({ profileId }) }),
     update: (topic: GeneratedTopic) => request<GeneratedTopic>(`/api/topics/${topic.id}`, { method: 'PUT', body: JSON.stringify(topic) }),
   },
   scripts: {

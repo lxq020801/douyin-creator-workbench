@@ -2,7 +2,6 @@ import { ArrowRight, FileSearch, Link2, UsersRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProductHeader } from '../components/ProductHeader';
-import { sampleAccountUrl, sampleVideoUrl } from '../data/mockData';
 import { api } from '../api';
 
 type IntakeMode = 'video' | 'account';
@@ -103,7 +102,6 @@ export function WorkbenchPage() {
             </button>
           </div>
           <div className="home-v2-intake-note">
-            <button type="button" onClick={() => setUrl(isVideo ? sampleVideoUrl : sampleAccountUrl)}>填入演示链接</button>
             <span>{isVideo ? '拆解不需要先填写行业资料' : '30 条完整深拆 · 20 条元数据辅助判断'}</span>
           </div>
         </section>

@@ -67,8 +67,11 @@ class ModelClient:
         try:
             return schema.model_validate(parse_json_text(first))
         except (json.JSONDecodeError, ValidationError, TypeError, ValueError) as first_error:
+            schema_json = json.dumps(schema.model_json_schema(), ensure_ascii=False)
             repair = self.text(
-                f"以下输出没有满足JSON结构。请只返回修复后的JSON对象，不增加解释。\n错误：{first_error}\n原输出：\n{first}",
+                "以下输出没有满足JSON结构。保留原有专业内容，"
+                "只修复字段与格式，不要重新分析或压缩信息。只返回JSON对象，不增加解释。\n"
+                f"目标JSON Schema：\n{schema_json}\n校验错误：\n{first_error}\n原输出：\n{first}",
                 max_output_tokens=max_output_tokens,
             )
             try:

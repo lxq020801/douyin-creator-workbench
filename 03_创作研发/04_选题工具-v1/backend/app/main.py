@@ -16,11 +16,12 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .config import settings
-from .db import AccountSample, Analysis, Profile, Script, Topic, get_db, get_or_404, init_db
+from .db import AccountSample, Analysis, Profile, Script, Topic, TopicBatch, get_db, get_or_404, init_db
+from .factual_guard import factual_final
 from .job_queue import connection, enqueue
 from .media.douyin import probe_cookie
-from .model_client import ModelClient
-from .prompts import intake_prompt, topics_prompt
+from .model_client import ModelClient, ModelOutputError
+from .prompts import DEFAULT_PROMPTS, intake_prompt, topics_prompt
 from .schemas import (
     AnalysisCreate,
     AnalysisOut,
@@ -34,6 +35,7 @@ from .schemas import (
     ScriptBatchRequest,
     ScriptOut,
     TopicBatchModel,
+    TopicBatchOut,
     TopicGenerateRequest,
     TopicOut,
     TopicUpdate,
@@ -79,7 +81,7 @@ def analysis_out(row: Analysis) -> AnalysisOut:
         id=row.id, kind=row.kind, source=row.source, title=row.title, status=row.status,
         progress=row.progress, step=row.step, detail=row.detail,
         metadata=_loads(row.metadata_json), report=_loads(row.report_json), coverage=_loads(row.coverage_json),
-        error=row.error, createdAt=row.created_at, updatedAt=row.updated_at,
+        error=row.error, promptVersion=row.prompt_version, createdAt=row.created_at, updatedAt=row.updated_at,
     )
 
 
@@ -88,11 +90,20 @@ def profile_out(row: Profile) -> ProfileOut:
 
 
 def topic_out(row: Topic) -> TopicOut:
-    return TopicOut(id=row.id, analysisId=row.analysis_id, profileId=row.profile_id, position=row.position, **json.loads(row.data_json))
+    return TopicOut(id=row.id, analysisId=row.analysis_id, profileId=row.profile_id, batchId=row.batch_id, position=row.position, **json.loads(row.data_json))
+
+
+def topic_batch_out(row: TopicBatch, topics: list[Topic]) -> TopicBatchOut:
+    return TopicBatchOut(
+        id=row.id, analysisId=row.analysis_id, profileId=row.profile_id, kind=row.kind,
+        direction=row.direction, spreadSummary=row.spread_summary,
+        promptVersion=row.prompt_version, createdAt=row.created_at,
+        topics=[topic_out(topic) for topic in topics],
+    )
 
 
 def script_out(row: Script) -> ScriptOut:
-    return ScriptOut(id=row.id, topicId=row.topic_id, status=row.status, data=_loads(row.data_json), error=row.error)
+    return ScriptOut(id=row.id, topicId=row.topic_id, status=row.status, data=_loads(row.data_json), error=row.error, promptVersion=row.prompt_version)
 
 
 @app.get("/health")
@@ -125,6 +136,11 @@ async def settings_get(db: AsyncSession = Depends(get_db)):
 @app.put("/api/settings", response_model=RuntimeSettingsOut)
 async def settings_put(payload: RuntimeSettingsIn, db: AsyncSession = Depends(get_db)):
     return await save_runtime_settings(db, payload)
+
+
+@app.get("/api/settings/prompts/defaults")
+async def settings_prompt_defaults() -> dict[str, Any]:
+    return {"version": settings.prompt_pack_version, "prompts": DEFAULT_PROMPTS}
 
 
 @app.post("/api/settings/test-model", response_model=ConnectionTestResult)
@@ -185,8 +201,6 @@ async def profile_intake(payload: IntakeRequest, db: AsyncSession = Depends(get_
         intake_prompt(payload.description, payload.answers, runtime.prompts),
         IntakeResponse,
     )
-    if len(payload.answers) >= 2 and result.status == "followup":
-        raise HTTPException(status_code=422, detail="两轮追问后仍无法形成资料卡，请补充更完整的描述")
     return result
 
 
@@ -202,7 +216,12 @@ async def _create_analysis(kind: str, payload: AnalysisCreate, db: AsyncSession)
     if missing:
         raise HTTPException(status_code=409, detail=f"请先在设置页配置：{'、'.join(missing)}")
 
-    row = Analysis(kind=kind, source=payload.source.strip(), detail="任务已进入后台队列")
+    row = Analysis(
+        kind=kind,
+        source=payload.source.strip(),
+        detail="任务已进入后台队列",
+        prompt_version=settings.prompt_pack_version,
+    )
     db.add(row)
     await db.commit()
     await db.refresh(row)
@@ -278,48 +297,67 @@ async def analyses_delete(analysis_id: str, db: AsyncSession = Depends(get_db)):
     if topic_ids:
         await db.execute(delete(Script).where(Script.topic_id.in_(topic_ids)))
     await db.execute(delete(Topic).where(Topic.analysis_id == analysis_id))
+    await db.execute(delete(TopicBatch).where(TopicBatch.analysis_id == analysis_id))
     await db.execute(delete(AccountSample).where(AccountSample.analysis_id == analysis_id))
     await db.execute(delete(Analysis).where(Analysis.id == analysis_id))
     await db.commit()
     return Response(status_code=204)
 
 
-@app.post("/api/analyses/{analysis_id}/topics", response_model=list[TopicOut])
+@app.post("/api/analyses/{analysis_id}/topics", response_model=TopicBatchOut)
 async def topics_generate(analysis_id: str, payload: TopicGenerateRequest, db: AsyncSession = Depends(get_db)):
     analysis = await get_or_404(db, Analysis, analysis_id)
     profile = await get_or_404(db, Profile, payload.profileId)
     if analysis.status != "completed" or not analysis.report_json:
         raise HTTPException(status_code=409, detail="拆解尚未完成")
     runtime = await get_runtime_settings(db)
-    result = await asyncio.to_thread(
-        ModelClient(runtime).json,
-        topics_prompt(analysis.kind, json.loads(analysis.report_json), profile.data(), runtime.prompts),
-        TopicBatchModel,
+    try:
+        client = ModelClient(runtime)
+        draft = await asyncio.to_thread(
+            client.json,
+            topics_prompt(analysis.kind, json.loads(analysis.report_json), profile.data(), runtime.prompts),
+            TopicBatchModel,
+            max_output_tokens=20000,
+        )
+        result = await factual_final(
+            client,
+            "对标选题",
+            profile.data(),
+            draft,
+            TopicBatchModel,
+            max_output_tokens=20000,
+        )
+    except ModelOutputError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    batch = TopicBatch(
+        analysis_id=analysis_id, profile_id=profile.id, kind=analysis.kind,
+        direction=result.direction, spread_summary=result.spreadSummary,
+        prompt_version=settings.prompt_pack_version,
     )
-    old_topic_ids = (await db.execute(
-        select(Topic.id).where(Topic.analysis_id == analysis_id, Topic.profile_id == profile.id)
-    )).scalars().all()
-    if old_topic_ids:
-        await db.execute(delete(Script).where(Script.topic_id.in_(old_topic_ids)))
-    await db.execute(delete(Topic).where(Topic.analysis_id == analysis_id, Topic.profile_id == profile.id))
+    db.add(batch)
+    await db.flush()
     rows: list[Topic] = []
     for index, item in enumerate(result.topics, start=1):
-        row = Topic(analysis_id=analysis_id, profile_id=profile.id, position=index, data_json=item.model_dump_json())
+        row = Topic(batch_id=batch.id, analysis_id=analysis_id, profile_id=profile.id, position=index, data_json=item.model_dump_json())
         db.add(row)
         rows.append(row)
     await db.commit()
     for row in rows:
         await db.refresh(row)
-    return [topic_out(row) for row in rows]
+    await db.refresh(batch)
+    return topic_batch_out(batch, rows)
 
 
-@app.get("/api/analyses/{analysis_id}/topics", response_model=list[TopicOut])
+@app.get("/api/analyses/{analysis_id}/topics", response_model=TopicBatchOut | None)
 async def topics_list(analysis_id: str, profileId: str | None = None, db: AsyncSession = Depends(get_db)):
-    query = select(Topic).where(Topic.analysis_id == analysis_id)
+    query = select(TopicBatch).where(TopicBatch.analysis_id == analysis_id)
     if profileId:
-        query = query.where(Topic.profile_id == profileId)
-    rows = (await db.execute(query.order_by(Topic.created_at.desc(), Topic.position))).scalars().all()
-    return [topic_out(row) for row in rows]
+        query = query.where(TopicBatch.profile_id == profileId)
+    batch = (await db.execute(query.order_by(TopicBatch.created_at.desc()).limit(1))).scalar_one_or_none()
+    if batch is None:
+        return None
+    rows = (await db.execute(select(Topic).where(Topic.batch_id == batch.id).order_by(Topic.position))).scalars().all()
+    return topic_batch_out(batch, rows)
 
 
 @app.put("/api/topics/{topic_id}", response_model=TopicOut)
@@ -341,6 +379,7 @@ async def scripts_batch(payload: ScriptBatchRequest, db: AsyncSession = Depends(
         existing = (await db.execute(select(Script).where(Script.topic_id == topic.id))).scalar_one_or_none()
         row = existing or Script(topic_id=topic.id)
         row.status, row.error, row.data_json = "queued", None, None
+        row.prompt_version = settings.prompt_pack_version
         if existing is None:
             db.add(row)
         rows.append(row)
