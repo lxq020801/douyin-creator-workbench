@@ -8,7 +8,7 @@ import { compactNumber } from '../data/mockData';
 import { useAppStore } from '../store/AppStore';
 import type { AnalysisRecord, ExternalAccountReport, ExternalVideoBreakdown, VideoSource } from '../types';
 
-const EXPORT_PIXEL_RATIO = 4;
+const EXPORT_PIXEL_RATIO = 3;
 const EXPORT_MAX_DIMENSION = 30_000;
 const EXPORT_MAX_PIXELS = 120_000_000;
 
