@@ -202,7 +202,7 @@ export function ProfileDialog({ open, title = '选择复刻到哪个账号', ini
           {createStep === 'card' ? (
             <div className="intake-stage">
               <div className="intake-step-label">03 / 核对资料卡</div>
-              <div className="intake-title-row"><div><h3>确认后才能用于对标杂交</h3><p>所有字段都来自你的描述和回答，也可以手动调整。</p></div><StatusBadge tone="green">待你确认</StatusBadge></div>
+              <div className="intake-title-row"><div><h3>确认后才能用于对标迁移</h3><p>所有字段都来自你的描述和回答，也可以手动调整。</p></div><StatusBadge tone="green">待你确认</StatusBadge></div>
               <div className="profile-form-grid">
                 {Object.entries(draft).map(([key, value]) => (
                   <label key={key} className={key === 'name' ? '' : 'span-2'}>

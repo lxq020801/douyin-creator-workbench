@@ -97,7 +97,7 @@ export function RemakeWorkspacePage() {
       setTopicBatch(generated);
       setSelectedTopics([]);
       setScripts([]);
-      notify(`已生成 ${generated?.topics.length || 0} 个对标杂交选题`);
+      notify(`已生成 ${generated?.topics.length || 0} 个对标迁移选题`);
     } catch (error) {
       notify(error instanceof Error ? error.message : '选题生成失败', 'danger');
     } finally {
@@ -214,7 +214,7 @@ function TopicPanel({ batch, selected, setSelected, onGenerateScripts, onUpdateT
       <div><span>TOPIC SELECTION</span><strong>选择要继续生成脚本的选题</strong></div>
       <div className="topic-actions"><button className="topic-select-all" type="button" onClick={() => setSelected(allSelected ? [] : topics.map((topic) => topic.id))}>{allSelected ? '清空选择' : '全选'}</button><span>{selected.length} 个已选</span><button className="button button--primary button--sm" disabled={!selected.length || busy} type="button" onClick={onGenerateScripts}>{busy ? <LoaderCircle className="spin" size={15} /> : <WandSparkles size={15} />} 生成拍摄脚本</button></div>
     </div>
-    {batch.direction ? <div className="remake-direction"><span>本轮杂交方向</span><p>{batch.direction}</p></div> : null}
+    {batch.direction ? <div className="remake-direction"><span>本轮迁移方向</span><p>{batch.direction.replaceAll('杂交', '迁移')}</p></div> : null}
 
     <div className="remake-topic-list">{topics.map((topic) => {
       const editing = editingId === topic.id && draft;

@@ -194,7 +194,7 @@ function AccountReportView({ report: data }: { report: ExternalAccountReport }) 
       <DefinitionGrid items={[['人物角色', data.expressionSystem.characterRole], ['文案语气', data.expressionSystem.copyTone], ['出镜状态', data.expressionSystem.onCameraState], ['视听语言', data.expressionSystem.visualLanguage]]} />
       <p className="external-system-effect"><strong>组合效果</strong>{data.expressionSystem.combinedEffect}</p>
     </ReportSection>
-    <ReportSection index="06" kicker="TRANSFERABLE ASSETS / 可杂交资产" title="哪些方法能迁移，哪些条件不能照搬">
+    <ReportSection index="06" kicker="TRANSFERABLE ASSETS / 可迁移资产" title="哪些方法能迁移，哪些条件不能照搬">
       <div className="external-assets">{data.transferableAssets.map((asset, index) => <article key={`${asset.name}-${index}`}><header><span>{String(index + 1).padStart(2, '0')}</span><h3>{asset.name}</h3></header><div><strong><Check size={15} /> 可迁移机制</strong><p>{asset.transferableMechanism}</p></div><div><strong><AlertTriangle size={15} /> 原账号依赖</strong><p>{asset.dependencies}</p></div></article>)}</div>
     </ReportSection>
   </div>;
