@@ -8111,6 +8111,7 @@ body {
   justify-content: space-between;
   gap: 20px;
   margin-bottom: 14px;
+  transform: translateY(-6px);
   font-family: Menlo, Monaco, monospace;
   font-size: 10px;
   font-weight: 700;
