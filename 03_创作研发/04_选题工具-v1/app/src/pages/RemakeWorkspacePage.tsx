@@ -396,7 +396,23 @@ function ScriptDetail({ topic, script, onCopy, onRegenerate, onActivateVersion, 
       <header><div><span>SHOOTING SCRIPT / 拍摄脚本 · 第 {activeVersion} 版</span><small>选题 {String(topic.position).padStart(2, '0')}</small><h3>{topic.title}</h3></div></header>
       <section className="remake-script-idea"><strong>视频思路</strong><p>{data.videoIdea}</p></section>
       <section className="remake-script-hook"><strong>开头钩子</strong><blockquote>{data.openingHook.line}</blockquote><p>{data.openingHook.type} · {data.openingHook.viewerTrigger}</p>{data.openingHook.supportingCue ? <small>{data.openingHook.supportingCue}</small> : null}</section>
-      <section className="remake-script-table-section"><strong>完整文案脚本</strong><div className="external-script-table-wrap"><table className="external-script-table"><thead><tr><th>段落</th><th>台词 / 旁白 / 对话</th><th>本段作用</th><th>关键提示</th></tr></thead><tbody>{data.scriptRows.map((row, index) => <tr key={`${row.section}-${index}`}><td>{row.section}</td><td>{row.copy}</td><td>{row.purpose}</td><td>{row.keyCue || '—'}</td></tr>)}</tbody></table></div></section>
+      <section className="remake-script-table-section">
+        <strong>完整拍摄脚本</strong>
+        <div className="remake-script-grid-wrap">
+          <div className="remake-script-grid" role="table" aria-label="完整拍摄脚本">
+            <div className="remake-script-grid-row remake-script-grid-head" role="row">
+              <div role="columnheader">段次</div><div role="columnheader">内容阶段</div><div role="columnheader">台词 / 旁白 / 对话</div><div role="columnheader">拍摄 / 剪辑提示</div><div role="columnheader">编导目的</div>
+            </div>
+            {data.scriptRows.map((row, index) => <div className="remake-script-grid-row" role="row" key={`${row.section}-${index}`}>
+              <div role="cell"><span className="remake-script-row-number">{String(index + 1).padStart(2, '0')}</span></div>
+              <div role="cell"><strong>{row.section}</strong></div>
+              <div className="remake-script-spoken-copy" role="cell">{row.copy}</div>
+              <div role="cell">{row.keyCue || <span className="remake-script-empty-cell">—</span>}</div>
+              <div role="cell">{row.purpose}</div>
+            </div>)}
+          </div>
+        </div>
+      </section>
       {data.captionAndSound.length ? <section><strong>关键字幕与声音</strong><div className="external-cue-list">{data.captionAndSound.map((cue, index) => <div key={`${cue.content}-${index}`}><b>{cue.content}</b><span>{cue.usage}</span></div>)}</div></section> : null}
       <section><strong>结尾与评论区互动</strong><p>{data.endingInteraction.endingLine}</p>{data.endingInteraction.commentPrompts.length ? <ul>{data.endingInteraction.commentPrompts.map((item) => <li key={item}>{item}</li>)}</ul> : null}{data.endingInteraction.pinnedComment ? <p><b>置顶评论：</b>{data.endingInteraction.pinnedComment}</p> : null}{data.endingInteraction.starterComments.length ? <p><b>首轮互动：</b>{data.endingInteraction.starterComments.join('；')}</p> : null}</section>
       <section className="external-teleprompter"><strong>连续提词稿</strong><p>{data.teleprompterCopy}</p></section>

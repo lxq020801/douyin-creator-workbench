@@ -12,7 +12,7 @@ export function ProductHeader() {
 
         <nav className="product-nav-v3" aria-label="主要页面">
           <NavLink to="/" end>首页</NavLink>
-          <NavLink to="/workspace">工作台</NavLink>
+          <Link to="/#history">创作记录</Link>
         </nav>
 
         <Link className="v2-icon-link" to="/admin/settings" aria-label="管理员设置" title="管理员设置"><Settings size={18} /></Link>

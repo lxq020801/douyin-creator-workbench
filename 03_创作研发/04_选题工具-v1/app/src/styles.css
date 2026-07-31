@@ -6430,6 +6430,99 @@ body {
   }
 }
 
+/* The intake and archive now form one continuous home page. */
+.home-v2--combined {
+  display: block;
+  overflow: visible;
+}
+
+.home-v2--combined .home-v2-main {
+  min-height: calc(100dvh - 108px);
+  box-sizing: border-box;
+}
+
+.home-history-v3 {
+  position: relative;
+  z-index: 1;
+  min-height: calc(100dvh - 76px);
+  box-sizing: border-box;
+  padding: 68px 0 104px;
+  border-top: 1px solid var(--ink);
+  background: var(--paper);
+}
+
+.home-history-v3-inner {
+  width: min(76vw, 1556px);
+  margin-inline: auto;
+}
+
+.home-history-v3-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 36px;
+  margin-bottom: 28px;
+}
+
+.home-history-v3-heading h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  font-family: 'Songti SC', 'STSong', serif;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.home-history-v3-heading h2 small {
+  color: var(--quiet);
+  font-family: Menlo, Monaco, monospace;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.home-history-v3-heading p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.home-records-list-v3 {
+  width: 100%;
+}
+
+@media (max-width: 980px) {
+  .home-history-v3-inner {
+    width: min(calc(100% - 64px), 760px);
+  }
+
+  .home-history-v3-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 760px) {
+  .home-v2--combined .home-v2-main {
+    min-height: 0;
+  }
+
+  .home-history-v3 {
+    min-height: calc(100dvh - 66px);
+    padding: 48px 0 72px;
+  }
+
+  .home-history-v3-inner {
+    width: calc(100% - 32px);
+  }
+
+  .home-history-v3-heading h2 {
+    font-size: 25px;
+  }
+}
+
 /* External prompt variant: the result workspace follows the RTF deliverables.
    It is intentionally editorial and flat so the analysis remains the focal point. */
 .external-workspace {
@@ -8619,7 +8712,7 @@ body {
 .remake-workspace-main {
   width: min(calc(100% - 80px), 1180px);
   margin-inline: auto;
-  padding: 42px 0 96px;
+  padding: 34px 0 96px;
 }
 
 .remake-page-header > a {
@@ -8638,7 +8731,7 @@ body {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   gap: 28px;
-  margin-top: 22px;
+  margin-top: 16px;
 }
 
 .remake-page-heading h1 {
@@ -8658,7 +8751,7 @@ body {
   grid-template-columns: 52px minmax(0, 1fr);
   align-items: center;
   gap: 14px;
-  margin-top: 28px;
+  margin-top: 22px;
   padding: 14px 0;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
@@ -8729,7 +8822,7 @@ body {
 }
 
 .remake-topic-workspace {
-  margin-top: 46px;
+  margin-top: 22px;
 }
 
 .remake-topic-toolbar {
@@ -8737,7 +8830,7 @@ body {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 24px;
-  padding-bottom: 18px;
+  padding-bottom: 14px;
   border-bottom: 3px solid var(--ink);
 }
 
@@ -8798,9 +8891,9 @@ body {
   display: grid;
   grid-template-columns: 128px minmax(0, 1fr);
   gap: 18px;
-  padding: 17px 18px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--line);
-  background: color-mix(in oklch, var(--paper-deep) 48%, var(--paper));
+  background: var(--paper);
 }
 
 .remake-spread-summary {
@@ -9021,7 +9114,7 @@ body {
   gap: 16px;
   padding: 8px 14px;
   border-bottom: 1px solid var(--line);
-  background: color-mix(in oklch, var(--paper-deep) 50%, var(--paper));
+  background: var(--paper-light);
 }
 
 .script-version-control,
@@ -9173,29 +9266,90 @@ body {
   line-height: 1.65;
 }
 
-.remake-script-table-section .external-script-table-wrap {
-  border: 1px solid var(--external-rule);
+.remake-script-grid-wrap {
+  overflow-x: auto;
 }
 
-.remake-script-table-section .external-script-table th:first-child,
-.remake-script-table-section .external-script-table td:first-child {
-  width: 82px;
+.remake-script-grid {
+  min-width: 980px;
+  border-top: 1px solid var(--ink);
+  border-right: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  border-left: 1px solid var(--ink);
 }
 
-.remake-script-table-section .external-script-table th:nth-child(3),
-.remake-script-table-section .external-script-table td:nth-child(3) {
-  width: 145px;
+.remake-script-grid-row {
+  display: grid;
+  grid-template-columns: 58px 118px minmax(300px, 1fr) 190px 180px;
+  border-top: 1px solid color-mix(in oklch, var(--ink) 42%, var(--paper));
 }
 
-.remake-script-table-section .external-script-table th:last-child,
-.remake-script-table-section .external-script-table td:last-child {
-  width: 155px;
+.remake-script-grid-row:first-child {
+  border-top: 0;
 }
 
-.remake-script-table-section .external-script-table td:nth-child(2) {
+.remake-script-grid-row > div {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 14px 12px 16px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.remake-script-grid-row > div + div {
+  border-left: 1px solid color-mix(in oklch, var(--ink) 42%, var(--paper));
+}
+
+.remake-script-grid-head > div {
+  justify-content: center;
+  padding: 10px 12px;
   color: var(--ink);
-  font-size: 12px;
-  line-height: 1.8;
+  background: var(--paper-deep);
+  font-family: Menlo, Monaco, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.remake-script-grid-row > div:first-child {
+  justify-content: center;
+  text-align: center;
+}
+
+.remake-script-grid-row:not(.remake-script-grid-head) > div:nth-child(2) {
+  justify-content: center;
+  text-align: center;
+}
+
+.remake-script-grid-row > div:nth-child(2) strong {
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.remake-script-grid-row .remake-script-spoken-copy {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.85;
+}
+
+.remake-script-row-number {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid color-mix(in oklch, var(--ink) 35%, var(--paper));
+  color: var(--ink);
+  background: var(--paper);
+  font-family: Menlo, Monaco, monospace;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.remake-script-empty-cell {
+  color: var(--quiet);
 }
 
 @media (max-width: 900px) {

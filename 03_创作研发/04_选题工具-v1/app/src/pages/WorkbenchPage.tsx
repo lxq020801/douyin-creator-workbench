@@ -1,6 +1,7 @@
 import { ArrowRight, FileSearch, Link2, UsersRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { AnalysisHistorySection } from '../components/AnalysisHistorySection';
 import { ProductHeader } from '../components/ProductHeader';
 import { api } from '../api';
 
@@ -20,6 +21,7 @@ const headlineSets = {
 } satisfies Record<IntakeMode, Array<{ lead: string; accent: string }>>;
 
 export function WorkbenchPage() {
+  const location = useLocation();
   const navigate = useNavigate();
   const [mode, setMode] = useState<IntakeMode>('video');
   const [url, setUrl] = useState('');
@@ -39,6 +41,15 @@ export function WorkbenchPage() {
     return () => window.clearInterval(rotation);
   }, [mode]);
 
+  useEffect(() => {
+    if (location.hash !== '#history') return;
+    const frame = window.requestAnimationFrame(() => {
+      const history = document.getElementById('history');
+      if (history) window.scrollTo({ top: history.offsetTop, behavior: 'smooth' });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.hash]);
+
   const start = async () => {
     if (!url.trim()) return;
     setSubmitting(true);
@@ -55,7 +66,7 @@ export function WorkbenchPage() {
   const isVideo = mode === 'video';
 
   return (
-    <div className="home-v2">
+    <div className="home-v2 home-v2--combined">
       <ProductHeader />
 
       <main className="home-v2-main">
@@ -106,6 +117,8 @@ export function WorkbenchPage() {
           </div>
         </section>
       </main>
+
+      <AnalysisHistorySection />
 
       <footer className="home-v2-footer">
         <span>DIRECTOR LINE / EDIT DECISION</span>

@@ -88,7 +88,7 @@ export function UnifiedWorkspacePage() {
       <ProductHeader />
       <main className="workspace-v2-main report-only-main">
         <div className="result-toolbar-v3">
-          <Link className="result-back-v3" to="/workspace"><ArrowLeft size={16} /> 返回工作台</Link>
+          <Link className="result-back-v3" to="/#history"><ArrowLeft size={16} /> 返回创作记录</Link>
           <button className="button button--ghost button--sm" type="button" disabled={exporting} onClick={() => void exportReport()}><Download size={15} /> {exporting ? '正在生成长图…' : '导出报告长图'}</button>
         </div>
 
@@ -118,11 +118,11 @@ export function UnifiedWorkspacePage() {
 }
 
 function ProcessingView({ analysis, onCancel }: { analysis: AnalysisRecord; onCancel: () => Promise<void> }) {
-  return <div className="page page--processing"><ProductHeader /><main className="processing-shell"><Link className="back-link" to="/workspace"><ArrowLeft size={15} /> 返回工作台</Link><div className="processing-kicker">{analysis.kind === 'video' ? 'SINGLE VIDEO / 单条视频' : 'ACCOUNT STUDY / 账号研究'}</div><h1>{analysis.kind === 'video' ? '正在提炼这条视频的创作方法' : '正在归纳这个账号的内容体系'}</h1><p>{analysis.detail}</p><div className="processing-progress"><div><span>{analysis.step}</span><strong>{analysis.progress}%</strong></div><i><b style={{ width: `${analysis.progress}%` }} /></i></div><div className="processing-status-list"><div className="is-active"><LoaderCircle size={17} className="spin" /><span>{analysis.detail}</span></div><div><CheckCircle2 size={17} /><span>报告完成后会自动保存到工作台</span></div></div><button className="button button--ghost" type="button" onClick={() => void onCancel()}>取消任务</button></main></div>;
+  return <div className="page page--processing"><ProductHeader /><main className="processing-shell"><Link className="back-link" to="/#history"><ArrowLeft size={15} /> 返回创作记录</Link><div className="processing-kicker">{analysis.kind === 'video' ? 'SINGLE VIDEO / 单条视频' : 'ACCOUNT STUDY / 账号研究'}</div><h1>{analysis.kind === 'video' ? '正在提炼这条视频的创作方法' : '正在归纳这个账号的内容体系'}</h1><p>{analysis.detail}</p><div className="processing-progress"><div><span>{analysis.step}</span><strong>{analysis.progress}%</strong></div><i><b style={{ width: `${analysis.progress}%` }} /></i></div><div className="processing-status-list"><div className="is-active"><LoaderCircle size={17} className="spin" /><span>{analysis.detail}</span></div><div><CheckCircle2 size={17} /><span>报告完成后会自动保存到创作记录</span></div></div><button className="button button--ghost" type="button" onClick={() => void onCancel()}>取消任务</button></main></div>;
 }
 
 function FailureView({ analysis, onRetry }: { analysis: AnalysisRecord; onRetry: () => Promise<void> }) {
-  return <div className="page page--processing"><ProductHeader /><main className="processing-shell"><Link className="back-link" to="/workspace"><ArrowLeft size={15} /> 返回工作台</Link><div className="processing-kicker">TASK FAILED / 任务失败</div><h1>这次分析没有完成</h1><p>{analysis.error || '没有返回更多错误信息。'}</p><div className="boundary-note"><AlertTriangle size={17} /><p>先检查设置页中的模型连接和抖音 Cookie，再重试；失败任务不会覆盖历史结果。</p></div><button className="button button--primary" type="button" onClick={() => void onRetry()}><RefreshCcw size={17} /> 重试任务</button></main></div>;
+  return <div className="page page--processing"><ProductHeader /><main className="processing-shell"><Link className="back-link" to="/#history"><ArrowLeft size={15} /> 返回创作记录</Link><div className="processing-kicker">TASK FAILED / 任务失败</div><h1>这次分析没有完成</h1><p>{analysis.error || '没有返回更多错误信息。'}</p><div className="boundary-note"><AlertTriangle size={17} /><p>先检查设置页中的模型连接和抖音 Cookie，再重试；失败任务不会覆盖历史结果。</p></div><button className="button button--primary" type="button" onClick={() => void onRetry()}><RefreshCcw size={17} /> 重试任务</button></main></div>;
 }
 
 function VideoReportHeader({ source }: { source: VideoSource }) {
