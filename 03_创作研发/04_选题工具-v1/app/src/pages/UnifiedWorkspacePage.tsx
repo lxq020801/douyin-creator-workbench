@@ -104,9 +104,8 @@ function VideoReportHeader({ source }: { source: VideoSource }) {
         <h1>{source.title}</h1>
         <div className="video-report-meta-row">
           <span className="video-report-byline">@{source.author || '未获取作者'}</span>
-          {publishedAt ? <span>{publishedAt}</span> : null}
-          {source.duration ? <span>时长 {source.duration}</span> : null}
-          <div className="video-report-metrics" aria-label="视频互动数据">{metrics.map(([label, value]) => <span key={label}><small>{label}</small>{compactNumber(value)}</span>)}</div>
+          {publishedAt ? <span className="video-report-date">{publishedAt}</span> : null}
+          <div className="video-report-metrics" aria-label="视频互动数据">{metrics.map(([label, value]) => <span key={label}><small>{label}</small><span>{compactNumber(value)}</span></span>)}</div>
         </div>
         <a href={source.url} target="_blank" rel="noreferrer">查看原视频 <ExternalLink size={14} /></a>
       </div>
