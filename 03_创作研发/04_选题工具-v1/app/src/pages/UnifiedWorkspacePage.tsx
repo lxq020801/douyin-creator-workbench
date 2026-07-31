@@ -1,9 +1,10 @@
 import { AlertTriangle, ArrowLeft, ArrowRight, Check, CheckCircle2, Download, ExternalLink, Film, LoaderCircle, RefreshCcw } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { ProductHeader } from '../components/ProductHeader';
+import { ProfileDialog } from '../components/ProfileDialog';
 import { compactNumber } from '../data/mockData';
 import { useAppStore } from '../store/AppStore';
 import type { AnalysisRecord, ExternalAccountReport, ExternalVideoBreakdown, VideoSource } from '../types';
@@ -30,9 +31,11 @@ function getExportPixelRatio(element: HTMLElement) {
 
 export function UnifiedWorkspacePage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { notify } = useAppStore();
   const [analysis, setAnalysis] = useState<AnalysisRecord | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   const load = async () => {
@@ -98,9 +101,18 @@ export function UnifiedWorkspacePage() {
 
         {report ? <section className="report-next-step">
           <div><span>NEXT / 对标复刻</span><h2>把拆解结果变成你的选题</h2><p>进入独立复刻工作台，结合账号资料生成 20 个选题，再选择需要的内容生成可拍脚本。</p></div>
-          <Link to={`/workspace/remake/${analysis.id}`}>进入复刻工作台 <ArrowRight size={18} /></Link>
+          <button type="button" onClick={() => setProfileOpen(true)}>进入复刻工作台 <ArrowRight size={18} /></button>
         </section> : null}
       </main>
+      <ProfileDialog
+        open={profileOpen}
+        title="选择这次要复刻到哪个账号"
+        onClose={() => setProfileOpen(false)}
+        onSelect={(profile) => {
+          setProfileOpen(false);
+          navigate(`/workspace/remake/${analysis.id}?profileId=${encodeURIComponent(profile.id)}`);
+        }}
+      />
     </div>
   );
 }

@@ -337,6 +337,14 @@ class ScriptOut(BaseModel):
     data: DirectorScript | None = None
     error: str | None = None
     promptVersion: str = "external-rtf-v3"
+    activeVersion: int = 0
+    versionCount: int = 0
+
+
+class ScriptVersionOut(BaseModel):
+    version: int
+    promptVersion: str
+    createdAt: datetime
 
 
 class ConnectionTestResult(BaseModel):

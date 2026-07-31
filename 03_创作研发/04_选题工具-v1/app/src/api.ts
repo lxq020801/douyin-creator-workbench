@@ -5,6 +5,7 @@ import type {
   GeneratedTopic,
   IntakeAnswer,
   RuntimeSettings,
+  ScriptVersionSummary,
   TopicBatch,
 } from './types';
 
@@ -79,6 +80,9 @@ export const api = {
     },
     batch: (topicIds: string[]) => request<GeneratedScript[]>('/api/scripts/batch', { method: 'POST', body: JSON.stringify({ topicIds }) }),
     retry: (id: string) => request<GeneratedScript>(`/api/scripts/${id}/retry`, { method: 'POST' }),
+    regenerate: (id: string) => request<GeneratedScript>(`/api/scripts/${id}/regenerate`, { method: 'POST' }),
+    versions: (id: string) => request<ScriptVersionSummary[]>(`/api/scripts/${id}/versions`),
+    activateVersion: (id: string, version: number) => request<GeneratedScript>(`/api/scripts/${id}/versions/${version}/activate`, { method: 'POST' }),
   },
 };
 

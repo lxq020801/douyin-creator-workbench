@@ -9,10 +9,10 @@ from typing import Any, TypeVar
 
 from openai import OpenAI
 from pydantic import BaseModel, ValidationError
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 
 from .config import settings as app_settings
-from .db import AccountSample, Analysis, Profile, Script, SessionLocal, Topic
+from .db import AccountSample, Analysis, Profile, Script, ScriptVersion, SessionLocal, Topic
 from .factual_guard import factual_final
 from .media.douyin import download_account_video, download_single, fetch_account, fetch_single
 from .media.scripts.analyzer import AnalyzeResult, analyze_video
@@ -397,9 +397,25 @@ async def _run_script(script_id: str) -> None:
     async with SessionLocal() as session:
         script = await session.get(Script, script_id)
         if script:
+            data_json = result.model_dump_json(by_alias=True)
+            last_version = (
+                await session.execute(
+                    select(func.max(ScriptVersion.version)).where(ScriptVersion.script_id == script.id)
+                )
+            ).scalar_one_or_none() or 0
+            next_version = int(last_version) + 1
+            session.add(ScriptVersion(
+                script_id=script.id,
+                version=next_version,
+                data_json=data_json,
+                prompt_version=app_settings.prompt_pack_version,
+            ))
             script.status = "completed"
-            script.data_json = result.model_dump_json(by_alias=True)
+            script.data_json = data_json
             script.prompt_version = app_settings.prompt_pack_version
+            script.active_version = next_version
+            script.version_count = next_version
+            script.error = None
             await session.commit()
 
 

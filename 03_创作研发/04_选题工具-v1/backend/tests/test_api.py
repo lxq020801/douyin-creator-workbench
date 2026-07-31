@@ -3,7 +3,7 @@ import asyncio
 import json
 
 import app.main as main_module
-from app.db import Analysis, Profile, Script, SessionLocal, Topic, TopicBatch
+from app.db import Analysis, Profile, Script, ScriptVersion, SessionLocal, Topic, TopicBatch
 from app.jobs import _update_analysis
 from app.settings_service import get_runtime_settings
 
@@ -202,6 +202,79 @@ def test_batch_enqueue_failure_is_isolated_and_retryable(monkeypatch):
         retried = client.post(f"/api/scripts/{failed_id}/retry")
         assert retried.status_code == 200
         assert retried.json()["status"] == "queued"
+
+
+def test_script_regeneration_preserves_current_version_and_history_can_switch(monkeypatch):
+    first_data = {
+        "videoIdea": "第一版思路",
+        "openingHook": {"line": "第一版开头", "type": "反差", "viewerTrigger": "好奇", "supportingCue": ""},
+        "scriptRows": [{"section": "开头", "copy": "第一版台词", "purpose": "留人", "keyCue": ""}],
+        "captionAndSound": [],
+        "endingInteraction": {"endingLine": "", "commentPrompts": [], "pinnedComment": "", "starterComments": []},
+        "teleprompterCopy": "第一版台词",
+    }
+    second_data = {**first_data, "videoIdea": "第二版思路", "teleprompterCopy": "第二版台词"}
+
+    async def seed() -> str:
+        async with SessionLocal() as session:
+            profile = Profile(name="版本资料", data_json=json.dumps({
+                "name": "版本资料", "creatorAndAccount": "门店老板",
+                "businessAndGoals": "到店转化", "audienceAndAction": "本地顾客",
+                "availableMaterials": "门店实拍", "productionConditions": "手机拍摄",
+                "toneAndBoundaries": "真实", "originalDescription": "测试",
+            }, ensure_ascii=False))
+            analysis = Analysis(kind="video", source="https://v.douyin.com/versions/", status="completed")
+            session.add_all([profile, analysis])
+            await session.flush()
+            batch = TopicBatch(
+                analysis_id=analysis.id, profile_id=profile.id, kind="video",
+                direction="版本测试", spread_summary="版本测试",
+            )
+            session.add(batch)
+            await session.flush()
+            topic = Topic(
+                batch_id=batch.id, analysis_id=analysis.id, profile_id=profile.id, position=1,
+                data_json=json.dumps({
+                    "title": "测试选题", "concept": "角度", "hook": "钩子", "fitReason": "理由",
+                    "inheritedValue": "机制", "profileConnection": "迁移", "accountRole": "",
+                }, ensure_ascii=False),
+            )
+            session.add(topic)
+            await session.flush()
+            script = Script(
+                topic_id=topic.id, status="completed",
+                data_json=json.dumps(second_data, ensure_ascii=False),
+                active_version=2, version_count=2,
+            )
+            session.add(script)
+            await session.flush()
+            session.add_all([
+                ScriptVersion(script_id=script.id, version=1, data_json=json.dumps(first_data, ensure_ascii=False)),
+                ScriptVersion(script_id=script.id, version=2, data_json=json.dumps(second_data, ensure_ascii=False)),
+            ])
+            await session.commit()
+            return script.id
+
+    with TestClient(main_module.app) as client:
+        script_id = asyncio.run(seed())
+        monkeypatch.setattr(main_module, "enqueue", lambda *args, **kwargs: "regenerate-job")
+        regenerated = client.post(f"/api/scripts/{script_id}/regenerate")
+        assert regenerated.status_code == 200
+        assert regenerated.json()["status"] == "queued"
+        assert regenerated.json()["data"]["videoIdea"] == "第二版思路"
+        assert regenerated.json()["activeVersion"] == 2
+        assert regenerated.json()["versionCount"] == 2
+
+        versions = client.get(f"/api/scripts/{script_id}/versions")
+        assert versions.status_code == 200
+        assert [item["version"] for item in versions.json()] == [2, 1]
+
+        activated = client.post(f"/api/scripts/{script_id}/versions/1/activate")
+        assert activated.status_code == 200
+        assert activated.json()["status"] == "queued"
+        assert activated.json()["data"]["videoIdea"] == "第一版思路"
+        assert activated.json()["activeVersion"] == 1
+        assert activated.json()["versionCount"] == 2
 
 
 def test_analysis_retry_stays_retryable_when_queue_is_unavailable(monkeypatch):

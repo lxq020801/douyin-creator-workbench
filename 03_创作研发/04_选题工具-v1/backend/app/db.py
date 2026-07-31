@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from typing import Any, AsyncIterator
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, event, inspect, select
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, event, inspect, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -113,8 +113,22 @@ class Script(Base):
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     job_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
     prompt_version: Mapped[str] = mapped_column(String(80), default="external-rtf-v3")
+    active_version: Mapped[int] = mapped_column(Integer, default=0)
+    version_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
+
+
+class ScriptVersion(Base):
+    __tablename__ = "script_versions"
+    __table_args__ = (UniqueConstraint("script_id", "version", name="uq_script_version"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    script_id: Mapped[str] = mapped_column(ForeignKey("scripts.id", ondelete="CASCADE"), index=True)
+    version: Mapped[int] = mapped_column(Integer)
+    data_json: Mapped[str] = mapped_column(Text)
+    prompt_version: Mapped[str] = mapped_column(String(80), default="external-rtf-v3")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
 
 
 engine = create_async_engine(settings.database_url, connect_args={"timeout": 30})
@@ -218,6 +232,14 @@ def _migrate_existing_database(sync_conn) -> None:
             sync_conn.exec_driver_sql(
                 "ALTER TABLE scripts ADD COLUMN prompt_version VARCHAR(80) NOT NULL DEFAULT 'legacy-v0.3'"
             )
+        if "active_version" not in columns:
+            sync_conn.exec_driver_sql(
+                "ALTER TABLE scripts ADD COLUMN active_version INTEGER NOT NULL DEFAULT 0"
+            )
+        if "version_count" not in columns:
+            sync_conn.exec_driver_sql(
+                "ALTER TABLE scripts ADD COLUMN version_count INTEGER NOT NULL DEFAULT 0"
+            )
     if "topics" in tables:
         columns = {column["name"] for column in inspector.get_columns("topics")}
         if "batch_id" not in columns:
@@ -270,6 +292,24 @@ def _migrate_existing_database(sync_conn) -> None:
                     f"UPDATE {table} SET data_json = ? WHERE id = ?",
                     (json.dumps(after, ensure_ascii=False), row_id),
                 )
+
+    if {"scripts", "script_versions"}.issubset(tables):
+        rows = sync_conn.exec_driver_sql(
+            "SELECT id, data_json, prompt_version, created_at FROM scripts "
+            "WHERE data_json IS NOT NULL AND NOT EXISTS "
+            "(SELECT 1 FROM script_versions WHERE script_versions.script_id = scripts.id)"
+        ).fetchall()
+        for script_id, data_json, prompt_version, created_at in rows:
+            sync_conn.exec_driver_sql(
+                "INSERT INTO script_versions "
+                "(id, script_id, version, data_json, prompt_version, created_at) "
+                "VALUES (?, ?, 1, ?, ?, ?)",
+                (uid(), script_id, data_json, prompt_version or "legacy-v0.3", created_at or now()),
+            )
+            sync_conn.exec_driver_sql(
+                "UPDATE scripts SET active_version = 1, version_count = 1 WHERE id = ?",
+                (script_id,),
+            )
 
 
 async def init_db() -> None:

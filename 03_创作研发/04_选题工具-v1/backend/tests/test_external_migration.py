@@ -66,8 +66,10 @@ def test_legacy_database_is_upgraded_without_losing_history(tmp_path):
         _migrate_existing_database(connection)
         analysis_columns = {row[1] for row in connection.exec_driver_sql("PRAGMA table_info(analyses)")}
         topic_columns = {row[1] for row in connection.exec_driver_sql("PRAGMA table_info(topics)")}
+        script_columns = {row[1] for row in connection.exec_driver_sql("PRAGMA table_info(scripts)")}
         assert "prompt_version" in analysis_columns
         assert "batch_id" in topic_columns
+        assert {"active_version", "version_count"}.issubset(script_columns)
         batch_id = connection.execute(text("SELECT batch_id FROM topics WHERE id='topic-1'" )).scalar_one()
         assert batch_id
         assert connection.execute(text("SELECT prompt_version FROM topic_batches WHERE id=:id"), {"id": batch_id}).scalar_one() == "legacy-v0.3"
@@ -78,6 +80,15 @@ def test_legacy_database_is_upgraded_without_losing_history(tmp_path):
         assert topic["inheritedValue"] == "旧机制"
         assert script["teleprompterCopy"] == "连续口播"
         assert DirectorScript.model_validate(script).scriptRows[0].spoken_copy == "旧开头"
+        saved_version = connection.execute(text(
+            "SELECT version, data_json FROM script_versions WHERE script_id='script-1'"
+        )).one()
+        assert saved_version.version == 1
+        assert json.loads(saved_version.data_json)["teleprompterCopy"] == "连续口播"
+        active = connection.execute(text(
+            "SELECT active_version, version_count FROM scripts WHERE id='script-1'"
+        )).one()
+        assert active == (1, 1)
 
 
 def test_old_saved_prompts_cannot_override_external_pack(tmp_path):

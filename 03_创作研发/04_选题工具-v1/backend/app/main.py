@@ -16,7 +16,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .config import settings
-from .db import AccountSample, Analysis, Profile, Script, Topic, TopicBatch, get_db, get_or_404, init_db
+from .db import AccountSample, Analysis, Profile, Script, ScriptVersion, Topic, TopicBatch, get_db, get_or_404, init_db
 from .factual_guard import factual_final
 from .job_queue import connection, enqueue
 from .media.douyin import probe_cookie
@@ -34,6 +34,7 @@ from .schemas import (
     RuntimeSettingsOut,
     ScriptBatchRequest,
     ScriptOut,
+    ScriptVersionOut,
     TopicBatchModel,
     TopicBatchOut,
     TopicGenerateRequest,
@@ -103,7 +104,11 @@ def topic_batch_out(row: TopicBatch, topics: list[Topic]) -> TopicBatchOut:
 
 
 def script_out(row: Script) -> ScriptOut:
-    return ScriptOut(id=row.id, topicId=row.topic_id, status=row.status, data=_loads(row.data_json), error=row.error, promptVersion=row.prompt_version)
+    return ScriptOut(
+        id=row.id, topicId=row.topic_id, status=row.status, data=_loads(row.data_json),
+        error=row.error, promptVersion=row.prompt_version,
+        activeVersion=row.active_version, versionCount=row.version_count,
+    )
 
 
 @app.get("/health")
@@ -375,16 +380,18 @@ async def scripts_batch(payload: ScriptBatchRequest, db: AsyncSession = Depends(
     if len(topics) != len(payload.topicIds):
         raise HTTPException(status_code=404, detail="部分选题不存在")
     rows: list[Script] = []
+    queued_rows: list[Script] = []
     for topic in topics:
         existing = (await db.execute(select(Script).where(Script.topic_id == topic.id))).scalar_one_or_none()
-        row = existing or Script(topic_id=topic.id)
-        row.status, row.error, row.data_json = "queued", None, None
-        row.prompt_version = settings.prompt_pack_version
-        if existing is None:
-            db.add(row)
+        if existing is not None:
+            rows.append(existing)
+            continue
+        row = Script(topic_id=topic.id, status="queued", error=None, prompt_version=settings.prompt_pack_version)
+        db.add(row)
+        queued_rows.append(row)
         rows.append(row)
     await db.commit()
-    for row in rows:
+    for row in queued_rows:
         await db.refresh(row)
         try:
             row.job_id = enqueue("app.jobs.run_script_generation", row.id, job_id=f"script-{row.id}-{int(datetime.utcnow().timestamp())}", timeout=3600)
@@ -423,4 +430,71 @@ async def scripts_retry(script_id: str, db: AsyncSession = Depends(get_db)):
         row.status = "failed"
         row.error = f"任务队列不可用：{exc}"[:1000]
     await db.commit()
+    return script_out(row)
+
+
+@app.post("/api/scripts/{script_id}/regenerate", response_model=ScriptOut)
+async def scripts_regenerate(script_id: str, db: AsyncSession = Depends(get_db)):
+    row = await get_or_404(db, Script, script_id)
+    if row.status in {"queued", "running"}:
+        raise HTTPException(status_code=409, detail="脚本正在生成，请完成后再重新生成")
+    if not row.data_json:
+        raise HTTPException(status_code=409, detail="当前脚本还没有可保留的版本，请先完成首次生成")
+    row.status, row.error = "queued", None
+    await db.commit()
+    try:
+        row.job_id = enqueue(
+            "app.jobs.run_script_generation",
+            row.id,
+            job_id=f"script-{row.id}-regenerate-{int(datetime.utcnow().timestamp())}",
+            timeout=3600,
+        )
+    except Exception as exc:
+        row.status = "failed"
+        row.error = f"任务队列不可用：{exc}"[:1000]
+    await db.commit()
+    return script_out(row)
+
+
+@app.get("/api/scripts/{script_id}/versions", response_model=list[ScriptVersionOut])
+async def scripts_versions(script_id: str, db: AsyncSession = Depends(get_db)):
+    await get_or_404(db, Script, script_id)
+    versions = (
+        await db.execute(
+            select(ScriptVersion)
+            .where(ScriptVersion.script_id == script_id)
+            .order_by(ScriptVersion.version.desc())
+        )
+    ).scalars().all()
+    return [
+        ScriptVersionOut(
+            version=item.version,
+            promptVersion=item.prompt_version,
+            createdAt=item.created_at,
+        )
+        for item in versions
+    ]
+
+
+@app.post("/api/scripts/{script_id}/versions/{version}/activate", response_model=ScriptOut)
+async def scripts_activate_version(script_id: str, version: int, db: AsyncSession = Depends(get_db)):
+    row = await get_or_404(db, Script, script_id)
+    saved = (
+        await db.execute(
+            select(ScriptVersion).where(
+                ScriptVersion.script_id == script_id,
+                ScriptVersion.version == version,
+            )
+        )
+    ).scalar_one_or_none()
+    if saved is None:
+        raise HTTPException(status_code=404, detail="脚本历史版本不存在")
+    row.data_json = saved.data_json
+    row.active_version = saved.version
+    row.prompt_version = saved.prompt_version
+    row.error = None
+    if row.status not in {"queued", "running"}:
+        row.status = "completed"
+    await db.commit()
+    await db.refresh(row)
     return script_out(row)

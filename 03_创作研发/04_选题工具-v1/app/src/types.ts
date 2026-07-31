@@ -234,4 +234,12 @@ export interface GeneratedScript {
   data: DirectorScript | null;
   error: string | null;
   promptVersion: string;
+  activeVersion: number;
+  versionCount: number;
+}
+
+export interface ScriptVersionSummary {
+  version: number;
+  promptVersion: string;
+  createdAt: string;
 }
