@@ -1,0 +1,81 @@
+name: video-benchmark-external
+
+x-default-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data-external:/data
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment: &backend-env
+      DATABASE_URL: sqlite+aiosqlite:////service/data/reference.db
+      DATA_DIR: /service/data
+      REDIS_URL: redis://redis:6379/0
+      REFERENCE_FRAME_RUNTIME_ROOT: /service/data/runtime
+      INITIAL_ADMIN_USERNAME: ${INITIAL_ADMIN_USERNAME:-admin}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-}
+      INITIAL_ADMIN_DISPLAY_NAME: ${INITIAL_ADMIN_DISPLAY_NAME:-管理员}
+      SESSION_DAYS: ${SESSION_DAYS:-14}
+      SECURE_COOKIES: ${SECURE_COOKIES:-false}
+    volumes:
+      - app-data-external:/service/data
+    logging: *default-logging
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8011}:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  worker:
+    build: ./backend
+    restart: unless-stopped
+    command: ["rq", "worker", "--url", "redis://redis:6379/0", "reference-frame-external"]
+    scale: ${WORKER_PROCESSES:-3}
+    environment:
+      <<: *backend-env
+      WORKER_PROCESSES: ${WORKER_PROCESSES:-3}
+    volumes:
+      - app-data-external:/service/data
+    logging: *default-logging
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-4191}:80"
+    logging: *default-logging
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  redis-data-external:
+    name: video-benchmark-external-redis-data
+  app-data-external:
+    name: video-benchmark-external-app-data
