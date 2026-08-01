@@ -34,7 +34,7 @@ def test_legacy_database_is_upgraded_without_losing_history(tmp_path):
         )
         connection.exec_driver_sql(
             "INSERT INTO profiles VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
-            ("profile-1", "local", "旧资料", json.dumps({
+            ("profile-1", None, "旧资料", json.dumps({
                 "name": "旧资料", "industry": "餐饮", "creatorIdentity": "老板",
                 "audience": "附近顾客", "valuePromise": "到店消费",
                 "formatsAndResources": "门店实拍", "constraints": "手机拍摄",
@@ -74,6 +74,7 @@ def test_legacy_database_is_upgraded_without_losing_history(tmp_path):
         assert batch_id
         assert connection.execute(text("SELECT prompt_version FROM topic_batches WHERE id=:id"), {"id": batch_id}).scalar_one() == "legacy-v0.3"
         profile = json.loads(connection.execute(text("SELECT data_json FROM profiles WHERE id='profile-1'" )).scalar_one())
+        assert connection.execute(text("SELECT workspace_id FROM profiles WHERE id='profile-1'" )).scalar_one() == "local"
         topic = json.loads(connection.execute(text("SELECT data_json FROM topics WHERE id='topic-1'" )).scalar_one())
         script = json.loads(connection.execute(text("SELECT data_json FROM scripts WHERE id='script-1'" )).scalar_one())
         assert profile["creatorAndAccount"] == "老板"

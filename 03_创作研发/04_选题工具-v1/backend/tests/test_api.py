@@ -8,6 +8,11 @@ from app.jobs import _update_analysis
 from app.settings_service import get_runtime_settings
 
 
+def login_admin(client: TestClient) -> None:
+    response = client.post("/api/auth/login", json={"username": "admin", "password": "test-admin-password"})
+    assert response.status_code == 200
+
+
 def test_analysis_requires_complete_runtime_settings(monkeypatch):
     async def incomplete_settings(_db):
         from app.schemas import RuntimeSettingsIn
@@ -15,6 +20,7 @@ def test_analysis_requires_complete_runtime_settings(monkeypatch):
 
     monkeypatch.setattr(main_module, "get_runtime_settings", incomplete_settings)
     with TestClient(main_module.app) as client:
+        login_admin(client)
         response = client.post("/api/analyses/video", json={"source": "https://v.douyin.com/example/"})
         assert response.status_code == 409
         assert response.json()["detail"] == "请先在设置页配置：API Key、模型名称、抖音 Cookie"
@@ -23,6 +29,7 @@ def test_analysis_requires_complete_runtime_settings(monkeypatch):
 def test_settings_hide_secrets_and_profile_crud(monkeypatch):
     monkeypatch.setattr(main_module, "enqueue", lambda *args, **kwargs: "job-test")
     with TestClient(main_module.app) as client:
+        login_admin(client)
         settings = client.get("/api/settings")
         assert settings.status_code == 200
         payload = settings.json()
@@ -117,6 +124,7 @@ def test_scripts_can_be_filtered_by_analysis_and_delete_cascades(monkeypatch):
             return first.id, first_topic.id, second.id
 
     with TestClient(main_module.app) as client:
+        login_admin(client)
         first_id, first_topic_id, second_id = asyncio.run(seed())
         filtered = client.get(f"/api/scripts?analysisId={first_id}")
         assert filtered.status_code == 200
@@ -181,6 +189,7 @@ def test_batch_enqueue_failure_is_isolated_and_retryable(monkeypatch):
         return f"job-{attempts}"
 
     with TestClient(main_module.app) as client:
+        login_admin(client)
         topic_ids = asyncio.run(seed())
         monkeypatch.setattr(main_module, "enqueue", partial_enqueue)
         response = client.post("/api/scripts/batch", json={"topicIds": topic_ids})
@@ -256,6 +265,7 @@ def test_script_regeneration_preserves_current_version_and_history_can_switch(mo
             return script.id
 
     with TestClient(main_module.app) as client:
+        login_admin(client)
         script_id = asyncio.run(seed())
         monkeypatch.setattr(main_module, "enqueue", lambda *args, **kwargs: "regenerate-job")
         regenerated = client.post(f"/api/scripts/{script_id}/regenerate")
@@ -286,6 +296,7 @@ def test_analysis_retry_stays_retryable_when_queue_is_unavailable(monkeypatch):
             return row.id
 
     with TestClient(main_module.app) as client:
+        login_admin(client)
         analysis_id = asyncio.run(seed())
 
         def unavailable(*args, **kwargs):

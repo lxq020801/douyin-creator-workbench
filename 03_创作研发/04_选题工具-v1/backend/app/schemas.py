@@ -153,6 +153,36 @@ class RuntimeSettingsOut(RuntimeSettingsIn):
     promptPackVersion: str = "external-rtf-v3"
 
 
+class LoginRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=80)
+    password: str = Field(min_length=1, max_length=128)
+
+
+class UserOut(BaseModel):
+    id: str
+    username: str
+    displayName: str
+    role: Literal["admin", "user"]
+    workspaceId: str
+    createdAt: datetime
+
+
+class UserCreate(BaseModel):
+    username: str = Field(min_length=3, max_length=80, pattern=r"^[A-Za-z0-9._-]+$")
+    displayName: str = Field(min_length=1, max_length=120)
+    password: str = Field(min_length=8, max_length=128)
+    role: Literal["admin", "user"] = "user"
+
+
+class UserPasswordReset(BaseModel):
+    password: str = Field(min_length=8, max_length=128)
+
+
+class PasswordChange(BaseModel):
+    currentPassword: str = Field(min_length=1, max_length=128)
+    newPassword: str = Field(min_length=8, max_length=128)
+
+
 class ProfileData(BaseModel):
     name: str
     creatorAndAccount: str

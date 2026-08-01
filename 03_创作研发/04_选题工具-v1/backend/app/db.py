@@ -31,6 +31,38 @@ class Setting(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
 
 
+class Workspace(Base):
+    __tablename__ = "workspaces"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    name: Mapped[str] = mapped_column(String(120))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+class User(Base):
+    __tablename__ = "users"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), unique=True, index=True
+    )
+    username: Mapped[str] = mapped_column(String(80), unique=True, index=True)
+    display_name: Mapped[str] = mapped_column(String(120))
+    password_hash: Mapped[str] = mapped_column(Text)
+    role: Mapped[str] = mapped_column(String(20), default="user", index=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
+
+
+class LoginSession(Base):
+    __tablename__ = "login_sessions"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
 class Profile(Base):
     __tablename__ = "profiles"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
@@ -138,6 +170,8 @@ engine = create_async_engine(settings.database_url, connect_args={"timeout": 30}
 def _enable_sqlite_foreign_keys(dbapi_connection, _connection_record) -> None:
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.execute("PRAGMA busy_timeout=30000")
     cursor.close()
 
 
@@ -220,6 +254,15 @@ def _script_v1_to_external(value: dict[str, Any]) -> dict[str, Any]:
 def _migrate_existing_database(sync_conn) -> None:
     inspector = inspect(sync_conn)
     tables = set(inspector.get_table_names())
+    for table in ("profiles", "analyses", "topic_batches", "topics", "scripts"):
+        if table not in tables:
+            continue
+        columns = {column["name"] for column in inspector.get_columns(table)}
+        if "workspace_id" in columns:
+            sync_conn.exec_driver_sql(
+                f"UPDATE {table} SET workspace_id = ? WHERE workspace_id IS NULL OR workspace_id = ''",
+                (settings.local_workspace_id,),
+            )
     if "analyses" in tables:
         columns = {column["name"] for column in inspector.get_columns("analyses")}
         if "prompt_version" not in columns:
@@ -333,5 +376,22 @@ async def get_or_404(session: AsyncSession, model: type[Base], object_id: str):
     return value
 
 
-async def list_for_workspace(session: AsyncSession, model: type[Base]):
-    return (await session.execute(select(model).where(model.workspace_id == settings.local_workspace_id))).scalars().all()
+async def get_for_workspace_or_404(
+    session: AsyncSession,
+    model: type[Base],
+    object_id: str,
+    workspace_id: str,
+):
+    value = (
+        await session.execute(
+            select(model).where(model.id == object_id, model.workspace_id == workspace_id)
+        )
+    ).scalar_one_or_none()
+    if value is None:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="记录不存在")
+    return value
+
+
+async def list_for_workspace(session: AsyncSession, model: type[Base], workspace_id: str):
+    return (await session.execute(select(model).where(model.workspace_id == workspace_id))).scalars().all()

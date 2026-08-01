@@ -1,5 +1,6 @@
-import { Clapperboard, Settings } from 'lucide-react';
+import { Clapperboard } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
+import { AccountMenu } from './AccountMenu';
 
 export function ProductHeader() {
   return (
@@ -15,7 +16,7 @@ export function ProductHeader() {
           <Link to="/#history">创作记录</Link>
         </nav>
 
-        <Link className="v2-icon-link" to="/admin/settings" aria-label="管理员设置" title="管理员设置"><Settings size={18} /></Link>
+        <AccountMenu />
       </div>
     </header>
   );

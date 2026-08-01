@@ -1,0 +1,28 @@
+.DS_Store
+
+# Runtime configuration and credentials
+.env
+.env.*
+!.env.example
+**/initial-admin.txt
+
+# Runtime data and generated outputs
+data/
+backend/data/
+output/
+.playwright-cli/
+
+# Python
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+*.py[cod]
+
+# Node and frontend builds
+**/node_modules/
+**/dist/
+
+# Logs and local editor files
+*.log
+.idea/
+.vscode/

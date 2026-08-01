@@ -1,5 +1,11 @@
 name: video-benchmark-external
 
+x-default-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   redis:
     image: redis:7.4-alpine
@@ -7,6 +13,7 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis-data-external:/data
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -21,8 +28,14 @@ services:
       DATA_DIR: /service/data
       REDIS_URL: redis://redis:6379/0
       REFERENCE_FRAME_RUNTIME_ROOT: /service/data/runtime
+      INITIAL_ADMIN_USERNAME: ${INITIAL_ADMIN_USERNAME:-admin}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-}
+      INITIAL_ADMIN_DISPLAY_NAME: ${INITIAL_ADMIN_DISPLAY_NAME:-管理员}
+      SESSION_DAYS: ${SESSION_DAYS:-14}
+      SECURE_COOKIES: ${SECURE_COOKIES:-false}
     volumes:
       - app-data-external:/service/data
+    logging: *default-logging
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8011}:8000"
     depends_on:
@@ -44,6 +57,7 @@ services:
       WORKER_PROCESSES: ${WORKER_PROCESSES:-3}
     volumes:
       - app-data-external:/service/data
+    logging: *default-logging
     depends_on:
       backend:
         condition: service_healthy
@@ -51,12 +65,11 @@ services:
   frontend:
     build:
       context: ./app
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     restart: unless-stopped
-    environment:
-      VITE_API_PROXY_TARGET: http://backend:8000
     ports:
-      - "127.0.0.1:${FRONTEND_PORT:-4191}:4191"
+      - "127.0.0.1:${FRONTEND_PORT:-4191}:80"
+    logging: *default-logging
     depends_on:
       backend:
         condition: service_healthy

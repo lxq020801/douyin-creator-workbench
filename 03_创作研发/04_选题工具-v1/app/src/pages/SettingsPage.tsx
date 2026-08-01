@@ -1,10 +1,12 @@
-import { Bot, CheckCircle2, Cookie, Cpu, FileText, Gauge, KeyRound, RotateCcw, Save, Wifi } from 'lucide-react';
+import { Bot, CheckCircle2, Cookie, Cpu, FileText, Gauge, KeyRound, RotateCcw, Save, UsersRound, Wifi } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { PageHeader, StatusBadge } from '../components/Common';
 import { api } from '../api';
 import { defaultSettings } from '../data/mockData';
 import { useAppStore } from '../store/AppStore';
 import type { RuntimeSettings } from '../types';
+import { UserManagementPanel } from '../components/UserManagementPanel';
+import { ProductHeader } from '../components/ProductHeader';
 
 const promptTabs = [
   { key: 'common', label: '公共基础提示词' },
@@ -21,7 +23,7 @@ export function SettingsPage() {
   const [draft, setDraft] = useState<RuntimeSettings>(settings);
   const [promptDefaults, setPromptDefaults] = useState<Record<string, string>>(defaultSettings.prompts);
   const [promptVersion, setPromptVersion] = useState(settings.promptPackVersion || 'external-rtf-v3');
-  const [tab, setTab] = useState<'model' | 'crawler' | 'video' | 'prompts'>('model');
+  const [tab, setTab] = useState<'users' | 'model' | 'crawler' | 'video' | 'prompts'>('users');
   const [promptKey, setPromptKey] = useState<(typeof promptTabs)[number]['key']>('videoBreakdown');
   const [testing, setTesting] = useState<'model' | 'cookie' | null>(null);
   const [testState, setTestState] = useState<{ type: 'model' | 'cookie'; message: string; ok: boolean } | null>(null);
@@ -68,10 +70,13 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="page page--settings">
-      <PageHeader eyebrow="ADMIN / 运行设置" title="管理模型、采集与提示词" description="配置保存在本机。API Key 和 Cookie 只显示配置状态，不会回传到页面。" actions={<button className="button button--primary" type="submit" form="runtime-settings-form"><Save size={17} /> 保存设置</button>} />
-      <form className="settings-layout" id="runtime-settings-form" onSubmit={(event) => { event.preventDefault(); void save(); }}>
+    <div className="settings-page-shell">
+      <ProductHeader />
+      <div className="page page--settings">
+        <PageHeader eyebrow="ADMIN / 系统管理" title="管理用户与运行设置" description="用户空间彼此隔离；模型、采集和提示词由管理员统一维护。" actions={tab === 'users' ? undefined : <button className="button button--primary" type="button" onClick={() => void save()}><Save size={17} /> 保存设置</button>} />
+        <div className="settings-layout">
         <nav className="settings-nav" aria-label="设置类别">
+          <button type="button" className={tab === 'users' ? 'is-active' : ''} onClick={() => setTab('users')}><UsersRound size={17} /><span><strong>用户管理</strong><small>账号与工作空间</small></span></button>
           <button type="button" className={tab === 'model' ? 'is-active' : ''} onClick={() => setTab('model')}><Cpu size={17} /><span><strong>模型与 API</strong><small>Ark / 兼容接口</small></span></button>
           <button type="button" className={tab === 'crawler' ? 'is-active' : ''} onClick={() => setTab('crawler')}><Cookie size={17} /><span><strong>抖音认证</strong><small>Cookie 与同步状态</small></span></button>
           <button type="button" className={tab === 'video' ? 'is-active' : ''} onClick={() => setTab('video')}><Gauge size={17} /><span><strong>视频处理</strong><small>抽帧、超时与并发</small></span></button>
@@ -79,6 +84,8 @@ export function SettingsPage() {
         </nav>
 
         <section className="settings-panel">
+          {tab === 'users' ? <UserManagementPanel /> : null}
+          {tab !== 'users' ? <form className="settings-form" id="runtime-settings-form" onSubmit={(event) => { event.preventDefault(); void save(); }}>
           {tab === 'model' ? (
             <div className="settings-section">
               <div className="settings-section-heading"><div><span>MODEL CONNECTION</span><h2>模型与 API</h2></div><StatusBadge tone={modelReady ? 'green' : 'warning'}><CheckCircle2 size={13} /> {modelReady ? '配置完整' : '等待 API Key'}</StatusBadge></div>
@@ -123,8 +130,10 @@ export function SettingsPage() {
               </div>
             </div>
           ) : null}
+          </form> : null}
         </section>
-      </form>
+        </div>
+      </div>
     </div>
   );
 }

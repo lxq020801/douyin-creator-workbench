@@ -31,6 +31,22 @@ export interface AccountProfile {
   updatedAt: string;
 }
 
+export interface AuthUser {
+  id: string;
+  username: string;
+  displayName: string;
+  role: 'admin' | 'user';
+  workspaceId: string;
+  createdAt: string;
+}
+
+export interface CreateUserInput {
+  username: string;
+  displayName: string;
+  password: string;
+  role: 'admin' | 'user';
+}
+
 export interface ExternalBreakoutJudgment {
   entryPoint: string;
   viewerSituation: string;

@@ -1,7 +1,7 @@
 {
   "name": "reference-frame",
   "private": true,
-  "version": "0.3.0-external",
+  "version": "0.4.0-dev",
   "type": "module",
   "scripts": {
     "dev": "vite --config vite.config.ts",
@@ -14,7 +14,7 @@
     "lucide-react": "^0.577.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-router-dom": "7.18.1"
+    "react-router-dom": "7.18.2"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",

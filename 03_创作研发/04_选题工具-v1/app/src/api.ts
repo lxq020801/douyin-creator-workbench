@@ -1,6 +1,8 @@
 import type {
   AccountProfile,
   AnalysisRecord,
+  AuthUser,
+  CreateUserInput,
   GeneratedScript,
   GeneratedTopic,
   IntakeAnswer,
@@ -20,6 +22,7 @@ class ApiError extends Error {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
+    credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json', ...init?.headers },
   });
   if (!response.ok) {
@@ -29,6 +32,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       message = typeof payload.detail === 'string' ? payload.detail : JSON.stringify(payload.detail);
     } catch {
       // Keep the status-based message when the backend did not return JSON.
+    }
+    if (response.status === 401 && path !== '/api/auth/login') {
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'));
     }
     throw new ApiError(response.status, message);
   }
@@ -44,6 +50,18 @@ function withColor(profile: ProfileWire, index = 0): AccountProfile {
 }
 
 export const api = {
+  auth: {
+    me: () => request<AuthUser>('/api/auth/me'),
+    login: (username: string, password: string) => request<AuthUser>('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
+    logout: () => request<void>('/api/auth/logout', { method: 'POST' }),
+    changePassword: (currentPassword: string, newPassword: string) => request<void>('/api/auth/password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) }),
+  },
+  users: {
+    list: () => request<AuthUser[]>('/api/admin/users'),
+    create: (value: CreateUserInput) => request<AuthUser>('/api/admin/users', { method: 'POST', body: JSON.stringify(value) }),
+    resetPassword: (id: string, password: string) => request<void>(`/api/admin/users/${id}/password`, { method: 'PUT', body: JSON.stringify({ password }) }),
+    remove: (id: string) => request<void>(`/api/admin/users/${id}`, { method: 'DELETE' }),
+  },
   settings: {
     get: () => request<RuntimeSettings>('/api/settings'),
     save: (value: RuntimeSettings) => request<RuntimeSettings>('/api/settings', { method: 'PUT', body: JSON.stringify(value) }),
