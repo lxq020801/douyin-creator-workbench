@@ -1,5 +1,6 @@
 {
   "$schema": "https://openship.io/openship.schema.json",
   "framework": "docker-compose",
+  "packageManager": "npm",
   "composePath": "compose.yml"
 }
