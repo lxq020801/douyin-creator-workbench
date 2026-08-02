@@ -22,7 +22,7 @@ class AppSettings(BaseSettings):
     session_days: int = 14
     secure_cookies: bool = False
     initial_admin_username: str = "admin"
-    initial_admin_password: str = ""
+    initial_admin_password: str = "123456"
     initial_admin_display_name: str = "管理员"
 
     @property

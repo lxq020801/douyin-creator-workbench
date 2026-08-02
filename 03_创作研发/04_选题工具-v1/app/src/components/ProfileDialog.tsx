@@ -14,6 +14,21 @@ interface ProfileDialogProps {
   onSelect: (profile: AccountProfile) => void;
 }
 
+type IntakeTone = 'industry' | 'audience' | 'materials' | 'boundary';
+
+interface IntakeGuide {
+  label: string;
+  hint: string;
+  tone: IntakeTone;
+}
+
+const intakeGuides: IntakeGuide[] = [
+  { label: '行业与主营', hint: '行业：餐饮 / 装修 / 教育；主营与特色', tone: 'industry' },
+  { label: '受众与目标', hint: '给谁看；希望到店、获客、成交还是涨粉', tone: 'audience' },
+  { label: '素材与条件', hint: '能拍什么；谁出镜、设备、更新频率', tone: 'materials' },
+  { label: '调性与边界', hint: '想呈现什么；明确不做 / 不说什么', tone: 'boundary' },
+];
+
 const exampleDescription = '我在柳州开了一家社区型的老牌螺蛳粉店，开了8年，主打传统骨汤螺蛳粉，还有卤味、炒螺这些小吃。店是自己的房子，没有加盟，就是夫妻店加两个员工。账号由我本人出镜，我是30多岁的柳州本地老板，说话比较直，不会演，想做得真实一点。我主要想吸引周边3公里的居民和来柳州旅游的游客，最终目标是到店消费，也想慢慢卖一些真空包装螺蛳粉。现阶段先把人设和门店口碑立起来，不急着硬推产品。我可以拍每天熬汤、卤味制作、顾客到店、顾客反馈、螺蛳粉冷知识、本地人的吃法，以及开店这些年的真实经历。拍摄就是手机，我老婆偶尔帮忙，不会复杂剪辑，每周更新2到3条，每条拍加剪大约2小时。账号想做成真实、接地气的本地老店老板，不搞夸张剧情，不贬低同行，不做9.9元低价引流，不承诺“最好吃”“第一”这类话。';
 
 const emptyDraft = {
@@ -180,7 +195,21 @@ export function ProfileDialog({ open, title = '选择复刻到哪个账号', ini
               <div className="intake-step-label">01 / 一段自然描述</div>
               <h3>告诉 AI 你是谁，以及真实能做什么</h3>
               <p>尽量说清业务、目标、受众、素材、拍摄条件和不能做的事。AI 只会对真正影响后续创作的缺项追问。</p>
-              <textarea className="large-textarea" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="例如：我是……，准备做……，主要给……看，我能提供……，但目前……" />
+              <section className="intake-guide" aria-labelledby="intake-guide-title">
+                <div className="intake-guide__header">
+                  <strong id="intake-guide-title">一段话里，先交代这四件事</strong>
+                  <span>写成自然的一段话即可，不用按字段填写</span>
+                </div>
+                <ul className="intake-guide__items">
+                  {intakeGuides.map((guide) => (
+                    <li key={guide.label} className={`intake-guide__item intake-guide__item--${guide.tone}`}>
+                      <b>{guide.label}</b>
+                      <span>{guide.hint}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+              <textarea className="large-textarea" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="例如：我在柳州开了一家螺蛳粉店，主打……，想吸引……；我能拍……，目前……，内容上不做……" />
               <div className="example-box">
                 <div><strong>完整示例</strong><span>业务 · 目标 · 受众 · 资源 · 制作条件 · 边界</span></div>
                 <p>{exampleDescription}</p>
