@@ -37,7 +37,7 @@ services:
       - app-data-external:/service/data
     logging: *default-logging
     ports:
-      - "127.0.0.1:${BACKEND_PORT:-8011}:8000"
+      - "127.0.0.1:${BACKEND_PORT:-8021}:8000"
     depends_on:
       redis:
         condition: service_healthy
