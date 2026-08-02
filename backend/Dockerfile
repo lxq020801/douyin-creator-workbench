@@ -12,8 +12,8 @@ RUN printf 'Acquire::ForceIPv4 "true";\n' > /etc/apt/apt.conf.d/99force-ipv4 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /service
-COPY backend/requirements.txt ./requirements.txt
+COPY requirements.txt ./requirements.txt
 RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
-COPY backend/app ./app
+COPY app ./app
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
