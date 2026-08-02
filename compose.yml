@@ -21,7 +21,9 @@ services:
       retries: 10
 
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     restart: unless-stopped
     environment: &backend-env
       DATABASE_URL: sqlite+aiosqlite:////service/data/reference.db
@@ -48,7 +50,9 @@ services:
       retries: 12
 
   worker:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     restart: unless-stopped
     command: ["rq", "worker", "--url", "redis://redis:6379/0", "reference-frame-external"]
     scale: ${WORKER_PROCESSES:-3}
@@ -64,8 +68,8 @@ services:
 
   frontend:
     build:
-      context: ./app
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: app/Dockerfile
     restart: unless-stopped
     ports:
       - "127.0.0.1:${FRONTEND_PORT:-4191}:80"
