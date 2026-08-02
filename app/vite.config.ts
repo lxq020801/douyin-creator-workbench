@@ -8,8 +8,8 @@ export default defineConfig({
     port: 4191,
     strictPort: true,
     proxy: {
-      '/api': process.env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8000',
-      '/health': process.env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8000',
+      '/api': process.env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8011',
+      '/health': process.env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8011',
     },
   },
 });

@@ -39,13 +39,9 @@ docker compose up -d --build
 docker compose ps
 ```
 
-可以在 `.env` 中提前填写 `INITIAL_ADMIN_PASSWORD`。如果保持为空，系统会在首次启动时生成随机密码，使用下面的命令读取一次：
+默认管理员账号为 `admin`，初始密码为 `123456`。可以在 `.env` 中修改 `INITIAL_ADMIN_PASSWORD`。这个值只会在数据目录还没有用户、首次初始化管理员时生效。
 
-```bash
-docker compose exec backend sh -c 'cat /service/data/initial-admin.txt'
-```
-
-管理员首次成功登录后，这个临时凭据文件会自动删除。
+管理员首次登录后，可以在账号菜单中自行修改密码。
 
 默认地址：
 
