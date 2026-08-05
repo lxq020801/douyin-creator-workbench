@@ -1,6 +1,6 @@
 import asyncio
 
-from app.factual_guard import factual_final
+from app.factual_guard import _hard_fact_issues, factual_final
 from app.model_client import parse_json_text
 from app.prompts import factual_audit_prompt, topics_prompt
 from app.schemas import FactualAudit, FactualIssue, IntakeResponse, TopicBatchModel
@@ -120,3 +120,18 @@ def test_factual_guard_rejects_events_even_when_model_audit_misses_them():
         TopicBatchModel, max_output_tokens=20000,
     ))
     assert result.topics[0].title == "把制作过程拍明白"
+
+
+def test_factual_guard_accepts_supported_customer_feedback_paraphrase():
+    topic = {
+        "title": "分享门店的真实顾客反馈日常", "concept": "记录顾客反馈内容",
+        "hook": "今天聊聊门店日常", "fitReason": "理由", "inheritedValue": "机制",
+        "profileConnection": "迁移", "accountRole": "建立信任",
+    }
+    draft = TopicBatchModel.model_validate({
+        "direction": "方向", "spreadSummary": "说明", "topics": [topic] * 20,
+    })
+    issues = _hard_fact_issues(
+        {"availableMaterials": "可拍摄真实顾客反馈内容和门店日常"}, draft, None,
+    )
+    assert not issues

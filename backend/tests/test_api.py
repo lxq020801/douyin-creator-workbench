@@ -84,6 +84,46 @@ def test_settings_hide_secrets_and_profile_crud(monkeypatch):
         assert client.delete(f"/api/profiles/{profile_id}").status_code == 204
 
 
+def test_topic_generation_is_queued_without_blocking_request(monkeypatch):
+    calls: list[tuple[tuple, dict]] = []
+
+    def fake_enqueue(*args, **kwargs):
+        calls.append((args, kwargs))
+        return "topic-job-test"
+
+    monkeypatch.setattr(main_module, "enqueue", fake_enqueue)
+
+    async def seed() -> tuple[str, str]:
+        async with SessionLocal() as session:
+            profile = Profile(name="异步选题资料", data_json=json.dumps({
+                "name": "异步选题资料", "creatorAndAccount": "本地商家",
+                "businessAndGoals": "提高转化", "audienceAndAction": "附近顾客",
+                "availableMaterials": "门店实拍", "productionConditions": "手机拍摄",
+                "toneAndBoundaries": "真实", "originalDescription": "测试",
+            }, ensure_ascii=False))
+            analysis = Analysis(
+                kind="video", source="https://v.douyin.com/async-topics/",
+                status="completed", report_json=json.dumps({"source": {}}, ensure_ascii=False),
+            )
+            session.add_all([profile, analysis])
+            await session.commit()
+            return analysis.id, profile.id
+
+    with TestClient(main_module.app) as client:
+        login_admin(client)
+        analysis_id, profile_id = asyncio.run(seed())
+        first = client.post(f"/api/analyses/{analysis_id}/topics", json={"profileId": profile_id})
+        assert first.status_code == 200
+        assert first.json()["status"] == "queued"
+        assert first.json()["topics"] == []
+        assert calls[0][0] == ("app.jobs.run_topic_generation", first.json()["id"])
+
+        second = client.post(f"/api/analyses/{analysis_id}/topics", json={"profileId": profile_id})
+        assert second.status_code == 200
+        assert second.json()["id"] == first.json()["id"]
+        assert len(calls) == 1
+
+
 def test_scripts_can_be_filtered_by_analysis_and_delete_cascades(monkeypatch):
     monkeypatch.setattr(main_module, "enqueue", lambda *args, **kwargs: "job-test")
 

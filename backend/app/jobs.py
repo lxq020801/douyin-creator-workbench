@@ -12,14 +12,14 @@ from pydantic import BaseModel, ValidationError
 from sqlalchemy import delete, func, select
 
 from .config import settings as app_settings
-from .db import AccountSample, Analysis, Profile, Script, ScriptVersion, SessionLocal, Topic
+from .db import AccountSample, Analysis, Profile, Script, ScriptVersion, SessionLocal, Topic, TopicBatch
 from .factual_guard import factual_final
 from .media.douyin import download_account_video, download_single, fetch_account, fetch_single
 from .media.scripts.analyzer import AnalyzeResult, analyze_video
 from .model_client import ModelClient, parse_json_text
-from .prompts import account_summary_prompt, script_prompt, video_breakdown_prompt
+from .prompts import account_summary_prompt, script_prompt, topics_prompt, video_breakdown_prompt
 from .sampling import balanced_sample
-from .schemas import AccountReportModel, DirectorScript, RuntimeSettingsIn, VideoBreakdownModel
+from .schemas import AccountReportModel, DirectorScript, RuntimeSettingsIn, TopicBatchModel, VideoBreakdownModel
 from .settings_service import get_runtime_settings
 
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
@@ -417,6 +417,102 @@ async def _run_script(script_id: str) -> None:
             script.version_count = next_version
             script.error = None
             await session.commit()
+
+
+async def _run_topic_generation(batch_id: str) -> None:
+    try:
+        async with SessionLocal() as session:
+            batch = await session.get(TopicBatch, batch_id)
+            if batch is None or batch.status == "completed":
+                return
+            batch.status = "running"
+            batch.progress = 8
+            batch.step = "load"
+            batch.detail = "正在读取拆解结果和账号资料"
+            batch.error = None
+            await session.commit()
+            analysis = await session.get(Analysis, batch.analysis_id)
+            profile = await session.get(Profile, batch.profile_id)
+            if analysis is None or profile is None or analysis.status != "completed" or not analysis.report_json:
+                raise RuntimeError("拆解记录或账号资料不存在，无法生成选题")
+            analysis_kind = analysis.kind
+            report = json.loads(analysis.report_json)
+            profile_data = profile.data()
+        runtime = await _settings()
+        client = ModelClient(runtime)
+        async with SessionLocal() as session:
+            batch = await session.get(TopicBatch, batch_id)
+            if batch:
+                batch.progress = 18
+                batch.step = "draft"
+                batch.detail = "模型正在生成 20 个对标选题"
+                await session.commit()
+        draft = await asyncio.to_thread(
+            client.json,
+            topics_prompt(analysis_kind, report, profile_data, runtime.prompts),
+            TopicBatchModel,
+            max_output_tokens=20000,
+        )
+        async with SessionLocal() as session:
+            batch = await session.get(TopicBatch, batch_id)
+            if batch:
+                batch.progress = 58
+                batch.step = "audit"
+                batch.detail = "正在进行事实校验，避免生成资料中没有的内容"
+                await session.commit()
+        result = await factual_final(
+            client,
+            "对标选题",
+            profile_data,
+            draft,
+            TopicBatchModel,
+            max_output_tokens=20000,
+        )
+        async with SessionLocal() as session:
+            batch = await session.get(TopicBatch, batch_id)
+            if batch:
+                batch.progress = 90
+                batch.step = "save"
+                batch.detail = "事实校验通过，正在保存 20 个选题"
+                await session.commit()
+        async with SessionLocal() as session:
+            batch = await session.get(TopicBatch, batch_id)
+            if batch is None:
+                return
+            await session.execute(delete(Topic).where(Topic.batch_id == batch.id))
+            batch.direction = result.direction
+            batch.spread_summary = result.spreadSummary
+            batch.status = "completed"
+            batch.progress = 100
+            batch.step = "completed"
+            batch.detail = "20 个对标选题已生成"
+            batch.error = None
+            batch.prompt_version = app_settings.prompt_pack_version
+            for index, item in enumerate(result.topics, start=1):
+                session.add(Topic(
+                    workspace_id=batch.workspace_id,
+                    batch_id=batch.id,
+                    analysis_id=batch.analysis_id,
+                    profile_id=batch.profile_id,
+                    position=index,
+                    data_json=item.model_dump_json(),
+                ))
+            await session.commit()
+    except Exception as exc:
+        async with SessionLocal() as session:
+            batch = await session.get(TopicBatch, batch_id)
+            if batch:
+                batch.status = "failed"
+                batch.progress = min(batch.progress or 0, 99)
+                batch.step = "failed"
+                batch.detail = "生成未完成，请查看原因后手动重试"
+                batch.error = str(exc)[:1000]
+                await session.commit()
+        raise
+
+
+def run_topic_generation(batch_id: str) -> None:
+    asyncio.run(_run_topic_generation(batch_id))
 
 
 def run_script_generation(script_id: str) -> None:

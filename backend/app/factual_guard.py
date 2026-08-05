@@ -28,6 +28,32 @@ _COMPARISON_PATTERN = re.compile(
     r"很多店|好多店|周边店|其他店|普通.{0,6}店|连锁.{0,6}店|同行|网红店|大半|一半以上|"
     r"好多人|很多人|好多(?:顾客|游客|老客|网友|朋友)"
 )
+_TEXT_NOISE_PATTERN = re.compile(r"[^0-9A-Za-z\u4e00-\u9fff]+")
+
+
+def _compact_text(value: str) -> str:
+    return _TEXT_NOISE_PATTERN.sub("", value)
+
+
+def _supported_phrase(source: str, phrase: str) -> bool:
+    """Accept a short paraphrase when its meaningful characters occur in the source.
+
+    The guard still rejects new facts, but does not require an entire generated
+    sentence to be an exact substring of the profile.
+    """
+    compact_source = _compact_text(source)
+    compact_phrase = _compact_text(phrase)
+    if not compact_phrase:
+        return True
+    if compact_phrase in compact_source:
+        return True
+    cursor = 0
+    for character in compact_phrase:
+        position = compact_source.find(character, cursor)
+        if position < 0 or position - cursor > 6:
+            return False
+        cursor = position + 1
+    return True
 
 
 def _review_fields(draft: BaseModel) -> list[tuple[str, str]]:
@@ -72,9 +98,11 @@ def _hard_fact_issues(profile: dict[str, Any], draft: BaseModel, topic: dict[str
         unsupported_numbers = [token for token in _NUMBER_PATTERN.findall(value) if token not in source]
         if unsupported_numbers:
             reasons.append(f"出现资料中没有的数字：{'、'.join(dict.fromkeys(unsupported_numbers))}")
-        if _EVENT_PATTERN.search(value) and value not in source:
+        event_match = _EVENT_PATTERN.search(value)
+        if event_match and not _supported_phrase(source, event_match.group(0)):
             reasons.append("把资料中未明确提供的人物互动或历史事件写成了既有事实")
-        if _ABSOLUTE_PATTERN.search(value) and value not in source:
+        absolute_match = _ABSOLUTE_PATTERN.search(value)
+        if absolute_match and not _supported_phrase(source, absolute_match.group(0)):
             reasons.append("加入了资料中未明确提供的长期习惯、工艺细节或绝对承诺")
         if _COMPARISON_PATTERN.search(value) and value not in source:
             reasons.append("加入了资料中未明确提供的同行、顾客或市场比较")

@@ -206,6 +206,11 @@ export interface TopicBatch {
   kind: 'video' | 'account';
   direction: string;
   spreadSummary: string;
+  status: 'queued' | 'running' | 'completed' | 'failed';
+  progress: number;
+  step: string;
+  detail: string;
+  error?: string | null;
   promptVersion: string;
   createdAt: string;
   topics: GeneratedTopic[];

@@ -8,7 +8,7 @@ from sqlalchemy import select
 import app.jobs as jobs
 from app.db import Analysis, Profile, Script, ScriptVersion, SessionLocal, Topic, TopicBatch, init_db
 from app.media.scripts.analyzer import AnalyzeResult
-from app.schemas import DirectorScript, RuntimeSettingsIn
+from app.schemas import DirectorScript, RuntimeSettingsIn, TopicBatchModel
 
 
 def test_remote_file_is_deleted_when_report_validation_fails(monkeypatch, tmp_path: Path):
@@ -118,3 +118,56 @@ def test_script_worker_appends_versions_and_activates_the_latest(monkeypatch):
             return script.active_version, script.version_count, json.loads(script.data_json or "{}")["videoIdea"], [item.version for item in versions]
 
     assert asyncio.run(run()) == (2, 2, "第 2 版思路", [1, 2])
+
+
+def test_topic_worker_saves_batch_after_generation_and_audit(monkeypatch):
+    class FakeModelClient:
+        def __init__(self, _runtime):
+            pass
+
+        def json(self, *_args, **_kwargs):
+            topic = {
+                "title": "可执行选题", "concept": "测试角度", "hook": "测试开头",
+                "inheritedValue": "测试方法", "profileConnection": "测试结合", "fitReason": "测试理由",
+            }
+            return TopicBatchModel.model_validate({
+                "direction": "测试方向", "spreadSummary": "测试说明", "topics": [topic] * 20,
+            })
+
+    async def passthrough(_client, _label, _profile, draft, _schema, **_kwargs):
+        return draft
+
+    monkeypatch.setattr(jobs, "ModelClient", FakeModelClient)
+    monkeypatch.setattr(jobs, "factual_final", passthrough)
+
+    async def run() -> tuple[str, int, str]:
+        await init_db()
+        async with SessionLocal() as session:
+            profile = Profile(name="异步选题资料", data_json=json.dumps({
+                "name": "异步选题资料", "creatorAndAccount": "本地商家",
+                "businessAndGoals": "提高转化", "audienceAndAction": "附近顾客",
+                "availableMaterials": "门店实拍", "productionConditions": "手机拍摄",
+                "toneAndBoundaries": "真实", "originalDescription": "测试",
+            }, ensure_ascii=False))
+            analysis = Analysis(
+                kind="video", source="https://v.douyin.com/async-worker/",
+                status="completed", report_json=json.dumps({"source": {}}, ensure_ascii=False),
+            )
+            session.add_all([profile, analysis])
+            await session.flush()
+            batch = TopicBatch(
+                analysis_id=analysis.id, profile_id=profile.id, kind="video",
+                direction="", spread_summary="", status="queued",
+            )
+            session.add(batch)
+            await session.commit()
+            batch_id = batch.id
+
+        await jobs._run_topic_generation(batch_id)
+        async with SessionLocal() as session:
+            batch = await session.get(TopicBatch, batch_id)
+            assert batch is not None
+            topics = (await session.execute(select(Topic).where(Topic.batch_id == batch_id))).scalars().all()
+            return batch.status, len(topics), batch.direction
+
+    assert asyncio.run(run()) == ("completed", 20, "测试方向")

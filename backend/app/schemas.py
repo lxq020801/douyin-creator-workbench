@@ -299,6 +299,11 @@ class TopicBatchOut(BaseModel):
     kind: Literal["video", "account"]
     direction: str
     spreadSummary: str
+    status: Literal["queued", "running", "completed", "failed"] = "completed"
+    progress: int = 0
+    step: str = "queued"
+    detail: str = "任务已排队"
+    error: str | None = None
     promptVersion: str
     createdAt: datetime
     topics: list[TopicOut]

@@ -26,11 +26,10 @@ from .auth import (
     router as auth_router,
 )
 from .db import AccountSample, Analysis, Profile, Script, ScriptVersion, Topic, TopicBatch, get_db, get_for_workspace_or_404, init_db
-from .factual_guard import factual_final
 from .job_queue import connection, enqueue
 from .media.douyin import probe_cookie
-from .model_client import ModelClient, ModelOutputError
-from .prompts import DEFAULT_PROMPTS, intake_prompt, topics_prompt
+from .model_client import ModelClient
+from .prompts import DEFAULT_PROMPTS, intake_prompt
 from .schemas import (
     AnalysisCreate,
     AnalysisOut,
@@ -44,7 +43,6 @@ from .schemas import (
     ScriptBatchRequest,
     ScriptOut,
     ScriptVersionOut,
-    TopicBatchModel,
     TopicBatchOut,
     TopicGenerateRequest,
     TopicOut,
@@ -124,6 +122,7 @@ def topic_batch_out(row: TopicBatch, topics: list[Topic]) -> TopicBatchOut:
     return TopicBatchOut(
         id=row.id, analysisId=row.analysis_id, profileId=row.profile_id, kind=row.kind,
         direction=row.direction, spreadSummary=row.spread_summary,
+        status=row.status, progress=row.progress, step=row.step, detail=row.detail, error=row.error,
         promptVersion=row.prompt_version, createdAt=row.created_at,
         topics=[topic_out(topic) for topic in topics],
     )
@@ -343,42 +342,53 @@ async def topics_generate(analysis_id: str, payload: TopicGenerateRequest, user:
     profile = await get_for_workspace_or_404(db, Profile, payload.profileId, user.workspace_id)
     if analysis.status != "completed" or not analysis.report_json:
         raise HTTPException(status_code=409, detail="拆解尚未完成")
-    runtime = await get_runtime_settings(db)
+    query = select(TopicBatch).where(
+        TopicBatch.analysis_id == analysis_id,
+        TopicBatch.profile_id == profile.id,
+        TopicBatch.workspace_id == user.workspace_id,
+    ).order_by(TopicBatch.created_at.desc()).limit(1)
+    batch = (await db.execute(query)).scalar_one_or_none()
+    if batch is None:
+        batch = TopicBatch(
+            workspace_id=user.workspace_id,
+            analysis_id=analysis_id,
+            profile_id=profile.id,
+            kind=analysis.kind,
+            direction="",
+            spread_summary="",
+            status="queued",
+            progress=0,
+            step="queued",
+            detail="任务已排队，等待后台 Worker 接手",
+            prompt_version=settings.prompt_pack_version,
+        )
+        db.add(batch)
+        await db.flush()
+    elif batch.status in {"queued", "running", "completed"}:
+        rows = (await db.execute(select(Topic).where(Topic.batch_id == batch.id).order_by(Topic.position))).scalars().all()
+        return topic_batch_out(batch, rows)
+    else:
+        batch.status = "queued"
+        batch.progress = 0
+        batch.step = "queued"
+        batch.detail = "任务已重新进入队列"
+        batch.error = None
+        batch.job_id = None
     try:
-        client = ModelClient(runtime)
-        draft = await asyncio.to_thread(
-            client.json,
-            topics_prompt(analysis.kind, json.loads(analysis.report_json), profile.data(), runtime.prompts),
-            TopicBatchModel,
-            max_output_tokens=20000,
+        batch.job_id = enqueue(
+            "app.jobs.run_topic_generation",
+            batch.id,
+            job_id=f"topics-{batch.id}-{int(datetime.utcnow().timestamp())}",
+            timeout=3600,
         )
-        result = await factual_final(
-            client,
-            "对标选题",
-            profile.data(),
-            draft,
-            TopicBatchModel,
-            max_output_tokens=20000,
-        )
-    except ModelOutputError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
-    batch = TopicBatch(
-        workspace_id=user.workspace_id,
-        analysis_id=analysis_id, profile_id=profile.id, kind=analysis.kind,
-        direction=result.direction, spread_summary=result.spreadSummary,
-        prompt_version=settings.prompt_pack_version,
-    )
-    db.add(batch)
-    await db.flush()
-    rows: list[Topic] = []
-    for index, item in enumerate(result.topics, start=1):
-        row = Topic(workspace_id=user.workspace_id, batch_id=batch.id, analysis_id=analysis_id, profile_id=profile.id, position=index, data_json=item.model_dump_json())
-        db.add(row)
-        rows.append(row)
+    except Exception as exc:
+        batch.status = "failed"
+        batch.step = "failed"
+        batch.detail = "后台任务未启动，可以恢复服务后重试"
+        batch.error = f"任务队列不可用：{exc}"[:1000]
     await db.commit()
-    for row in rows:
-        await db.refresh(row)
     await db.refresh(batch)
+    rows = (await db.execute(select(Topic).where(Topic.batch_id == batch.id).order_by(Topic.position))).scalars().all()
     return topic_batch_out(batch, rows)
 
 
