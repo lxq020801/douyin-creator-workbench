@@ -8,7 +8,7 @@ from sqlalchemy import select
 import app.jobs as jobs
 from app.db import Analysis, Profile, Script, ScriptVersion, SessionLocal, Topic, TopicBatch, init_db
 from app.media.scripts.analyzer import AnalyzeResult
-from app.schemas import DirectorScript, RuntimeSettingsIn, TopicBatchModel
+from app.schemas import DirectorScript, RuntimeSettingsIn, TopicBatchModel, TopicSeedPlan
 
 
 def test_remote_file_is_deleted_when_report_validation_fails(monkeypatch, tmp_path: Path):
@@ -47,7 +47,7 @@ def test_script_worker_appends_versions_and_activates_the_latest(monkeypatch):
     generated = 0
 
     class FakeModelClient:
-        def __init__(self, _runtime):
+        def __init__(self, _runtime, model=None):
             pass
 
         def json(self, *_args, **_kwargs):
@@ -120,25 +120,39 @@ def test_script_worker_appends_versions_and_activates_the_latest(monkeypatch):
     assert asyncio.run(run()) == (2, 2, "第 2 版思路", [1, 2])
 
 
-def test_topic_worker_saves_batch_after_generation_and_audit(monkeypatch):
+def test_topic_worker_saves_batch_after_seed_review(monkeypatch):
+    calls: list[type] = []
+
     class FakeModelClient:
-        def __init__(self, _runtime):
+        def __init__(self, _runtime, model=None):
             pass
 
-        def json(self, *_args, **_kwargs):
+        def json(self, prompt, schema, **_kwargs):
+            calls.append(schema)
+            if schema is TopicSeedPlan:
+                seeds = [{
+                    "sourceValue": f"对标方法 {index}",
+                    "profileMaterial": "门店实拍",
+                    "audienceProblem": f"观众问题 {index}",
+                    "contentTask": f"内容任务 {index}",
+                    "expressionForm": f"表达形式 {index}",
+                    "distinction": f"区别 {index}",
+                } for index in range(1, 21)]
+                return TopicSeedPlan.model_validate({"planningDirection": "测试种子方向", "seeds": seeds})
             topic = {
                 "title": "可执行选题", "concept": "测试角度", "hook": "测试开头",
                 "inheritedValue": "测试方法", "profileConnection": "测试结合", "fitReason": "测试理由",
             }
+            assert "已审核创意种子" in prompt
             return TopicBatchModel.model_validate({
                 "direction": "测试方向", "spreadSummary": "测试说明", "topics": [topic] * 20,
             })
 
-    async def passthrough(_client, _label, _profile, draft, _schema, **_kwargs):
-        return draft
+    async def should_not_run(*_args, **_kwargs):
+        raise AssertionError("topic generation must not run factual_final")
 
     monkeypatch.setattr(jobs, "ModelClient", FakeModelClient)
-    monkeypatch.setattr(jobs, "factual_final", passthrough)
+    monkeypatch.setattr(jobs, "factual_final", should_not_run)
 
     async def run() -> tuple[str, int, str]:
         await init_db()
@@ -171,3 +185,4 @@ def test_topic_worker_saves_batch_after_generation_and_audit(monkeypatch):
             return batch.status, len(topics), batch.direction
 
     assert asyncio.run(run()) == ("completed", 20, "测试方向")
+    assert calls == [TopicSeedPlan, TopicSeedPlan, TopicBatchModel]

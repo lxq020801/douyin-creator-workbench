@@ -16,14 +16,14 @@ def login_admin(client: TestClient) -> None:
 def test_analysis_requires_complete_runtime_settings(monkeypatch):
     async def incomplete_settings(_db):
         from app.schemas import RuntimeSettingsIn
-        return RuntimeSettingsIn()
+        return RuntimeSettingsIn(model="", analysisModel="", replicationModel="")
 
     monkeypatch.setattr(main_module, "get_runtime_settings", incomplete_settings)
     with TestClient(main_module.app) as client:
         login_admin(client)
         response = client.post("/api/analyses/video", json={"source": "https://v.douyin.com/example/"})
         assert response.status_code == 409
-        assert response.json()["detail"] == "请先在设置页配置：API Key、模型名称、抖音 Cookie"
+        assert response.json()["detail"] == "请先在设置页配置：API Key、拆解模型名称、复刻模型名称、抖音 Cookie"
 
 
 def test_settings_hide_secrets_and_profile_crud(monkeypatch):
@@ -37,14 +37,25 @@ def test_settings_hide_secrets_and_profile_crud(monkeypatch):
         assert "爆款骨架" in payload["prompts"]["videoBreakdown"]
         assert len(payload["prompts"]["common"]) > 200
         assert payload["promptPackVersion"] == "external-rtf-v3"
+        assert payload["topicSeedEnabled"] is True
+        assert payload["topicSeedReviewEnabled"] is True
+        assert payload["topicFactualAuditEnabled"] is False
+        assert payload["scriptFactualAuditEnabled"] is True
         assert set(payload["prompts"]) == {
             "common", "videoBreakdown", "accountSummary", "profileIntake",
-            "videoTopics", "accountTopics", "scriptGeneration",
+            "topicSeed", "topicSeedReview", "videoTopics", "accountTopics",
+            "scriptGeneration", "factualAudit", "factualCorrection",
         }
         defaults = client.get("/api/settings/prompts/defaults")
         assert defaults.status_code == 200
         assert defaults.json()["version"] == "external-rtf-v3"
-        payload.update({"apiKey": "sk-test-secret", "model": "doubao-test", "douyinCookie": "sessionid=test-cookie-value"})
+        payload.update({
+            "apiKey": "sk-test-secret",
+            "model": "doubao-test",
+            "analysisModel": "doubao-analysis-test",
+            "replicationModel": "doubao-replication-test",
+            "douyinCookie": "sessionid=test-cookie-value",
+        })
         saved = client.put("/api/settings", json=payload)
         assert saved.status_code == 200
         assert saved.json()["apiKey"] == ""
@@ -65,6 +76,8 @@ def test_settings_hide_secrets_and_profile_crud(monkeypatch):
         assert runtime.apiKey == "sk-test-secret"
         assert runtime.douyinCookie == "sessionid=test-cookie-value"
         assert runtime.model == "doubao-test-updated"
+        assert runtime.analysisModel == "doubao-analysis-test"
+        assert runtime.replicationModel == "doubao-replication-test"
 
         profile_payload = {
             "name": "测试账号", "creatorAndAccount": "编导运营的内容账号",

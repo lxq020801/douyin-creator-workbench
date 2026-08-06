@@ -6,7 +6,7 @@ import { api } from '../api';
 import { ProductHeader } from '../components/ProductHeader';
 import { ProfileDialog } from '../components/ProfileDialog';
 import { useAppStore } from '../store/AppStore';
-import type { AccountProfile, AnalysisRecord, ExternalVideoBreakdown, GeneratedScript, GeneratedTopic } from '../types';
+import type { AccountProfile, AnalysisRecord, ExternalVideoBreakdown, GeneratedScript, GeneratedTopic, RuntimeSettings } from '../types';
 
 type ExternalTopic = GeneratedTopic & {
   angle?: string;
@@ -27,6 +27,7 @@ type TopicBatchView = {
   step: string;
   detail: string;
   error?: string | null;
+  pipeline?: string[];
   topics: ExternalTopic[];
 };
 
@@ -55,6 +56,7 @@ function normalizeTopicBatch(payload: unknown): TopicBatchView | null {
     step: batch.step || 'queued',
     detail: batch.detail || '任务已排队',
     error: batch.error || null,
+    pipeline: Array.isArray(batch.pipeline) ? batch.pipeline : undefined,
     topics: batch.topics,
   };
 }
@@ -63,7 +65,7 @@ export function RemakeWorkspacePage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedProfileId = searchParams.get('profileId') || '';
-  const { profiles, notify } = useAppStore();
+  const { profiles, settings, notify } = useAppStore();
   const [analysis, setAnalysis] = useState<AnalysisRecord | null>(null);
   const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -252,6 +254,7 @@ export function RemakeWorkspacePage() {
         onRetryTopics={retryTopics}
         busy={busy}
         scripts={scripts}
+        settings={settings}
         notify={notify}
       />}
     </main>
@@ -259,7 +262,7 @@ export function RemakeWorkspacePage() {
   </div>;
 }
 
-function TopicPanel({ batch, selected, setSelected, onGenerateScripts, onUpdateTopic, onRetryScript, onRegenerateScript, onActivateVersion, onRetryTopics, busy, scripts, notify }: {
+function TopicPanel({ batch, selected, setSelected, onGenerateScripts, onUpdateTopic, onRetryScript, onRegenerateScript, onActivateVersion, onRetryTopics, busy, scripts, settings, notify }: {
   batch: TopicBatchView;
   selected: string[];
   setSelected: (value: string[]) => void;
@@ -271,6 +274,7 @@ function TopicPanel({ batch, selected, setSelected, onGenerateScripts, onUpdateT
   onRetryTopics: () => void;
   busy: boolean;
   scripts: GeneratedScript[];
+  settings: RuntimeSettings;
   notify: (message: string, tone?: 'success' | 'info' | 'danger') => void;
 }) {
   const topics = batch.topics;
@@ -287,6 +291,20 @@ function TopicPanel({ batch, selected, setSelected, onGenerateScripts, onUpdateT
   const profileConnection = (topic: ExternalTopic) => topic.profileConnection || topic.adaptation || '';
   const fitReason = (topic: ExternalTopic) => topic.fitReason || topic.reason || '';
   const topicGenerating = batch.status === 'queued' || batch.status === 'running';
+  const stepLabels: Record<string, string> = {
+    load: '读取资料', seed_draft: '生成创意种子', seed_audit: '审核创意种子',
+    draft: '生成选题', factual_audit: '选题事实审计', save: '保存结果',
+  };
+  const stepThresholds: Record<string, number> = { load: 8, seed_draft: 18, seed_audit: 35, draft: 48, factual_audit: 75, save: 90 };
+  const fallbackPipeline = [
+    'load',
+    ...(settings.topicSeedEnabled ? ['seed_draft'] : []),
+    ...(settings.topicSeedEnabled && settings.topicSeedReviewEnabled ? ['seed_audit'] : []),
+    'draft',
+    ...(settings.topicFactualAuditEnabled ? ['factual_audit'] : []),
+    'save',
+  ];
+  const progressSteps = (batch.pipeline?.length ? batch.pipeline : fallbackPipeline).map((key) => ({ key, label: stepLabels[key] || key, threshold: stepThresholds[key] ?? 0 }));
 
   const startEdit = (topic: ExternalTopic) => { setEditingId(topic.id); setDraft({ ...topic }); };
   const saveEdit = async () => {
@@ -307,10 +325,10 @@ function TopicPanel({ batch, selected, setSelected, onGenerateScripts, onUpdateT
 
   return <section className="remake-topic-workspace">
     <div className="remake-topic-toolbar">
-      <div><span>TOPIC SELECTION</span><strong>{topicGenerating ? '正在准备对标选题' : batch.status === 'failed' ? '选题生成失败' : '选择要继续生成脚本的选题'}</strong></div>
+      <div><span>TOPIC SELECTION</span><strong>{topicGenerating ? '正在规划并生成对标选题' : batch.status === 'failed' ? '选题生成失败' : '选择要继续生成脚本的选题'}</strong></div>
       {batch.status === 'completed' ? <div className="topic-actions"><button className={`topic-select-all${allSelected ? ' is-active' : ''}`} type="button" aria-pressed={allSelected} title={allSelected ? '取消选择全部选题' : '选择全部选题'} onClick={() => setSelected(allSelected ? [] : topics.map((topic) => topic.id))}><span aria-hidden="true"><Check size={11} /></span>{allSelected ? '取消全选' : '全选'}</button><span>{selected.length} 个已选</span><button className="button button--primary button--sm" disabled={!selected.length || busy} type="button" onClick={onGenerateScripts}>{busy ? <LoaderCircle className="spin" size={15} /> : <WandSparkles size={15} />} 生成拍摄脚本</button></div> : null}
     </div>
-    {topicGenerating ? <div className="remake-topic-progress"><LoaderCircle className="spin" size={18} /><div className="remake-topic-progress-content"><div className="remake-topic-progress-heading"><strong>{batch.status === 'running' ? '正在生成 20 个对标选题' : '选题任务已排队'}</strong><span>{batch.progress}%</span></div><div className="remake-topic-progress-track"><i style={{ width: `${Math.max(4, batch.progress)}%` }} /></div><p>{batch.detail}</p><ol className="remake-topic-steps"><li className={batch.step === 'load' ? 'is-current' : batch.progress > 8 ? 'is-done' : ''}>读取资料</li><li className={batch.step === 'draft' ? 'is-current' : batch.progress > 18 ? 'is-done' : ''}>生成选题</li><li className={batch.step === 'audit' ? 'is-current' : batch.progress > 58 ? 'is-done' : ''}>事实校验</li><li className={batch.step === 'save' ? 'is-current' : batch.progress >= 100 ? 'is-done' : ''}>保存结果</li></ol></div></div> : null}
+    {topicGenerating ? <div className="remake-topic-progress"><LoaderCircle className="spin" size={18} /><div className="remake-topic-progress-content"><div className="remake-topic-progress-heading"><strong>{batch.status === 'running' ? '正在规划并生成 20 个对标选题' : '选题任务已排队'}</strong><span>{batch.progress}%</span></div><div className="remake-topic-progress-track"><i style={{ width: `${Math.max(4, batch.progress)}%` }} /></div><p>{batch.detail}</p><ol className="remake-topic-steps">{progressSteps.map((step) => <li key={step.key} className={batch.step === step.key ? 'is-current' : (step.key === 'save' ? batch.progress >= 100 : batch.progress > step.threshold) ? 'is-done' : ''}>{step.label}</li>)}</ol></div></div> : null}
     {batch.status === 'failed' ? <div className="remake-topic-progress is-failed"><div><strong>这次生成没有完成</strong><p>{batch.error || '服务暂时不可用，请重新尝试。'}</p></div><button className="button button--primary button--sm" type="button" onClick={onRetryTopics}><RefreshCcw size={15} />重新生成选题</button></div> : null}
     {batch.status === 'completed' && batch.direction ? <div className="remake-direction"><span>本轮迁移方向</span><p>{batch.direction.replaceAll('杂交', '迁移')}</p></div> : null}
 

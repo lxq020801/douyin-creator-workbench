@@ -2606,6 +2606,100 @@ button.task-row:hover {
   line-height: 1.5;
 }
 
+.settings-section-lead {
+  max-width: 680px;
+  margin: -4px 0 20px;
+  color: var(--quiet);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.settings-toggle-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 78px;
+  padding: 15px 16px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.settings-toggle:hover {
+  border-color: var(--muted);
+  background: var(--surface-muted, #f7f8f5);
+}
+
+.settings-toggle-copy {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+}
+
+.settings-toggle-copy strong {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.settings-toggle-copy small {
+  color: var(--quiet);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.settings-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.settings-switch {
+  position: relative;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 23px;
+  border-radius: 999px;
+  background: var(--line-strong, #c7cec8);
+  transition: background 150ms ease;
+}
+
+.settings-switch::after {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(20 30 24 / 18%);
+  content: '';
+  transition: transform 150ms ease;
+}
+
+.settings-toggle input:checked + .settings-switch {
+  background: var(--red);
+}
+
+.settings-toggle input:checked + .settings-switch::after {
+  transform: translateX(17px);
+}
+
+.settings-toggle input:focus-visible + .settings-switch {
+  outline: 2px solid var(--red);
+  outline-offset: 3px;
+}
+
 .span-2 {
   grid-column: span 2;
 }

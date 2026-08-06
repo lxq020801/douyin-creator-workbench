@@ -114,3 +114,32 @@ def test_old_saved_prompts_cannot_override_external_pack(tmp_path):
         await engine.dispose()
 
     asyncio.run(run())
+
+
+def test_pipeline_switches_have_safe_defaults_and_round_trip(tmp_path):
+    async def run():
+        engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'pipeline-settings.db'}")
+        session_factory = async_sessionmaker(engine, expire_on_commit=False)
+        async with engine.begin() as connection:
+            await connection.run_sync(Base.metadata.create_all)
+        async with session_factory() as session:
+            defaults = await get_runtime_settings(session)
+            assert defaults.topicSeedEnabled is True
+            assert defaults.topicSeedReviewEnabled is True
+            assert defaults.topicFactualAuditEnabled is False
+            assert defaults.scriptFactualAuditEnabled is True
+
+            await save_runtime_settings(session, RuntimeSettingsIn(
+                topicSeedEnabled=False,
+                topicSeedReviewEnabled=False,
+                topicFactualAuditEnabled=True,
+                scriptFactualAuditEnabled=False,
+            ))
+            saved = await get_runtime_settings(session)
+            assert saved.topicSeedEnabled is False
+            assert saved.topicSeedReviewEnabled is False
+            assert saved.topicFactualAuditEnabled is True
+            assert saved.scriptFactualAuditEnabled is False
+        await engine.dispose()
+
+    asyncio.run(run())

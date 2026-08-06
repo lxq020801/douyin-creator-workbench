@@ -143,12 +143,13 @@ async def factual_final(
     topic: dict[str, Any] | None = None,
     max_output_tokens: int,
     max_corrections: int = 3,
+    prompts: dict[str, str] | None = None,
 ) -> SchemaT:
     result = draft
     for _ in range(max_corrections):
         audit = await asyncio.to_thread(
             client.json,
-            factual_audit_prompt(artifact_name, profile, result, topic),
+            factual_audit_prompt(artifact_name, profile, result, topic, prompts),
             FactualAudit,
             max_output_tokens=12000,
         )
@@ -157,7 +158,7 @@ async def factual_final(
             return result
         result = await asyncio.to_thread(
             client.json,
-            factual_correction_prompt(artifact_name, profile, result, audit, schema, topic),
+            factual_correction_prompt(artifact_name, profile, result, audit, schema, topic, prompts),
             schema,
             max_output_tokens=max_output_tokens,
         )
@@ -173,6 +174,7 @@ async def factual_final(
                 FactualAudit(passed=False, issues=hard_issues),
                 schema,
                 topic,
+                prompts,
             ),
             schema,
             max_output_tokens=max_output_tokens,

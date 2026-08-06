@@ -53,6 +53,8 @@ def test_admin_user_management_and_workspace_isolation(monkeypatch):
         return RuntimeSettingsIn(
             apiKey="test-key",
             model="test-model",
+            analysisModel="test-model",
+            replicationModel="test-model",
             douyinCookie="sessionid=test",
         )
 

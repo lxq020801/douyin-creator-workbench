@@ -935,6 +935,17 @@ def _image_data_url(image_path: Path) -> str:
     return f"data:{mime};base64,{encoded}"
 
 
+def _reasoning_options(model: str) -> dict[str, Any]:
+    """Enable the highest supported thinking level for Seed 2.x models."""
+    if str(model).startswith(("doubao-seed-2-0", "doubao-seed-2-1")):
+        return {
+            "reasoning": {"effort": "high"},
+            # Ark exposes thinking as an extra body field in the OpenAI SDK.
+            "extra_body": {"thinking": {"type": "enabled"}},
+        }
+    return {}
+
+
 async def _upload_with_preprocess(
     client: Any, video_path: Path, *, fps: float, model: str,
 ) -> Any:
@@ -1056,6 +1067,7 @@ async def _stream_responses(
             "stream": True,
             "store": True,
         }
+        create_kwargs.update(_reasoning_options(model))
         if previous_response_id:
             create_kwargs["previous_response_id"] = previous_response_id
         stream = client.responses.create(
@@ -1127,12 +1139,14 @@ async def _call_image_responses(
     }]
 
     def _do_call() -> tuple[str, dict]:
-        response = client.responses.create(
-            model=model,
-            input=input_payload,
-            stream=False,
-            store=True,
-        )
+        create_kwargs = {
+            "model": model,
+            "input": input_payload,
+            "stream": False,
+            "store": True,
+        }
+        create_kwargs.update(_reasoning_options(model))
+        response = client.responses.create(**create_kwargs)
         text = _extract_response_text(response)
         return text, _usage_to_dict(getattr(response, "usage", None))
 
@@ -1179,6 +1193,7 @@ async def _call_text_responses(
             "stream": False,
             "store": True,
         }
+        create_kwargs.update(_reasoning_options(model))
         if previous_response_id:
             create_kwargs["previous_response_id"] = previous_response_id
         response = client.responses.create(**create_kwargs)

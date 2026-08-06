@@ -1,4 +1,4 @@
-import { Bot, CheckCircle2, Cookie, Cpu, FileText, Gauge, KeyRound, RotateCcw, Save, UsersRound, Wifi } from 'lucide-react';
+import { Bot, CheckCircle2, Cookie, Cpu, FileText, Gauge, KeyRound, RotateCcw, Save, SlidersHorizontal, UsersRound, Wifi } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { PageHeader, StatusBadge } from '../components/Common';
 import { api } from '../api';
@@ -13,9 +13,13 @@ const promptTabs = [
   { key: 'videoBreakdown', label: '单条视频拆解' },
   { key: 'accountSummary', label: '账号主页综合分析' },
   { key: 'profileIntake', label: '账号资料问诊与资料卡' },
+  { key: 'topicSeed', label: '创意种子生成' },
+  { key: 'topicSeedReview', label: '创意种子审核' },
   { key: 'videoTopics', label: '单条视频对标选题' },
   { key: 'accountTopics', label: '账号对标选题' },
   { key: 'scriptGeneration', label: '选题生成可拍脚本' },
+  { key: 'factualAudit', label: '事实审计' },
+  { key: 'factualCorrection', label: '事实修正' },
 ] as const;
 
 export function SettingsPage() {
@@ -23,11 +27,11 @@ export function SettingsPage() {
   const [draft, setDraft] = useState<RuntimeSettings>(settings);
   const [promptDefaults, setPromptDefaults] = useState<Record<string, string>>(defaultSettings.prompts);
   const [promptVersion, setPromptVersion] = useState(settings.promptPackVersion || 'external-rtf-v3');
-  const [tab, setTab] = useState<'users' | 'model' | 'crawler' | 'video' | 'prompts'>('users');
+  const [tab, setTab] = useState<'users' | 'model' | 'crawler' | 'video' | 'workflow' | 'prompts'>('users');
   const [promptKey, setPromptKey] = useState<(typeof promptTabs)[number]['key']>('videoBreakdown');
-  const [testing, setTesting] = useState<'model' | 'cookie' | null>(null);
-  const [testState, setTestState] = useState<{ type: 'model' | 'cookie'; message: string; ok: boolean } | null>(null);
-  const modelReady = Boolean((draft.apiKey.trim() || draft.apiKeyConfigured) && draft.baseUrl.trim() && draft.model.trim());
+  const [testing, setTesting] = useState<'analysis' | 'replication' | 'cookie' | null>(null);
+  const [testState, setTestState] = useState<{ type: 'analysis' | 'replication' | 'cookie'; message: string; ok: boolean } | null>(null);
+  const modelReady = Boolean((draft.apiKey.trim() || draft.apiKeyConfigured) && draft.baseUrl.trim() && draft.analysisModel.trim() && draft.replicationModel.trim());
   const cookieReady = Boolean(draft.douyinCookie.trim() || draft.douyinCookieConfigured);
 
   useEffect(() => setDraft(settings), [settings]);
@@ -54,13 +58,13 @@ export function SettingsPage() {
     }
   };
 
-  const testConnection = async (type: 'model' | 'cookie') => {
+  const testConnection = async (type: 'analysis' | 'replication' | 'cookie') => {
     setTestState(null);
     setTesting(type);
     try {
       const saved = await saveSettings(draft);
       setDraft(saved);
-      const result = type === 'model' ? await api.settings.testModel() : await api.settings.testCookie();
+      const result = type === 'cookie' ? await api.settings.testCookie() : await api.settings.testModel(type);
       setTestState({ type, message: result.message, ok: result.ok });
     } catch (error) {
       setTestState({ type, message: error instanceof Error ? error.message : '检测失败', ok: false });
@@ -80,7 +84,8 @@ export function SettingsPage() {
           <button type="button" className={tab === 'model' ? 'is-active' : ''} onClick={() => setTab('model')}><Cpu size={17} /><span><strong>模型与 API</strong><small>Ark / 兼容接口</small></span></button>
           <button type="button" className={tab === 'crawler' ? 'is-active' : ''} onClick={() => setTab('crawler')}><Cookie size={17} /><span><strong>抖音认证</strong><small>Cookie 与同步状态</small></span></button>
           <button type="button" className={tab === 'video' ? 'is-active' : ''} onClick={() => setTab('video')}><Gauge size={17} /><span><strong>视频处理</strong><small>抽帧、超时与并发</small></span></button>
-          <button type="button" className={tab === 'prompts' ? 'is-active' : ''} onClick={() => setTab('prompts')}><Bot size={17} /><span><strong>系统提示词</strong><small>公共底座 + 六项专业能力</small></span></button>
+          <button type="button" className={tab === 'workflow' ? 'is-active' : ''} onClick={() => setTab('workflow')}><SlidersHorizontal size={17} /><span><strong>生成流程</strong><small>审核与质量控制</small></span></button>
+          <button type="button" className={tab === 'prompts' ? 'is-active' : ''} onClick={() => setTab('prompts')}><Bot size={17} /><span><strong>系统提示词</strong><small>公共底座 + 全部任务提示词</small></span></button>
         </nav>
 
         <section className="settings-panel">
@@ -92,11 +97,12 @@ export function SettingsPage() {
               <div className="form-grid">
                 <label className="span-2"><span>API Key</span><div className="secret-field"><KeyRound size={17} /><input type="password" value={draft.apiKey} onChange={(event) => setDraft({ ...draft, apiKey: event.target.value })} placeholder={draft.apiKeyConfigured ? '已保存；留空保留原值，输入新值可替换' : '输入 Ark 或兼容服务的 API Key'} /></div></label>
                 <label className="span-2"><span>Base URL</span><input value={draft.baseUrl} onChange={(event) => setDraft({ ...draft, baseUrl: event.target.value })} /></label>
-                <label><span>模型名称</span><input value={draft.model} onChange={(event) => setDraft({ ...draft, model: event.target.value })} /></label>
+                <label><span>拆解模型</span><input value={draft.analysisModel} onChange={(event) => setDraft({ ...draft, analysisModel: event.target.value })} placeholder="视频拆解、账号分析" /></label>
+                <label><span>复刻模型</span><input value={draft.replicationModel} onChange={(event) => setDraft({ ...draft, replicationModel: event.target.value })} placeholder="创意种子、选题、脚本" /></label>
                 <label><span>请求超时（秒）</span><input type="number" value={draft.timeout} onChange={(event) => setDraft({ ...draft, timeout: Number(event.target.value) })} /></label>
               </div>
-              <div className="settings-actions-row"><button className="button button--ghost button--sm" type="button" disabled={!modelReady || testing !== null} onClick={() => void testConnection('model')}><Wifi size={15} /> {testing === 'model' ? '正在保存并测试…' : '保存并测试模型'}</button>{testState?.type === 'model' ? <StatusBadge tone={testState.ok ? 'green' : 'warning'}>{testState.message}</StatusBadge> : null}</div>
-              <div className="connection-note"><Cpu size={18} /><div><strong>统一配置</strong><p>本地所有分析任务使用这里的模型配置；敏感值保存后不再回显，留空提交不会清除原配置。</p></div></div>
+              <div className="settings-actions-row"><button className="button button--ghost button--sm" type="button" disabled={!modelReady || testing !== null} onClick={() => void testConnection('analysis')}><Wifi size={15} /> {testing === 'analysis' ? '正在测试拆解模型…' : '测试拆解模型'}</button>{testState?.type === 'analysis' ? <StatusBadge tone={testState.ok ? 'green' : 'warning'}>{testState.message}</StatusBadge> : null}<button className="button button--ghost button--sm" type="button" disabled={!modelReady || testing !== null} onClick={() => void testConnection('replication')}><Wifi size={15} /> {testing === 'replication' ? '正在测试复刻模型…' : '测试复刻模型'}</button>{testState?.type === 'replication' ? <StatusBadge tone={testState.ok ? 'green' : 'warning'}>{testState.message}</StatusBadge> : null}</div>
+              <div className="connection-note"><Cpu size={18} /><div><strong>分工配置</strong><p>拆解模型负责视频拆解和账号分析；复刻模型负责创意种子、选题和脚本。敏感值保存后不再回显，留空提交不会清除原配置。</p></div></div>
             </div>
           ) : null}
 
@@ -118,6 +124,36 @@ export function SettingsPage() {
                 <label><span>最大并发任务</span><input type="number" min="1" max="3" value={draft.maxConcurrent} onChange={(event) => setDraft({ ...draft, maxConcurrent: Number(event.target.value) })} /><small>账号深拆与批量脚本最多同时运行 3 条。</small></label>
                 <label><span>单任务超时（秒）</span><input type="number" value={draft.timeout} onChange={(event) => setDraft({ ...draft, timeout: Number(event.target.value) })} /></label>
               </div>
+            </div>
+          ) : null}
+
+          {tab === 'workflow' ? (
+            <div className="settings-section">
+              <div className="settings-section-heading"><div><span>GENERATION PIPELINE</span><h2>生成流程开关</h2></div><StatusBadge tone="green"><CheckCircle2 size={13} /> 当前流程可控</StatusBadge></div>
+              <p className="settings-section-lead">只影响后续新任务，不会改变已经生成的历史结果。生成创意种子是选题流程的第一步，也可以按需关闭。</p>
+              <div className="settings-toggle-grid">
+                <label className="settings-toggle">
+                  <span className="settings-toggle-copy"><strong>生成创意种子</strong><small>先规划一组创意方向，再用于生成最终选题。</small></span>
+                  <input type="checkbox" checked={draft.topicSeedEnabled} onChange={(event) => setDraft({ ...draft, topicSeedEnabled: event.target.checked })} />
+                  <span className="settings-switch" aria-hidden="true" />
+                </label>
+                <label className="settings-toggle">
+                  <span className="settings-toggle-copy"><strong>审核创意种子</strong><small>在生成最终选题前，先检查种子的差异性和资料边界。</small></span>
+                  <input type="checkbox" checked={draft.topicSeedReviewEnabled} disabled={!draft.topicSeedEnabled} onChange={(event) => setDraft({ ...draft, topicSeedReviewEnabled: event.target.checked })} />
+                  <span className="settings-switch" aria-hidden="true" />
+                </label>
+                <label className="settings-toggle">
+                  <span className="settings-toggle-copy"><strong>选题事实审计</strong><small>生成选题后再核对资料依据；关闭可减少等待，但不阻止选题保存。</small></span>
+                  <input type="checkbox" checked={draft.topicFactualAuditEnabled} onChange={(event) => setDraft({ ...draft, topicFactualAuditEnabled: event.target.checked })} />
+                  <span className="settings-switch" aria-hidden="true" />
+                </label>
+                <label className="settings-toggle">
+                  <span className="settings-toggle-copy"><strong>脚本事实审计</strong><small>脚本生成后检查没有依据的数字、经历和承诺，默认开启。</small></span>
+                  <input type="checkbox" checked={draft.scriptFactualAuditEnabled} onChange={(event) => setDraft({ ...draft, scriptFactualAuditEnabled: event.target.checked })} />
+                  <span className="settings-switch" aria-hidden="true" />
+                </label>
+              </div>
+              <div className="connection-note"><SlidersHorizontal size={18} /><div><strong>推荐配置</strong><p>保留创意种子审核，关闭选题事实审计以保持生成速度；脚本事实审计单独控制，不会跟随选题开关一起变化。</p></div></div>
             </div>
           ) : null}
 

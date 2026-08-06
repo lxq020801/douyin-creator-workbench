@@ -36,6 +36,7 @@ from .schemas import (
     ConnectionTestResult,
     IntakeRequest,
     IntakeResponse,
+    ModelTestRequest,
     ProfileData,
     ProfileOut,
     RuntimeSettingsIn,
@@ -118,11 +119,25 @@ def topic_out(row: Topic) -> TopicOut:
     return TopicOut(id=row.id, analysisId=row.analysis_id, profileId=row.profile_id, batchId=row.batch_id, position=row.position, **json.loads(row.data_json))
 
 
-def topic_batch_out(row: TopicBatch, topics: list[Topic]) -> TopicBatchOut:
+def topic_pipeline(runtime: RuntimeSettingsIn) -> list[str]:
+    steps = ["load"]
+    if runtime.topicSeedEnabled:
+        steps.append("seed_draft")
+        if runtime.topicSeedReviewEnabled:
+            steps.append("seed_audit")
+    steps.append("draft")
+    if runtime.topicFactualAuditEnabled:
+        steps.append("factual_audit")
+    steps.append("save")
+    return steps
+
+
+def topic_batch_out(row: TopicBatch, topics: list[Topic], pipeline: list[str] | None = None) -> TopicBatchOut:
     return TopicBatchOut(
         id=row.id, analysisId=row.analysis_id, profileId=row.profile_id, kind=row.kind,
         direction=row.direction, spreadSummary=row.spread_summary,
         status=row.status, progress=row.progress, step=row.step, detail=row.detail, error=row.error,
+        pipeline=pipeline or [],
         promptVersion=row.prompt_version, createdAt=row.created_at,
         topics=[topic_out(topic) for topic in topics],
     )
@@ -174,11 +189,18 @@ async def settings_prompt_defaults() -> dict[str, Any]:
 
 
 @app.post("/api/settings/test-model", response_model=ConnectionTestResult, dependencies=[Depends(require_admin)])
-async def test_model(db: AsyncSession = Depends(get_db)):
+async def test_model(payload: ModelTestRequest | None = None, db: AsyncSession = Depends(get_db)):
     runtime = await get_runtime_settings(db)
+    model_type = payload.modelType if payload else "analysis"
+    model = runtime.analysisModel if model_type == "analysis" else runtime.replicationModel
+    model = model or runtime.model
     try:
-        text = await asyncio.to_thread(ModelClient(runtime).text, "只回复：连接正常", max_output_tokens=30)
-        return ConnectionTestResult(ok=True, message="模型连接正常", detail={"reply": text[:80], "model": runtime.model})
+        text = await asyncio.to_thread(
+            ModelClient(runtime, model=model).text,
+            "只回复：连接正常",
+            max_output_tokens=30,
+        )
+        return ConnectionTestResult(ok=True, message="模型连接正常", detail={"reply": text[:80], "model": model, "modelType": model_type})
     except Exception as exc:
         return ConnectionTestResult(ok=False, message="模型连接失败", detail={"error": str(exc)[:300]})
 
@@ -227,7 +249,7 @@ async def profiles_delete(profile_id: str, user: AuthenticatedUser = Depends(req
 async def profile_intake(payload: IntakeRequest, _user: AuthenticatedUser = Depends(request_user), db: AsyncSession = Depends(get_db)):
     runtime = await get_runtime_settings(db)
     result = await asyncio.to_thread(
-        ModelClient(runtime).json,
+        ModelClient(runtime, model=runtime.replicationModel or runtime.model).json,
         intake_prompt(payload.description, payload.answers, runtime.prompts),
         IntakeResponse,
     )
@@ -239,8 +261,10 @@ async def _create_analysis(kind: str, payload: AnalysisCreate, user: Authenticat
     missing: list[str] = []
     if not runtime.apiKey:
         missing.append("API Key")
-    if not runtime.model:
-        missing.append("模型名称")
+    if not (runtime.analysisModel or runtime.model):
+        missing.append("拆解模型名称")
+    if not runtime.replicationModel:
+        missing.append("复刻模型名称")
     if not runtime.douyinCookie:
         missing.append("抖音 Cookie")
     if missing:
@@ -342,6 +366,7 @@ async def topics_generate(analysis_id: str, payload: TopicGenerateRequest, user:
     profile = await get_for_workspace_or_404(db, Profile, payload.profileId, user.workspace_id)
     if analysis.status != "completed" or not analysis.report_json:
         raise HTTPException(status_code=409, detail="拆解尚未完成")
+    pipeline = topic_pipeline(await get_runtime_settings(db))
     query = select(TopicBatch).where(
         TopicBatch.analysis_id == analysis_id,
         TopicBatch.profile_id == profile.id,
@@ -366,7 +391,7 @@ async def topics_generate(analysis_id: str, payload: TopicGenerateRequest, user:
         await db.flush()
     elif batch.status in {"queued", "running", "completed"}:
         rows = (await db.execute(select(Topic).where(Topic.batch_id == batch.id).order_by(Topic.position))).scalars().all()
-        return topic_batch_out(batch, rows)
+        return topic_batch_out(batch, rows, pipeline)
     else:
         batch.status = "queued"
         batch.progress = 0
@@ -389,7 +414,7 @@ async def topics_generate(analysis_id: str, payload: TopicGenerateRequest, user:
     await db.commit()
     await db.refresh(batch)
     rows = (await db.execute(select(Topic).where(Topic.batch_id == batch.id).order_by(Topic.position))).scalars().all()
-    return topic_batch_out(batch, rows)
+    return topic_batch_out(batch, rows, pipeline)
 
 
 @app.get("/api/analyses/{analysis_id}/topics", response_model=TopicBatchOut | None)
@@ -402,7 +427,7 @@ async def topics_list(analysis_id: str, profileId: str | None = None, user: Auth
     if batch is None:
         return None
     rows = (await db.execute(select(Topic).where(Topic.batch_id == batch.id).order_by(Topic.position))).scalars().all()
-    return topic_batch_out(batch, rows)
+    return topic_batch_out(batch, rows, topic_pipeline(await get_runtime_settings(db)))
 
 
 @app.put("/api/topics/{topic_id}", response_model=TopicOut)

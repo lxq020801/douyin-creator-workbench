@@ -65,7 +65,7 @@ export const api = {
   settings: {
     get: () => request<RuntimeSettings>('/api/settings'),
     save: (value: RuntimeSettings) => request<RuntimeSettings>('/api/settings', { method: 'PUT', body: JSON.stringify(value) }),
-    testModel: () => request<{ ok: boolean; message: string; detail: Record<string, unknown> }>('/api/settings/test-model', { method: 'POST' }),
+    testModel: (modelType: 'analysis' | 'replication' = 'analysis') => request<{ ok: boolean; message: string; detail: Record<string, unknown> }>('/api/settings/test-model', { method: 'POST', body: JSON.stringify({ modelType }) }),
     testCookie: () => request<{ ok: boolean; message: string }>('/api/settings/test-cookie', { method: 'POST' }),
     promptDefaults: () => request<{ version: string; prompts: Record<string, string> }>('/api/settings/prompts/defaults'),
   },
