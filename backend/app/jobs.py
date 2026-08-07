@@ -12,14 +12,14 @@ from pydantic import BaseModel, ValidationError
 from sqlalchemy import delete, func, select
 
 from .config import settings as app_settings
-from .db import AccountSample, Analysis, Profile, Script, ScriptVersion, SessionLocal, Topic, TopicBatch
+from .db import AccountSample, Analysis, Profile, Script, ScriptVersion, SessionLocal, Topic
 from .factual_guard import factual_final
 from .media.douyin import download_account_video, download_single, fetch_account, fetch_single
 from .media.scripts.analyzer import AnalyzeResult, analyze_video
 from .model_client import ModelClient, parse_json_text
-from .prompts import account_summary_prompt, script_prompt, topic_seed_prompt, topic_seed_review_prompt, topics_prompt, video_breakdown_prompt
+from .prompts import account_summary_prompt, script_prompt, video_breakdown_prompt
 from .sampling import balanced_sample
-from .schemas import AccountReportModel, DirectorScript, RuntimeSettingsIn, TopicBatchModel, TopicSeedPlan, VideoBreakdownModel
+from .schemas import AccountReportModel, DirectorScript, RuntimeSettingsIn, VideoBreakdownModel
 from .settings_service import get_runtime_settings
 
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
@@ -58,7 +58,7 @@ def _validated_video_output(text: str, runtime: RuntimeSettingsIn) -> VideoBreak
         return VideoBreakdownModel.model_validate(parse_json_text(text))
     except (ValidationError, ValueError, TypeError) as exc:
         schema_json = json.dumps(VideoBreakdownModel.model_json_schema(), ensure_ascii=False)
-        return ModelClient(runtime, model=runtime.analysisModel or runtime.model).json(
+        return ModelClient(runtime).json(
             "修复下面的视频拆解输出。保留原有专业内容，只修复字段与格式，"
             "不要在没有视频的情况下重新分析。只返回JSON对象。\n"
             f"目标JSON Schema：\n{schema_json}\n校验错误：\n{exc}\n原输出：\n{text}",
@@ -78,7 +78,7 @@ async def _analyze_path(
         prompt,
         api_key=runtime.apiKey,
         endpoint=runtime.baseUrl,
-        model=runtime.analysisModel or runtime.model,
+        model=runtime.model,
         source_id=source_id,
         audit_id=source_id,
         video_fps=runtime.videoFps,
@@ -332,7 +332,7 @@ async def _run_account(analysis_id: str) -> None:
         "deep_reports": _summary_inputs(reports),
     }
     report = await asyncio.to_thread(
-        ModelClient(runtime, model=runtime.analysisModel or runtime.model).json,
+        ModelClient(runtime).json,
         account_summary_prompt(payload, runtime.prompts),
         AccountReportModel,
         max_output_tokens=18000,
@@ -384,24 +384,16 @@ async def _run_script(script_id: str) -> None:
         topic_data = json.loads(topic.data_json)
         profile_data = profile.data()
     prompt = script_prompt(topic_data, profile_data, runtime.prompts)
-    draft = await asyncio.to_thread(
-        ModelClient(runtime, model=runtime.replicationModel or runtime.model).json,
-        prompt,
+    draft = await asyncio.to_thread(ModelClient(runtime).json, prompt, DirectorScript, max_output_tokens=16000)
+    result = await factual_final(
+        ModelClient(runtime),
+        "可拍脚本",
+        profile_data,
+        draft,
         DirectorScript,
+        topic=topic_data,
         max_output_tokens=16000,
     )
-    result = draft
-    if runtime.scriptFactualAuditEnabled:
-        result = await factual_final(
-            ModelClient(runtime, model=runtime.replicationModel or runtime.model),
-            "可拍脚本",
-            profile_data,
-            draft,
-            DirectorScript,
-            topic=topic_data,
-            max_output_tokens=16000,
-            prompts=runtime.prompts,
-        )
     async with SessionLocal() as session:
         script = await session.get(Script, script_id)
         if script:
@@ -425,136 +417,6 @@ async def _run_script(script_id: str) -> None:
             script.version_count = next_version
             script.error = None
             await session.commit()
-
-
-async def _run_topic_generation(batch_id: str) -> None:
-    try:
-        async with SessionLocal() as session:
-            batch = await session.get(TopicBatch, batch_id)
-            if batch is None or batch.status == "completed":
-                return
-            batch.status = "running"
-            batch.progress = 8
-            batch.step = "load"
-            batch.detail = "正在读取拆解结果和账号资料"
-            batch.error = None
-            await session.commit()
-            analysis = await session.get(Analysis, batch.analysis_id)
-            profile = await session.get(Profile, batch.profile_id)
-            if analysis is None or profile is None or analysis.status != "completed" or not analysis.report_json:
-                raise RuntimeError("拆解记录或账号资料不存在，无法生成选题")
-            analysis_kind = analysis.kind
-            report = json.loads(analysis.report_json)
-            profile_data = profile.data()
-        runtime = await _settings()
-        client = ModelClient(runtime, model=runtime.replicationModel or runtime.model)
-        seed_plan: TopicSeedPlan | None = None
-        if runtime.topicSeedEnabled:
-            async with SessionLocal() as session:
-                batch = await session.get(TopicBatch, batch_id)
-                if batch:
-                    batch.progress = 18
-                    batch.step = "seed_draft"
-                    batch.detail = "模型正在规划 20 个创意种子"
-                    await session.commit()
-            seed_draft = await asyncio.to_thread(
-                client.json,
-                topic_seed_prompt(analysis_kind, report, profile_data, runtime.prompts),
-                TopicSeedPlan,
-                max_output_tokens=16000,
-            )
-            seed_plan = seed_draft
-            if runtime.topicSeedReviewEnabled:
-                async with SessionLocal() as session:
-                    batch = await session.get(TopicBatch, batch_id)
-                    if batch:
-                        batch.progress = 35
-                        batch.step = "seed_audit"
-                        batch.detail = "正在审核创意种子的差异性和资料边界"
-                        await session.commit()
-                seed_plan = await asyncio.to_thread(
-                    client.json,
-                    topic_seed_review_prompt(analysis_kind, report, profile_data, seed_draft, runtime.prompts),
-                    TopicSeedPlan,
-                    max_output_tokens=16000,
-                )
-        async with SessionLocal() as session:
-            batch = await session.get(TopicBatch, batch_id)
-            if batch:
-                batch.progress = 48
-                batch.step = "draft"
-                batch.detail = "模型正在根据创意种子生成 20 个对标选题"
-                await session.commit()
-        draft = await asyncio.to_thread(
-            client.json,
-            topics_prompt(analysis_kind, report, profile_data, runtime.prompts, seed_plan=seed_plan),
-            TopicBatchModel,
-            max_output_tokens=20000,
-        )
-        result = draft
-        if runtime.topicFactualAuditEnabled:
-            async with SessionLocal() as session:
-                batch = await session.get(TopicBatch, batch_id)
-                if batch:
-                    batch.progress = 75
-                    batch.step = "factual_audit"
-                    batch.detail = "正在进行选题事实审计"
-                    await session.commit()
-            result = await factual_final(
-                client,
-                "对标选题",
-                profile_data,
-                draft,
-                TopicBatchModel,
-                topic=None,
-                max_output_tokens=20000,
-                prompts=runtime.prompts,
-            )
-        async with SessionLocal() as session:
-            batch = await session.get(TopicBatch, batch_id)
-            if batch:
-                batch.progress = 90
-                batch.step = "save"
-                batch.detail = "事实审计完成，正在保存 20 个选题" if runtime.topicFactualAuditEnabled else "选题生成完成，正在保存 20 个选题"
-                await session.commit()
-        async with SessionLocal() as session:
-            batch = await session.get(TopicBatch, batch_id)
-            if batch is None:
-                return
-            await session.execute(delete(Topic).where(Topic.batch_id == batch.id))
-            batch.direction = result.direction
-            batch.spread_summary = result.spreadSummary
-            batch.status = "completed"
-            batch.progress = 100
-            batch.step = "completed"
-            batch.detail = "20 个对标选题已生成"
-            batch.error = None
-            batch.prompt_version = app_settings.prompt_pack_version
-            for index, item in enumerate(result.topics, start=1):
-                session.add(Topic(
-                    workspace_id=batch.workspace_id,
-                    batch_id=batch.id,
-                    analysis_id=batch.analysis_id,
-                    profile_id=batch.profile_id,
-                    position=index,
-                    data_json=item.model_dump_json(),
-                ))
-            await session.commit()
-    except Exception as exc:
-        async with SessionLocal() as session:
-            batch = await session.get(TopicBatch, batch_id)
-            if batch:
-                batch.status = "failed"
-                batch.progress = min(batch.progress or 0, 99)
-                batch.step = "failed"
-                batch.detail = "生成未完成，请查看原因后手动重试"
-                batch.error = str(exc)[:1000]
-                await session.commit()
-        raise
-
-
-def run_topic_generation(batch_id: str) -> None:
-    asyncio.run(_run_topic_generation(batch_id))
 
 
 def run_script_generation(script_id: str) -> None:

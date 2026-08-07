@@ -139,16 +139,7 @@ class AccountReport(AccountReportModel):
 class RuntimeSettingsIn(BaseModel):
     apiKey: str = ""
     baseUrl: str = "https://ark.cn-beijing.volces.com/api/v3"
-    # `model` remains for compatibility with older clients and saved settings.
-    model: str = "doubao-seed-2-0-lite-260428"
-    analysisModel: str = "doubao-seed-2-0-lite-260428"
-    replicationModel: str = "doubao-seed-2-0-lite-260428"
-    # Pipeline switches are persisted as settings so the admin UI can change
-    # the orchestration without changing prompt content or redeploying code.
-    topicSeedEnabled: bool = True
-    topicSeedReviewEnabled: bool = True
-    topicFactualAuditEnabled: bool = False
-    scriptFactualAuditEnabled: bool = True
+    model: str = ""
     timeout: int = Field(default=900, ge=30, le=3600)
     videoFps: float = Field(default=1, ge=0.1, le=5)
     maxConcurrent: int = Field(default=3, ge=1, le=3)
@@ -160,10 +151,6 @@ class RuntimeSettingsOut(RuntimeSettingsIn):
     apiKeyConfigured: bool = False
     douyinCookieConfigured: bool = False
     promptPackVersion: str = "external-rtf-v3"
-
-
-class ModelTestRequest(BaseModel):
-    modelType: Literal["analysis", "replication"] = "analysis"
 
 
 class LoginRequest(BaseModel):
@@ -272,20 +259,6 @@ class TopicData(BaseModel):
     accountRole: str = ""
 
 
-class TopicSeed(BaseModel):
-    sourceValue: str
-    profileMaterial: str
-    audienceProblem: str
-    contentTask: str
-    expressionForm: str
-    distinction: str
-
-
-class TopicSeedPlan(BaseModel):
-    planningDirection: str
-    seeds: list[TopicSeed] = Field(min_length=20, max_length=20)
-
-
 class TopicBatchModel(BaseModel):
     direction: str
     spreadSummary: str
@@ -326,12 +299,6 @@ class TopicBatchOut(BaseModel):
     kind: Literal["video", "account"]
     direction: str
     spreadSummary: str
-    status: Literal["queued", "running", "completed", "failed"] = "completed"
-    progress: int = 0
-    step: str = "queued"
-    detail: str = "任务已排队"
-    error: str | None = None
-    pipeline: list[str] = Field(default_factory=list)
     promptVersion: str
     createdAt: datetime
     topics: list[TopicOut]

@@ -6,7 +6,7 @@ import { api } from '../api';
 import { ProductHeader } from '../components/ProductHeader';
 import { ProfileDialog } from '../components/ProfileDialog';
 import { useAppStore } from '../store/AppStore';
-import type { AccountProfile, AnalysisRecord, ExternalVideoBreakdown, GeneratedScript, GeneratedTopic, RuntimeSettings } from '../types';
+import type { AccountProfile, AnalysisRecord, ExternalVideoBreakdown, GeneratedScript, GeneratedTopic } from '../types';
 
 type ExternalTopic = GeneratedTopic & {
   angle?: string;
@@ -22,12 +22,6 @@ type TopicBatchView = {
   kind?: 'video' | 'account';
   direction: string;
   spreadSummary: string;
-  status: 'queued' | 'running' | 'completed' | 'failed';
-  progress: number;
-  step: string;
-  detail: string;
-  error?: string | null;
-  pipeline?: string[];
   topics: ExternalTopic[];
 };
 
@@ -40,7 +34,7 @@ function normalizeTopicBatch(payload: unknown): TopicBatchView | null {
   if (Array.isArray(payload)) {
     const topics = payload as ExternalTopic[];
     if (!topics.length) return null;
-    return { profileId: topics[0].profileId, direction: '', spreadSummary: '', status: 'completed', progress: 100, step: 'completed', detail: '选题已生成', topics };
+    return { profileId: topics[0].profileId, direction: '', spreadSummary: '', topics };
   }
   const batch = payload as Partial<TopicBatchView>;
   if (!Array.isArray(batch.topics)) return null;
@@ -51,12 +45,6 @@ function normalizeTopicBatch(payload: unknown): TopicBatchView | null {
     kind: batch.kind,
     direction: batch.direction || '',
     spreadSummary: batch.spreadSummary || '',
-    status: batch.status || 'completed',
-    progress: typeof batch.progress === 'number' ? batch.progress : 0,
-    step: batch.step || 'queued',
-    detail: batch.detail || '任务已排队',
-    error: batch.error || null,
-    pipeline: Array.isArray(batch.pipeline) ? batch.pipeline : undefined,
     topics: batch.topics,
   };
 }
@@ -65,7 +53,7 @@ export function RemakeWorkspacePage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedProfileId = searchParams.get('profileId') || '';
-  const { profiles, settings, notify } = useAppStore();
+  const { profiles, notify } = useAppStore();
   const [analysis, setAnalysis] = useState<AnalysisRecord | null>(null);
   const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -74,7 +62,7 @@ export function RemakeWorkspacePage() {
   const [scripts, setScripts] = useState<GeneratedScript[]>([]);
   const [busy, setBusy] = useState(false);
   const loadRequest = useRef(0);
-  const [topicReload, setTopicReload] = useState(0);
+  const profileLoad = useRef<{ key: string; promise: Promise<TopicBatchView | null> } | null>(null);
 
   const topics = topicBatch?.topics || [];
 
@@ -98,21 +86,21 @@ export function RemakeWorkspacePage() {
         setBusy(true);
         setTopicBatch(null);
         setScripts([]);
-        let batch = normalizeTopicBatch(await api.topics.list(id, selectedProfileId));
-        if (!batch) {
-          batch = normalizeTopicBatch(await api.topics.generate(id, selectedProfileId));
+        const key = `${id}:${selectedProfileId}`;
+        if (profileLoad.current?.key !== key) {
+          profileLoad.current = {
+            key,
+            promise: (async () => {
+              const existing = normalizeTopicBatch(await api.topics.list(id, selectedProfileId));
+              if (existing) return existing;
+              return normalizeTopicBatch(await api.topics.generate(id, selectedProfileId));
+            })(),
+          };
         }
-        if (request !== loadRequest.current || !batch) return;
+        const batch = await profileLoad.current.promise;
+        if (request !== loadRequest.current) return;
         setTopicBatch(batch);
-        while (batch.status === 'queued' || batch.status === 'running') {
-          await new Promise((resolve) => window.setTimeout(resolve, 2200));
-          if (request !== loadRequest.current) return;
-          batch = normalizeTopicBatch(await api.topics.list(id, selectedProfileId));
-          if (!batch) throw new Error('选题任务记录不存在');
-          setTopicBatch(batch);
-        }
-        if (batch.status === 'failed') throw new Error(batch.error || '选题生成失败，请重试');
-        const topicIds = new Set(batch.topics.map((topic) => topic.id));
+        const topicIds = new Set((batch?.topics || []).map((topic) => topic.id));
         const savedScripts = await api.scripts.list({ analysisId: id });
         if (request !== loadRequest.current) return;
         setScripts(savedScripts.filter((script) => topicIds.has(script.topicId)));
@@ -123,7 +111,7 @@ export function RemakeWorkspacePage() {
       }
     };
     void run();
-  }, [id, selectedProfileId, topicReload]);
+  }, [id, selectedProfileId]);
 
   useEffect(() => {
     if (!selectedProfileId) {
@@ -146,20 +134,10 @@ export function RemakeWorkspacePage() {
   const selectProfile = (selected: AccountProfile) => {
     setProfile(selected);
     setProfileOpen(false);
+    if (selected.id === selectedProfileId) return;
     setBusy(true);
     setSelectedTopics([]);
-    setTopicBatch(null);
-    setScripts([]);
-    setTopicReload((value) => value + 1);
     setSearchParams({ profileId: selected.id }, { replace: true });
-  };
-
-  const retryTopics = () => {
-    setTopicBatch(null);
-    setScripts([]);
-    setSelectedTopics([]);
-    setBusy(true);
-    setTopicReload((value) => value + 1);
   };
 
   const replaceScript = (saved: GeneratedScript) => {
@@ -251,10 +229,8 @@ export function RemakeWorkspacePage() {
         onRetryScript={(scriptId) => void retryScript(scriptId)}
         onRegenerateScript={(scriptId) => void regenerateScript(scriptId)}
         onActivateVersion={(scriptId, version) => void activateScriptVersion(scriptId, version)}
-        onRetryTopics={retryTopics}
         busy={busy}
         scripts={scripts}
-        settings={settings}
         notify={notify}
       />}
     </main>
@@ -262,7 +238,7 @@ export function RemakeWorkspacePage() {
   </div>;
 }
 
-function TopicPanel({ batch, selected, setSelected, onGenerateScripts, onUpdateTopic, onRetryScript, onRegenerateScript, onActivateVersion, onRetryTopics, busy, scripts, settings, notify }: {
+function TopicPanel({ batch, selected, setSelected, onGenerateScripts, onUpdateTopic, onRetryScript, onRegenerateScript, onActivateVersion, busy, scripts, notify }: {
   batch: TopicBatchView;
   selected: string[];
   setSelected: (value: string[]) => void;
@@ -271,10 +247,8 @@ function TopicPanel({ batch, selected, setSelected, onGenerateScripts, onUpdateT
   onRetryScript: (scriptId: string) => void;
   onRegenerateScript: (scriptId: string) => void;
   onActivateVersion: (scriptId: string, version: number) => void;
-  onRetryTopics: () => void;
   busy: boolean;
   scripts: GeneratedScript[];
-  settings: RuntimeSettings;
   notify: (message: string, tone?: 'success' | 'info' | 'danger') => void;
 }) {
   const topics = batch.topics;
@@ -290,21 +264,6 @@ function TopicPanel({ batch, selected, setSelected, onGenerateScripts, onUpdateT
   const inheritedValue = (topic: ExternalTopic) => topic.inheritedValue || topic.inheritedMechanism || '';
   const profileConnection = (topic: ExternalTopic) => topic.profileConnection || topic.adaptation || '';
   const fitReason = (topic: ExternalTopic) => topic.fitReason || topic.reason || '';
-  const topicGenerating = batch.status === 'queued' || batch.status === 'running';
-  const stepLabels: Record<string, string> = {
-    load: '读取资料', seed_draft: '生成创意种子', seed_audit: '审核创意种子',
-    draft: '生成选题', factual_audit: '选题事实审计', save: '保存结果',
-  };
-  const stepThresholds: Record<string, number> = { load: 8, seed_draft: 18, seed_audit: 35, draft: 48, factual_audit: 75, save: 90 };
-  const fallbackPipeline = [
-    'load',
-    ...(settings.topicSeedEnabled ? ['seed_draft'] : []),
-    ...(settings.topicSeedEnabled && settings.topicSeedReviewEnabled ? ['seed_audit'] : []),
-    'draft',
-    ...(settings.topicFactualAuditEnabled ? ['factual_audit'] : []),
-    'save',
-  ];
-  const progressSteps = (batch.pipeline?.length ? batch.pipeline : fallbackPipeline).map((key) => ({ key, label: stepLabels[key] || key, threshold: stepThresholds[key] ?? 0 }));
 
   const startEdit = (topic: ExternalTopic) => { setEditingId(topic.id); setDraft({ ...topic }); };
   const saveEdit = async () => {
@@ -325,14 +284,12 @@ function TopicPanel({ batch, selected, setSelected, onGenerateScripts, onUpdateT
 
   return <section className="remake-topic-workspace">
     <div className="remake-topic-toolbar">
-      <div><span>TOPIC SELECTION</span><strong>{topicGenerating ? '正在规划并生成对标选题' : batch.status === 'failed' ? '选题生成失败' : '选择要继续生成脚本的选题'}</strong></div>
-      {batch.status === 'completed' ? <div className="topic-actions"><button className={`topic-select-all${allSelected ? ' is-active' : ''}`} type="button" aria-pressed={allSelected} title={allSelected ? '取消选择全部选题' : '选择全部选题'} onClick={() => setSelected(allSelected ? [] : topics.map((topic) => topic.id))}><span aria-hidden="true"><Check size={11} /></span>{allSelected ? '取消全选' : '全选'}</button><span>{selected.length} 个已选</span><button className="button button--primary button--sm" disabled={!selected.length || busy} type="button" onClick={onGenerateScripts}>{busy ? <LoaderCircle className="spin" size={15} /> : <WandSparkles size={15} />} 生成拍摄脚本</button></div> : null}
+      <div><span>TOPIC SELECTION</span><strong>选择要继续生成脚本的选题</strong></div>
+      <div className="topic-actions"><button className={`topic-select-all${allSelected ? ' is-active' : ''}`} type="button" aria-pressed={allSelected} title={allSelected ? '取消选择全部选题' : '选择全部选题'} onClick={() => setSelected(allSelected ? [] : topics.map((topic) => topic.id))}><span aria-hidden="true"><Check size={11} /></span>{allSelected ? '取消全选' : '全选'}</button><span>{selected.length} 个已选</span><button className="button button--primary button--sm" disabled={!selected.length || busy} type="button" onClick={onGenerateScripts}>{busy ? <LoaderCircle className="spin" size={15} /> : <WandSparkles size={15} />} 生成拍摄脚本</button></div>
     </div>
-    {topicGenerating ? <div className="remake-topic-progress"><LoaderCircle className="spin" size={18} /><div className="remake-topic-progress-content"><div className="remake-topic-progress-heading"><strong>{batch.status === 'running' ? '正在规划并生成 20 个对标选题' : '选题任务已排队'}</strong><span>{batch.progress}%</span></div><div className="remake-topic-progress-track"><i style={{ width: `${Math.max(4, batch.progress)}%` }} /></div><p>{batch.detail}</p><ol className="remake-topic-steps">{progressSteps.map((step) => <li key={step.key} className={batch.step === step.key ? 'is-current' : (step.key === 'save' ? batch.progress >= 100 : batch.progress > step.threshold) ? 'is-done' : ''}>{step.label}</li>)}</ol></div></div> : null}
-    {batch.status === 'failed' ? <div className="remake-topic-progress is-failed"><div><strong>这次生成没有完成</strong><p>{batch.error || '服务暂时不可用，请重新尝试。'}</p></div><button className="button button--primary button--sm" type="button" onClick={onRetryTopics}><RefreshCcw size={15} />重新生成选题</button></div> : null}
-    {batch.status === 'completed' && batch.direction ? <div className="remake-direction"><span>本轮迁移方向</span><p>{batch.direction.replaceAll('杂交', '迁移')}</p></div> : null}
+    {batch.direction ? <div className="remake-direction"><span>本轮迁移方向</span><p>{batch.direction.replaceAll('杂交', '迁移')}</p></div> : null}
 
-    {batch.status === 'completed' ? <div className="remake-topic-list">{topics.map((topic) => {
+    <div className="remake-topic-list">{topics.map((topic) => {
       const editing = editingId === topic.id && draft;
       const script = scriptByTopic.get(topic.id);
       const canExpand = Boolean(script?.data);
@@ -368,8 +325,8 @@ function TopicPanel({ batch, selected, setSelected, onGenerateScripts, onUpdateT
           notify={notify}
         /> : null}
       </article>;
-    })}</div> : null}
-    {batch.status === 'completed' && batch.spreadSummary ? <div className="remake-spread-summary"><span>{batch.kind === 'account' ? '内容组合说明' : '整体发散说明'}</span><p>{batch.spreadSummary}</p></div> : null}
+    })}</div>
+    {batch.spreadSummary ? <div className="remake-spread-summary"><span>{batch.kind === 'account' ? '内容组合说明' : '整体发散说明'}</span><p>{batch.spreadSummary}</p></div> : null}
   </section>;
 }
 

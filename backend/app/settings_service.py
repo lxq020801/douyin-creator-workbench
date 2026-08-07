@@ -31,17 +31,11 @@ async def _write(session: AsyncSession, key: str, value: str) -> None:
 async def get_runtime_settings(session: AsyncSession) -> RuntimeSettingsIn:
     values = DEFAULTS.model_dump()
     saved_prompt_version = await _read(session, "promptPackVersion")
-    for key in (
-        "apiKey", "baseUrl", "model", "analysisModel", "replicationModel",
-        "topicSeedEnabled", "topicSeedReviewEnabled", "topicFactualAuditEnabled", "scriptFactualAuditEnabled",
-        "timeout", "videoFps", "maxConcurrent", "douyinCookie", "prompts",
-    ):
+    for key in ("apiKey", "baseUrl", "model", "timeout", "videoFps", "maxConcurrent", "douyinCookie", "prompts"):
         raw = await _read(session, key)
         if raw is None:
             continue
-        if key in {"topicSeedEnabled", "topicSeedReviewEnabled", "topicFactualAuditEnabled", "scriptFactualAuditEnabled"}:
-            values[key] = raw.strip().lower() in {"1", "true", "yes", "on"}
-        elif key in {"timeout", "maxConcurrent"}:
+        if key in {"timeout", "maxConcurrent"}:
             values[key] = int(raw)
         elif key == "videoFps":
             values[key] = float(raw)
@@ -57,9 +51,6 @@ async def get_runtime_settings(session: AsyncSession) -> RuntimeSettingsIn:
                     values[key] = dict(DEFAULT_PROMPTS)
         else:
             values[key] = raw
-    values["analysisModel"] = str(values.get("analysisModel", "")).strip() or str(values.get("model", "")).strip()
-    values["replicationModel"] = str(values.get("replicationModel", "")).strip() or DEFAULTS.replicationModel
-    values["model"] = str(values.get("model", "")).strip() or values["analysisModel"]
     return RuntimeSettingsIn.model_validate(values)
 
 
@@ -77,14 +68,6 @@ async def get_public_settings(session: AsyncSession) -> RuntimeSettingsOut:
 async def save_runtime_settings(session: AsyncSession, incoming: RuntimeSettingsIn) -> RuntimeSettingsOut:
     values = incoming.model_dump()
     current = await get_runtime_settings(session)
-    # Older clients do not send the pipeline switches. Preserve their saved
-    # values instead of silently resetting them to schema defaults.
-    switch_keys = {
-        "topicSeedEnabled", "topicSeedReviewEnabled", "topicFactualAuditEnabled", "scriptFactualAuditEnabled",
-    }
-    for key in switch_keys:
-        if key not in incoming.model_fields_set:
-            values[key] = getattr(current, key)
     if not values["apiKey"].strip() and current.apiKey:
         values["apiKey"] = current.apiKey
     if not values["douyinCookie"].strip() and current.douyinCookie:
@@ -94,9 +77,6 @@ async def save_runtime_settings(session: AsyncSession, incoming: RuntimeSettings
         prompt_key: str(submitted_prompts.get(prompt_key, default))
         for prompt_key, default in DEFAULT_PROMPTS.items()
     }
-    values["analysisModel"] = str(values.get("analysisModel", "")).strip() or str(values.get("model", "")).strip()
-    values["replicationModel"] = str(values.get("replicationModel", "")).strip() or DEFAULTS.replicationModel
-    values["model"] = str(values.get("model", "")).strip() or values["analysisModel"]
     for key, value in values.items():
         raw = json.dumps(value, ensure_ascii=False) if key == "prompts" else str(value)
         await _write(session, key, raw)

@@ -16,14 +16,14 @@ def login_admin(client: TestClient) -> None:
 def test_analysis_requires_complete_runtime_settings(monkeypatch):
     async def incomplete_settings(_db):
         from app.schemas import RuntimeSettingsIn
-        return RuntimeSettingsIn(model="", analysisModel="", replicationModel="")
+        return RuntimeSettingsIn()
 
     monkeypatch.setattr(main_module, "get_runtime_settings", incomplete_settings)
     with TestClient(main_module.app) as client:
         login_admin(client)
         response = client.post("/api/analyses/video", json={"source": "https://v.douyin.com/example/"})
         assert response.status_code == 409
-        assert response.json()["detail"] == "请先在设置页配置：API Key、拆解模型名称、复刻模型名称、抖音 Cookie"
+        assert response.json()["detail"] == "请先在设置页配置：API Key、模型名称、抖音 Cookie"
 
 
 def test_settings_hide_secrets_and_profile_crud(monkeypatch):
@@ -37,25 +37,14 @@ def test_settings_hide_secrets_and_profile_crud(monkeypatch):
         assert "爆款骨架" in payload["prompts"]["videoBreakdown"]
         assert len(payload["prompts"]["common"]) > 200
         assert payload["promptPackVersion"] == "external-rtf-v3"
-        assert payload["topicSeedEnabled"] is True
-        assert payload["topicSeedReviewEnabled"] is True
-        assert payload["topicFactualAuditEnabled"] is False
-        assert payload["scriptFactualAuditEnabled"] is True
         assert set(payload["prompts"]) == {
             "common", "videoBreakdown", "accountSummary", "profileIntake",
-            "topicSeed", "topicSeedReview", "videoTopics", "accountTopics",
-            "scriptGeneration", "factualAudit", "factualCorrection",
+            "videoTopics", "accountTopics", "scriptGeneration",
         }
         defaults = client.get("/api/settings/prompts/defaults")
         assert defaults.status_code == 200
         assert defaults.json()["version"] == "external-rtf-v3"
-        payload.update({
-            "apiKey": "sk-test-secret",
-            "model": "doubao-test",
-            "analysisModel": "doubao-analysis-test",
-            "replicationModel": "doubao-replication-test",
-            "douyinCookie": "sessionid=test-cookie-value",
-        })
+        payload.update({"apiKey": "sk-test-secret", "model": "doubao-test", "douyinCookie": "sessionid=test-cookie-value"})
         saved = client.put("/api/settings", json=payload)
         assert saved.status_code == 200
         assert saved.json()["apiKey"] == ""
@@ -76,8 +65,6 @@ def test_settings_hide_secrets_and_profile_crud(monkeypatch):
         assert runtime.apiKey == "sk-test-secret"
         assert runtime.douyinCookie == "sessionid=test-cookie-value"
         assert runtime.model == "doubao-test-updated"
-        assert runtime.analysisModel == "doubao-analysis-test"
-        assert runtime.replicationModel == "doubao-replication-test"
 
         profile_payload = {
             "name": "测试账号", "creatorAndAccount": "编导运营的内容账号",
@@ -95,46 +82,6 @@ def test_settings_hide_secrets_and_profile_crud(monkeypatch):
         assert analysis.json()["status"] == "queued"
 
         assert client.delete(f"/api/profiles/{profile_id}").status_code == 204
-
-
-def test_topic_generation_is_queued_without_blocking_request(monkeypatch):
-    calls: list[tuple[tuple, dict]] = []
-
-    def fake_enqueue(*args, **kwargs):
-        calls.append((args, kwargs))
-        return "topic-job-test"
-
-    monkeypatch.setattr(main_module, "enqueue", fake_enqueue)
-
-    async def seed() -> tuple[str, str]:
-        async with SessionLocal() as session:
-            profile = Profile(name="异步选题资料", data_json=json.dumps({
-                "name": "异步选题资料", "creatorAndAccount": "本地商家",
-                "businessAndGoals": "提高转化", "audienceAndAction": "附近顾客",
-                "availableMaterials": "门店实拍", "productionConditions": "手机拍摄",
-                "toneAndBoundaries": "真实", "originalDescription": "测试",
-            }, ensure_ascii=False))
-            analysis = Analysis(
-                kind="video", source="https://v.douyin.com/async-topics/",
-                status="completed", report_json=json.dumps({"source": {}}, ensure_ascii=False),
-            )
-            session.add_all([profile, analysis])
-            await session.commit()
-            return analysis.id, profile.id
-
-    with TestClient(main_module.app) as client:
-        login_admin(client)
-        analysis_id, profile_id = asyncio.run(seed())
-        first = client.post(f"/api/analyses/{analysis_id}/topics", json={"profileId": profile_id})
-        assert first.status_code == 200
-        assert first.json()["status"] == "queued"
-        assert first.json()["topics"] == []
-        assert calls[0][0] == ("app.jobs.run_topic_generation", first.json()["id"])
-
-        second = client.post(f"/api/analyses/{analysis_id}/topics", json={"profileId": profile_id})
-        assert second.status_code == 200
-        assert second.json()["id"] == first.json()["id"]
-        assert len(calls) == 1
 
 
 def test_scripts_can_be_filtered_by_analysis_and_delete_cascades(monkeypatch):

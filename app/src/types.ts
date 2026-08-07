@@ -155,21 +155,10 @@ export interface ExternalAccountReport {
 export interface RuntimeSettings {
   apiKey: string;
   baseUrl: string;
-  /** Legacy shared model field retained for older saved settings. */
   model: string;
-  analysisModel: string;
-  replicationModel: string;
   timeout: number;
   videoFps: number;
   maxConcurrent: number;
-  /** Generate a creative-seed plan before producing topics. */
-  topicSeedEnabled: boolean;
-  /** Keep creative-seed review as an explicit, configurable stage. */
-  topicSeedReviewEnabled: boolean;
-  /** Optional audit for generated topics; disabled by default for the fast flow. */
-  topicFactualAuditEnabled: boolean;
-  /** Keep the final script fact audit enabled by default. */
-  scriptFactualAuditEnabled: boolean;
   douyinCookie: string;
   prompts: Record<string, string>;
   apiKeyConfigured?: boolean;
@@ -217,12 +206,6 @@ export interface TopicBatch {
   kind: 'video' | 'account';
   direction: string;
   spreadSummary: string;
-  status: 'queued' | 'running' | 'completed' | 'failed';
-  progress: number;
-  step: string;
-  detail: string;
-  error?: string | null;
-  pipeline?: string[];
   promptVersion: string;
   createdAt: string;
   topics: GeneratedTopic[];

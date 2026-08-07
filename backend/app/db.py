@@ -119,12 +119,6 @@ class TopicBatch(Base):
     kind: Mapped[str] = mapped_column(String(20))
     direction: Mapped[str] = mapped_column(Text)
     spread_summary: Mapped[str] = mapped_column(Text)
-    status: Mapped[str] = mapped_column(String(20), default="completed", index=True)
-    progress: Mapped[int] = mapped_column(Integer, default=0)
-    step: Mapped[str] = mapped_column(String(80), default="queued")
-    detail: Mapped[str] = mapped_column(Text, default="任务已排队")
-    error: Mapped[str | None] = mapped_column(Text, nullable=True)
-    job_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
     prompt_version: Mapped[str] = mapped_column(String(80), default="external-rtf-v3")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now, index=True)
 
@@ -289,30 +283,6 @@ def _migrate_existing_database(sync_conn) -> None:
             sync_conn.exec_driver_sql(
                 "ALTER TABLE scripts ADD COLUMN version_count INTEGER NOT NULL DEFAULT 0"
             )
-    if "topic_batches" in tables:
-        columns = {column["name"] for column in inspector.get_columns("topic_batches")}
-        if "status" not in columns:
-            sync_conn.exec_driver_sql(
-                "ALTER TABLE topic_batches ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'completed'"
-            )
-        if "error" not in columns:
-            sync_conn.exec_driver_sql("ALTER TABLE topic_batches ADD COLUMN error TEXT")
-        if "job_id" not in columns:
-            sync_conn.exec_driver_sql("ALTER TABLE topic_batches ADD COLUMN job_id VARCHAR(80)")
-        if "progress" not in columns:
-            sync_conn.exec_driver_sql("ALTER TABLE topic_batches ADD COLUMN progress INTEGER NOT NULL DEFAULT 0")
-        if "step" not in columns:
-            sync_conn.exec_driver_sql("ALTER TABLE topic_batches ADD COLUMN step VARCHAR(80) NOT NULL DEFAULT 'queued'")
-        if "detail" not in columns:
-            sync_conn.exec_driver_sql("ALTER TABLE topic_batches ADD COLUMN detail TEXT NOT NULL DEFAULT '任务已排队'")
-        sync_conn.exec_driver_sql(
-            "UPDATE topic_batches SET progress = 100, step = 'completed', detail = '20 个对标选题已生成' "
-            "WHERE status = 'completed' AND (progress = 0 OR step = 'queued')"
-        )
-        sync_conn.exec_driver_sql(
-            "UPDATE topic_batches SET step = 'failed', detail = '生成未完成，请查看原因后手动重试' "
-            "WHERE status = 'failed' AND (step = 'queued' OR step IS NULL)"
-        )
     if "topics" in tables:
         columns = {column["name"] for column in inspector.get_columns("topics")}
         if "batch_id" not in columns:
@@ -331,12 +301,11 @@ def _migrate_existing_database(sync_conn) -> None:
             kind = str(kind_row[0]) if kind_row else "video"
             sync_conn.exec_driver_sql(
                 "INSERT INTO topic_batches "
-                "(id, workspace_id, analysis_id, profile_id, kind, direction, spread_summary, status, progress, step, detail, prompt_version, created_at) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "(id, workspace_id, analysis_id, profile_id, kind, direction, spread_summary, prompt_version, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     batch_id, settings.local_workspace_id, analysis_id, profile_id, kind,
-                    "旧版选题记录", "由升级前的选题记录自动归档", "completed", 100, "completed",
-                    "20 个对标选题已生成", "legacy-v0.3", created_at or now(),
+                    "旧版选题记录", "由升级前的选题记录自动归档", "legacy-v0.3", created_at or now(),
                 ),
             )
             sync_conn.exec_driver_sql(

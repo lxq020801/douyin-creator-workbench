@@ -11,7 +11,6 @@ from .schemas import (
     FactualAudit,
     IntakeAnswer,
     IntakeResponse,
-    TopicSeedPlan,
     TopicBatchModel,
     VideoBreakdownModel,
 )
@@ -279,55 +278,6 @@ ACCOUNT_TOPICS_PROMPT = """【输入说明】
 5. 不提前撰写脚本正文。"""
 
 
-TOPIC_SEED_PROMPT = """【任务】
-先不要写最终选题标题，也不要写脚本。请基于拆解报告和账号资料卡，规划20个可以继续发展成最终选题的“创意种子”。
-
-每个创意种子必须明确写出：
-• 继承对标产物中的哪项创作价值；
-• 使用资料卡中的哪项真实素材或能力；
-• 针对观众的什么具体问题、处境或期待；
-• 这条内容要完成什么任务；
-• 适合采用什么表达形式；
-• 它和其他种子的实质区别是什么。
-
-20个种子必须在素材、观众问题、内容任务、表达形式或叙事关系上有实质差异，不能只是替换行业、人物、产品、数字或地点。不得把对标账号的案例、数据、价格、客户、资质或服务承诺迁移到用户账号。资料卡没有提供的真实经历、案例、结果和资源不能编造。
-
-输出的是创意规划，不是最终标题、成片文案或脚本。"""
-
-
-TOPIC_SEED_REVIEW_PROMPT = """【任务】
-你是创意种子审核员。请审核输入中的20个创意种子，并直接返回修正后的完整20条创意种子计划，不要返回审核意见列表。
-
-逐条检查：
-1. 是否正好20条；
-2. 是否有重复方向或同一核心意思的换皮；
-3. 是否只是替换人物、产品、行业、数字或地点；
-4. 是否使用了资料卡没有明确提供的经历、案例、客户反馈、数据、资源或承诺；
-5. 每条是否都能清楚区分来源价值、资料卡素材、观众问题、内容任务和表达形式。
-
-没有问题的种子原样保留。有问题的种子直接改成与其他种子明显不同、且只依赖已有资料的方向。不要生成最终标题，不要写脚本，不要增加或减少种子数量。"""
-
-
-FACTUAL_AUDIT_PROMPT = """入库前的事实审计员，不负责创意策划，不改写内容。你的唯一任务是逐项找出初稿中没有明确来源的用户事实。
-
-逐项检查初稿中的所有具体事实、数字、价格、时长、材料、制作方式、人物经历、顾客反馈、同行行为、朋友建议、历史事件、经营数据、产品状态和承诺。只有在事实依据输入中明确出现的内容才能写成既有事实。
-特别注意：
-1. 资料卡写‘可以拍某类素材’，只代表具备该素材，不代表某个具体事件已经发生。
-2. 资料卡写‘不做某事’，只代表用户自己的边界，不代表同行正在做、有人劝过、有人质疑过。
-3. 资料卡写‘计划、后续、想做’，不能改写成产品已经生产、已经定价、已有客户反馈。
-4. 开店年限、受众和经营方向不能被扩写成未提供的老客数量、消费习惯、采购流程或经营故事。
-5. 不得用‘可能真实’替代‘输入已明确’，无法确认的断言必须删除。
-6. 只要一句话同时包含有依据和无依据内容，也必须把无依据部分列为问题。
-
-逐条返回问题所在JSON路径、原始断言和无依据原因。不要提供修改方案，不要因为内容听起来合理就放行。确认全文没有任何此类问题时才能将passed设为true。只返回一个JSON对象，不要使用Markdown代码块，不要复述格式说明。
-固定格式：{"passed":false,"issues":[{"path":"topics[0].concept","claim":"原始断言","reason":"没有事实依据"}]}；没有问题时返回{"passed":true,"issues":[]}。"""
-
-
-FACTUAL_CORRECTION_PROMPT = """事实校对员，不负责重新策划。专业内容已经完成，你只按审计问题清单做定点修正，并返回字段和数量完全相同的完整最终稿。
-
-每个问题都必须处理：删除无依据细节，或把对应内容改写成仅凭事实依据即可成立、现在就能拍摄的表达。不得用另一个未经提供的数字、经历、人物、客户反馈、同行行为、制作细节或承诺替换原问题。不得用‘需要核实’、括号占位、条件句或免责声明代替可直接使用的成品。除解决清单问题所必需的内容外，保留原稿的创作方向、对标基因、字段、顺序和数量。"""
-
-
 SCRIPT_GENERATION_PROMPT = """【输入说明】
 你将获得：① 单个选定的选题详情；② 对应的账号资料卡。
 
@@ -390,13 +340,9 @@ DEFAULT_PROMPTS = {
     "videoBreakdown": VIDEO_BREAKDOWN_PROMPT,
     "accountSummary": ACCOUNT_SUMMARY_PROMPT,
     "profileIntake": PROFILE_INTAKE_PROMPT,
-    "topicSeed": TOPIC_SEED_PROMPT,
-    "topicSeedReview": TOPIC_SEED_REVIEW_PROMPT,
     "videoTopics": VIDEO_TOPICS_PROMPT,
     "accountTopics": ACCOUNT_TOPICS_PROMPT,
     "scriptGeneration": SCRIPT_GENERATION_PROMPT,
-    "factualAudit": FACTUAL_AUDIT_PROMPT,
-    "factualCorrection": FACTUAL_CORRECTION_PROMPT,
 }
 
 
@@ -446,7 +392,6 @@ def topics_prompt(
     report: dict[str, Any],
     profile: dict[str, Any],
     prompts: dict[str, str],
-    seed_plan: TopicSeedPlan | dict[str, Any] | None = None,
 ) -> str:
     key = "videoTopics" if kind == "video" else "accountTopics"
     report_keys = (
@@ -458,56 +403,7 @@ def topics_prompt(
         "对标产物": {field: report.get(field) for field in report_keys},
         "已确认账号资料卡": profile,
     }
-    if seed_plan is not None:
-        context["已审核创意种子"] = seed_plan.model_dump(by_alias=True) if isinstance(seed_plan, BaseModel) else seed_plan
     return _compose(key, context, prompts, TopicBatchModel)
-
-
-def _topic_seed_context(kind: str, report: dict[str, Any], profile: dict[str, Any]) -> dict[str, Any]:
-    report_keys = (
-        ("breakoutJudgment", "viralSkeleton", "openingHook", "copyRetention", "audiovisual", "replicableMethods")
-        if kind == "video"
-        else ("strategyOverview", "contentMap", "topicEngine", "repeatableMethods", "expressionSystem", "transferableAssets")
-    )
-    return {
-        "对标产物": {field: report.get(field) for field in report_keys},
-        "已确认账号资料卡": profile,
-    }
-
-
-def topic_seed_prompt(
-    kind: str,
-    report: dict[str, Any],
-    profile: dict[str, Any],
-    prompts: dict[str, str],
-) -> str:
-    return (
-        _prompt_value(prompts, "common")
-        + "\n\n【当前任务】\n"
-        + _prompt_value(prompts, "topicSeed")
-        + "\n\n【本次输入】\n"
-        + json.dumps(_topic_seed_context(kind, report, profile), ensure_ascii=False)
-        + _schema_instruction(TopicSeedPlan)
-    )
-
-
-def topic_seed_review_prompt(
-    kind: str,
-    report: dict[str, Any],
-    profile: dict[str, Any],
-    seed_plan: TopicSeedPlan,
-    prompts: dict[str, str],
-) -> str:
-    context = _topic_seed_context(kind, report, profile)
-    context["待审核创意种子"] = seed_plan.model_dump(by_alias=True)
-    return (
-        _prompt_value(prompts, "common")
-        + "\n\n【当前任务】\n"
-        + _prompt_value(prompts, "topicSeedReview")
-        + "\n\n【本次输入】\n"
-        + json.dumps(context, ensure_ascii=False)
-        + _schema_instruction(TopicSeedPlan)
-    )
 
 
 def script_prompt(
@@ -530,14 +426,29 @@ def factual_audit_prompt(
     profile: dict[str, Any],
     draft: BaseModel,
     topic: dict[str, Any] | None = None,
-    prompts: dict[str, str] | None = None,
 ) -> str:
     payload = {
         "唯一允许作为用户事实依据的输入": _factual_sources(profile, topic),
         "待校验初稿": draft.model_dump(by_alias=True),
     }
     return (
-        f"你是{artifact_name}{_prompt_value(prompts or DEFAULT_PROMPTS, 'factualAudit')}\n\n"
+        f"你是{artifact_name}入库前的事实审计员，不负责创意策划，不改写内容。"
+        "你的唯一任务是逐项找出初稿中没有明确来源的用户事实。\n\n"
+        "逐项检查初稿中的所有具体事实、数字、价格、时长、材料、制作方式、人物经历、顾客反馈、"
+        "同行行为、朋友建议、历史事件、经营数据、产品状态和承诺。只有在事实依据输入中明确出现的内容才能写成既有事实。\n"
+        "特别注意：\n"
+        "1. 资料卡写‘可以拍某类素材’，只代表具备该素材，不代表某个具体事件已经发生。\n"
+        "2. 资料卡写‘不做某事’，只代表用户自己的边界，不代表同行正在做、有人劝过、有人质疑过。\n"
+        "3. 资料卡写‘计划、后续、想做’，不能改写成产品已经生产、已经定价、已有客户反馈。\n"
+        "4. 开店年限、受众和经营方向不能被扩写成未提供的老客数量、消费习惯、采购流程或经营故事。\n"
+        "5. 不得用‘可能真实’替代‘输入已明确’，无法确认的断言必须删除。\n"
+        "6. 只要一句话同时包含有依据和无依据内容，也必须把无依据部分列为问题。\n\n"
+        "逐条返回问题所在JSON路径、原始断言和无依据原因。不要提供修改方案，不要因为内容听起来合理就放行。"
+        "确认全文没有任何此类问题时才能将passed设为true。"
+        "只返回一个JSON对象，不要使用Markdown代码块，不要复述格式说明。"
+        "固定格式：{\"passed\":false,\"issues\":[{\"path\":\"topics[0].concept\","
+        "\"claim\":\"原始断言\",\"reason\":\"没有事实依据\"}]}；没有问题时返回"
+        "{\"passed\":true,\"issues\":[]}。\n\n"
         "【事实依据与待校验初稿】\n"
         + json.dumps(payload, ensure_ascii=False)
     )
@@ -550,7 +461,6 @@ def factual_correction_prompt(
     audit: FactualAudit,
     schema: type[BaseModel],
     topic: dict[str, Any] | None = None,
-    prompts: dict[str, str] | None = None,
 ) -> str:
     payload = {
         "唯一允许作为用户事实依据的输入": _factual_sources(profile, topic),
@@ -558,7 +468,12 @@ def factual_correction_prompt(
         "必须逐条解决的事实问题": audit.model_dump(),
     }
     return (
-        f"你是{artifact_name}{_prompt_value(prompts or DEFAULT_PROMPTS, 'factualCorrection')}\n\n"
+        f"你是{artifact_name}的事实校对员，不负责重新策划。专业内容已经完成，"
+        "你只按审计问题清单做定点修正，并返回字段和数量完全相同的完整最终稿。\n\n"
+        "每个问题都必须处理：删除无依据细节，或把对应内容改写成仅凭事实依据即可成立、现在就能拍摄的表达。"
+        "不得用另一个未经提供的数字、经历、人物、客户反馈、同行行为、制作细节或承诺替换原问题。"
+        "不得用‘需要核实’、括号占位、条件句或免责声明代替可直接使用的成品。"
+        "除解决清单问题所必需的内容外，保留原稿的创作方向、对标基因、字段、顺序和数量。\n\n"
         "【事实依据、初稿与审计问题】\n"
         + json.dumps(payload, ensure_ascii=False)
         + _schema_instruction(schema)

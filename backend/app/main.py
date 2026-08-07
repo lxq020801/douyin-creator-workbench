@@ -28,15 +28,14 @@ from .auth import (
 from .db import AccountSample, Analysis, Profile, Script, ScriptVersion, Topic, TopicBatch, get_db, get_for_workspace_or_404, init_db
 from .job_queue import connection, enqueue
 from .media.douyin import probe_cookie
-from .model_client import ModelClient
-from .prompts import DEFAULT_PROMPTS, intake_prompt
+from .model_client import ModelClient, ModelOutputError, parse_json_text
+from .prompts import DEFAULT_PROMPTS, intake_prompt, topics_prompt
 from .schemas import (
     AnalysisCreate,
     AnalysisOut,
     ConnectionTestResult,
     IntakeRequest,
     IntakeResponse,
-    ModelTestRequest,
     ProfileData,
     ProfileOut,
     RuntimeSettingsIn,
@@ -44,6 +43,7 @@ from .schemas import (
     ScriptBatchRequest,
     ScriptOut,
     ScriptVersionOut,
+    TopicBatchModel,
     TopicBatchOut,
     TopicGenerateRequest,
     TopicOut,
@@ -83,6 +83,16 @@ app.add_middleware(
 app.include_router(auth_router)
 
 
+def _generate_topics_once(client: ModelClient, prompt: str) -> TopicBatchModel:
+    """Make exactly one topic-model request without JSON repair or audit calls."""
+    try:
+        return TopicBatchModel.model_validate(
+            parse_json_text(client.text(prompt, max_output_tokens=20000))
+        )
+    except Exception as exc:
+        raise ModelOutputError(f"选题模型请求或输出校验失败：{exc}") from exc
+
+
 @app.middleware("http")
 async def authenticate_api_request(request: Request, call_next):
     path = request.url.path.rstrip("/") or "/"
@@ -119,25 +129,10 @@ def topic_out(row: Topic) -> TopicOut:
     return TopicOut(id=row.id, analysisId=row.analysis_id, profileId=row.profile_id, batchId=row.batch_id, position=row.position, **json.loads(row.data_json))
 
 
-def topic_pipeline(runtime: RuntimeSettingsIn) -> list[str]:
-    steps = ["load"]
-    if runtime.topicSeedEnabled:
-        steps.append("seed_draft")
-        if runtime.topicSeedReviewEnabled:
-            steps.append("seed_audit")
-    steps.append("draft")
-    if runtime.topicFactualAuditEnabled:
-        steps.append("factual_audit")
-    steps.append("save")
-    return steps
-
-
-def topic_batch_out(row: TopicBatch, topics: list[Topic], pipeline: list[str] | None = None) -> TopicBatchOut:
+def topic_batch_out(row: TopicBatch, topics: list[Topic]) -> TopicBatchOut:
     return TopicBatchOut(
         id=row.id, analysisId=row.analysis_id, profileId=row.profile_id, kind=row.kind,
         direction=row.direction, spreadSummary=row.spread_summary,
-        status=row.status, progress=row.progress, step=row.step, detail=row.detail, error=row.error,
-        pipeline=pipeline or [],
         promptVersion=row.prompt_version, createdAt=row.created_at,
         topics=[topic_out(topic) for topic in topics],
     )
@@ -189,18 +184,11 @@ async def settings_prompt_defaults() -> dict[str, Any]:
 
 
 @app.post("/api/settings/test-model", response_model=ConnectionTestResult, dependencies=[Depends(require_admin)])
-async def test_model(payload: ModelTestRequest | None = None, db: AsyncSession = Depends(get_db)):
+async def test_model(db: AsyncSession = Depends(get_db)):
     runtime = await get_runtime_settings(db)
-    model_type = payload.modelType if payload else "analysis"
-    model = runtime.analysisModel if model_type == "analysis" else runtime.replicationModel
-    model = model or runtime.model
     try:
-        text = await asyncio.to_thread(
-            ModelClient(runtime, model=model).text,
-            "只回复：连接正常",
-            max_output_tokens=30,
-        )
-        return ConnectionTestResult(ok=True, message="模型连接正常", detail={"reply": text[:80], "model": model, "modelType": model_type})
+        text = await asyncio.to_thread(ModelClient(runtime).text, "只回复：连接正常", max_output_tokens=30)
+        return ConnectionTestResult(ok=True, message="模型连接正常", detail={"reply": text[:80], "model": runtime.model})
     except Exception as exc:
         return ConnectionTestResult(ok=False, message="模型连接失败", detail={"error": str(exc)[:300]})
 
@@ -249,7 +237,7 @@ async def profiles_delete(profile_id: str, user: AuthenticatedUser = Depends(req
 async def profile_intake(payload: IntakeRequest, _user: AuthenticatedUser = Depends(request_user), db: AsyncSession = Depends(get_db)):
     runtime = await get_runtime_settings(db)
     result = await asyncio.to_thread(
-        ModelClient(runtime, model=runtime.replicationModel or runtime.model).json,
+        ModelClient(runtime).json,
         intake_prompt(payload.description, payload.answers, runtime.prompts),
         IntakeResponse,
     )
@@ -261,10 +249,8 @@ async def _create_analysis(kind: str, payload: AnalysisCreate, user: Authenticat
     missing: list[str] = []
     if not runtime.apiKey:
         missing.append("API Key")
-    if not (runtime.analysisModel or runtime.model):
-        missing.append("拆解模型名称")
-    if not runtime.replicationModel:
-        missing.append("复刻模型名称")
+    if not runtime.model:
+        missing.append("模型名称")
     if not runtime.douyinCookie:
         missing.append("抖音 Cookie")
     if missing:
@@ -366,55 +352,34 @@ async def topics_generate(analysis_id: str, payload: TopicGenerateRequest, user:
     profile = await get_for_workspace_or_404(db, Profile, payload.profileId, user.workspace_id)
     if analysis.status != "completed" or not analysis.report_json:
         raise HTTPException(status_code=409, detail="拆解尚未完成")
-    pipeline = topic_pipeline(await get_runtime_settings(db))
-    query = select(TopicBatch).where(
-        TopicBatch.analysis_id == analysis_id,
-        TopicBatch.profile_id == profile.id,
-        TopicBatch.workspace_id == user.workspace_id,
-    ).order_by(TopicBatch.created_at.desc()).limit(1)
-    batch = (await db.execute(query)).scalar_one_or_none()
-    if batch is None:
-        batch = TopicBatch(
-            workspace_id=user.workspace_id,
-            analysis_id=analysis_id,
-            profile_id=profile.id,
-            kind=analysis.kind,
-            direction="",
-            spread_summary="",
-            status="queued",
-            progress=0,
-            step="queued",
-            detail="任务已排队，等待后台 Worker 接手",
-            prompt_version=settings.prompt_pack_version,
-        )
-        db.add(batch)
-        await db.flush()
-    elif batch.status in {"queued", "running", "completed"}:
-        rows = (await db.execute(select(Topic).where(Topic.batch_id == batch.id).order_by(Topic.position))).scalars().all()
-        return topic_batch_out(batch, rows, pipeline)
-    else:
-        batch.status = "queued"
-        batch.progress = 0
-        batch.step = "queued"
-        batch.detail = "任务已重新进入队列"
-        batch.error = None
-        batch.job_id = None
+    runtime = await get_runtime_settings(db)
     try:
-        batch.job_id = enqueue(
-            "app.jobs.run_topic_generation",
-            batch.id,
-            job_id=f"topics-{batch.id}-{int(datetime.utcnow().timestamp())}",
-            timeout=3600,
+        client = ModelClient(runtime)
+        result = await asyncio.to_thread(
+            _generate_topics_once,
+            client,
+            topics_prompt(analysis.kind, json.loads(analysis.report_json), profile.data(), runtime.prompts),
         )
-    except Exception as exc:
-        batch.status = "failed"
-        batch.step = "failed"
-        batch.detail = "后台任务未启动，可以恢复服务后重试"
-        batch.error = f"任务队列不可用：{exc}"[:1000]
+    except ModelOutputError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    batch = TopicBatch(
+        workspace_id=user.workspace_id,
+        analysis_id=analysis_id, profile_id=profile.id, kind=analysis.kind,
+        direction=result.direction, spread_summary=result.spreadSummary,
+        prompt_version=settings.prompt_pack_version,
+    )
+    db.add(batch)
+    await db.flush()
+    rows: list[Topic] = []
+    for index, item in enumerate(result.topics, start=1):
+        row = Topic(workspace_id=user.workspace_id, batch_id=batch.id, analysis_id=analysis_id, profile_id=profile.id, position=index, data_json=item.model_dump_json())
+        db.add(row)
+        rows.append(row)
     await db.commit()
+    for row in rows:
+        await db.refresh(row)
     await db.refresh(batch)
-    rows = (await db.execute(select(Topic).where(Topic.batch_id == batch.id).order_by(Topic.position))).scalars().all()
-    return topic_batch_out(batch, rows, pipeline)
+    return topic_batch_out(batch, rows)
 
 
 @app.get("/api/analyses/{analysis_id}/topics", response_model=TopicBatchOut | None)
@@ -427,7 +392,7 @@ async def topics_list(analysis_id: str, profileId: str | None = None, user: Auth
     if batch is None:
         return None
     rows = (await db.execute(select(Topic).where(Topic.batch_id == batch.id).order_by(Topic.position))).scalars().all()
-    return topic_batch_out(batch, rows, topic_pipeline(await get_runtime_settings(db)))
+    return topic_batch_out(batch, rows)
 
 
 @app.put("/api/topics/{topic_id}", response_model=TopicOut)

@@ -44,53 +44,18 @@ def parse_json_text(text: str) -> Any:
 
 
 class ModelClient:
-    def __init__(self, settings: RuntimeSettingsIn, *, model: str | None = None):
-        # Unqualified legacy callers historically used the shared analysis
-        # model. Keep that behavior; pipeline code passes its model explicitly.
-        selected_model = (model or settings.analysisModel or settings.model or settings.replicationModel).strip()
-        if not settings.apiKey or not selected_model:
+    def __init__(self, settings: RuntimeSettingsIn):
+        if not settings.apiKey or not settings.model:
             raise RuntimeError("模型 API Key 或模型名称尚未配置")
         self.settings = settings
-        self.model = selected_model
         self.client = OpenAI(api_key=settings.apiKey, base_url=settings.baseUrl.rstrip("/"), timeout=settings.timeout)
-
-    def _request_options(
-        self,
-        *,
-        max_output_tokens: int,
-        json_schema: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        """Build Ark-compatible options without changing the prompt contract.
-
-        Seed 2.0 Lite and Seed 2.1 models enable deep thinking by default.
-        The highest effort keeps the full reasoning budget available. The
-        response schema is passed through the official Responses API format
-        for structured calls.
-        """
-        options: dict[str, Any] = {
-            "model": self.model,
-            "max_output_tokens": max_output_tokens,
-            "store": False,
-        }
-        if self.model.startswith(("doubao-seed-2-0", "doubao-seed-2-1")):
-            options["reasoning"] = {"effort": "high"}
-            # Ark exposes `thinking` as an extra request body field. The
-            # OpenAI SDK does not expose it as a first-class keyword.
-            options["extra_body"] = {"thinking": {"type": "enabled"}}
-        if json_schema is not None:
-            options["text"] = {
-                "format": {
-                    "type": "json_schema",
-                    "name": "structured_response",
-                    "schema": json_schema,
-                }
-            }
-        return options
 
     def text(self, prompt: str, *, max_output_tokens: int = 8000) -> str:
         response = self.client.responses.create(
+            model=self.settings.model,
             input=prompt,
-            **self._request_options(max_output_tokens=max_output_tokens),
+            max_output_tokens=max_output_tokens,
+            store=False,
         )
         text = _response_text(response)
         if not text.strip():
@@ -98,16 +63,7 @@ class ModelClient:
         return text
 
     def json(self, prompt: str, schema: type[T], *, max_output_tokens: int = 12000) -> T:
-        response = self.client.responses.create(
-            input=prompt,
-            **self._request_options(
-                max_output_tokens=max_output_tokens,
-                json_schema=schema.model_json_schema(),
-            ),
-        )
-        first = _response_text(response)
-        if not first.strip():
-            raise ModelOutputError("模型没有返回文本")
+        first = self.text(prompt, max_output_tokens=max_output_tokens)
         try:
             return schema.model_validate(parse_json_text(first))
         except (json.JSONDecodeError, ValidationError, TypeError, ValueError) as first_error:
