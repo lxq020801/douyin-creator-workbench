@@ -1,0 +1,14 @@
+services:
+  backend:
+    ports: !override
+      - "127.0.0.1:${BACKEND_PORT:-8022}:8000"
+
+  frontend:
+    ports: !override
+      - "127.0.0.1:${FRONTEND_PORT:-4192}:80"
+
+volumes:
+  redis-data-external:
+    name: video-benchmark-original-one-call-redis-data
+  app-data-external:
+    name: video-benchmark-original-one-call-app-data

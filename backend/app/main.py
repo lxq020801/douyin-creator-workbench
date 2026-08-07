@@ -26,10 +26,9 @@ from .auth import (
     router as auth_router,
 )
 from .db import AccountSample, Analysis, Profile, Script, ScriptVersion, Topic, TopicBatch, get_db, get_for_workspace_or_404, init_db
-from .factual_guard import factual_final
 from .job_queue import connection, enqueue
 from .media.douyin import probe_cookie
-from .model_client import ModelClient, ModelOutputError
+from .model_client import ModelClient, ModelOutputError, parse_json_text
 from .prompts import DEFAULT_PROMPTS, intake_prompt, topics_prompt
 from .schemas import (
     AnalysisCreate,
@@ -82,6 +81,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(auth_router)
+
+
+def _generate_topics_once(client: ModelClient, prompt: str) -> TopicBatchModel:
+    """Make exactly one topic-model request without JSON repair or audit calls."""
+    try:
+        return TopicBatchModel.model_validate(
+            parse_json_text(client.text(prompt, max_output_tokens=20000))
+        )
+    except Exception as exc:
+        raise ModelOutputError(f"选题模型请求或输出校验失败：{exc}") from exc
 
 
 @app.middleware("http")
@@ -346,19 +355,10 @@ async def topics_generate(analysis_id: str, payload: TopicGenerateRequest, user:
     runtime = await get_runtime_settings(db)
     try:
         client = ModelClient(runtime)
-        draft = await asyncio.to_thread(
-            client.json,
-            topics_prompt(analysis.kind, json.loads(analysis.report_json), profile.data(), runtime.prompts),
-            TopicBatchModel,
-            max_output_tokens=20000,
-        )
-        result = await factual_final(
+        result = await asyncio.to_thread(
+            _generate_topics_once,
             client,
-            "对标选题",
-            profile.data(),
-            draft,
-            TopicBatchModel,
-            max_output_tokens=20000,
+            topics_prompt(analysis.kind, json.loads(analysis.report_json), profile.data(), runtime.prompts),
         )
     except ModelOutputError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
