@@ -107,6 +107,15 @@ def test_old_saved_prompts_cannot_override_external_pack(tmp_path):
             runtime = await get_runtime_settings(session)
             assert runtime.prompts["videoBreakdown"] == DEFAULT_PROMPTS["videoBreakdown"]
 
+            # Existing local data uses the previous pack's marker. Once this
+            # pack changes, those saved prompts must no longer override it.
+            version_row = await session.get(Setting, "promptPackVersion")
+            assert version_row is not None
+            version_row.value = "external-rtf-v3"
+            await session.commit()
+            runtime = await get_runtime_settings(session)
+            assert runtime.prompts["videoBreakdown"] == DEFAULT_PROMPTS["videoBreakdown"]
+
             custom = {**DEFAULT_PROMPTS, "videoBreakdown": "外部版本自定义提示词"}
             await save_runtime_settings(session, RuntimeSettingsIn(prompts=custom))
             assert (await session.get(Setting, "promptPackVersion")).value == settings.prompt_pack_version

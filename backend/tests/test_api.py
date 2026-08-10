@@ -36,14 +36,14 @@ def test_settings_hide_secrets_and_profile_crud(monkeypatch):
         assert len(payload["prompts"]["videoBreakdown"]) > 300
         assert "爆款骨架" in payload["prompts"]["videoBreakdown"]
         assert len(payload["prompts"]["common"]) > 200
-        assert payload["promptPackVersion"] == "external-rtf-v3"
+        assert payload["promptPackVersion"] == "codex-topic-diversity-v1"
         assert set(payload["prompts"]) == {
             "common", "videoBreakdown", "accountSummary", "profileIntake",
             "videoTopics", "accountTopics", "scriptGeneration",
         }
         defaults = client.get("/api/settings/prompts/defaults")
         assert defaults.status_code == 200
-        assert defaults.json()["version"] == "external-rtf-v3"
+        assert defaults.json()["version"] == "codex-topic-diversity-v1"
         payload.update({"apiKey": "sk-test-secret", "model": "doubao-test", "douyinCookie": "sessionid=test-cookie-value"})
         saved = client.put("/api/settings", json=payload)
         assert saved.status_code == 200
