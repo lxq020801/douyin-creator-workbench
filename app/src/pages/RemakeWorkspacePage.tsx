@@ -25,6 +25,11 @@ type TopicBatchView = {
   topics: ExternalTopic[];
 };
 
+type TopicGenerationProgress = {
+  percent: number;
+  label: string;
+};
+
 const SCRIPT_EXPORT_PIXEL_RATIO = 3;
 const SCRIPT_EXPORT_MAX_DIMENSION = 30_000;
 const SCRIPT_EXPORT_MAX_PIXELS = 120_000_000;
@@ -61,7 +66,9 @@ export function RemakeWorkspacePage() {
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [scripts, setScripts] = useState<GeneratedScript[]>([]);
   const [busy, setBusy] = useState(false);
+  const [topicGenerationProgress, setTopicGenerationProgress] = useState<TopicGenerationProgress | null>(null);
   const loadRequest = useRef(0);
+  const topicProgressStartedAt = useRef(0);
   const profileLoad = useRef<{ key: string; promise: Promise<TopicBatchView | null> } | null>(null);
 
   const topics = topicBatch?.topics || [];
@@ -79,11 +86,15 @@ export function RemakeWorkspacePage() {
           setTopicBatch(null);
           setScripts([]);
           setBusy(false);
+          setTopicGenerationProgress(null);
+          topicProgressStartedAt.current = 0;
           setProfileOpen(true);
           return;
         }
 
         setBusy(true);
+        setTopicGenerationProgress(null);
+        topicProgressStartedAt.current = 0;
         setTopicBatch(null);
         setScripts([]);
         const key = `${id}:${selectedProfileId}`;
@@ -93,12 +104,15 @@ export function RemakeWorkspacePage() {
             promise: (async () => {
               const existing = normalizeTopicBatch(await api.topics.list(id, selectedProfileId));
               if (existing) return existing;
+              topicProgressStartedAt.current = Date.now();
+              setTopicGenerationProgress({ percent: 8, label: '正在读取拆解方法' });
               return normalizeTopicBatch(await api.topics.generate(id, selectedProfileId));
             })(),
           };
         }
         const batch = await profileLoad.current.promise;
         if (request !== loadRequest.current) return;
+        if (topicProgressStartedAt.current) setTopicGenerationProgress({ percent: 100, label: '选题已生成，正在整理结果' });
         setTopicBatch(batch);
         const topicIds = new Set((batch?.topics || []).map((topic) => topic.id));
         const savedScripts = await api.scripts.list({ analysisId: id });
@@ -107,11 +121,32 @@ export function RemakeWorkspacePage() {
       } catch (error) {
         if (request === loadRequest.current) notify(error instanceof Error ? error.message : '读取复刻工作台失败', 'danger');
       } finally {
-        if (request === loadRequest.current) setBusy(false);
+        if (request === loadRequest.current) {
+          setBusy(false);
+          setTopicGenerationProgress(null);
+          topicProgressStartedAt.current = 0;
+        }
       }
     };
     void run();
   }, [id, selectedProfileId]);
+
+  useEffect(() => {
+    if (!topicGenerationProgress || topicGenerationProgress.percent >= 100) return;
+    const timer = window.setInterval(() => {
+      const elapsedSeconds = (Date.now() - topicProgressStartedAt.current) / 1000;
+      const percent = Math.min(92, Math.round(8 + 84 * (1 - Math.exp(-elapsedSeconds / 24))));
+      const label = percent < 30
+        ? '正在读取拆解方法'
+        : percent < 58
+          ? '正在结合账号资料'
+          : percent < 82
+            ? '正在发散 20 个选题'
+            : '正在整理生成结果';
+      setTopicGenerationProgress({ percent, label });
+    }, 800);
+    return () => window.clearInterval(timer);
+  }, [Boolean(topicGenerationProgress)]);
 
   useEffect(() => {
     if (!selectedProfileId) {
@@ -219,6 +254,13 @@ export function RemakeWorkspacePage() {
         <span>01 / 选择复刻对象</span>
         <h2>{busy ? '正在把方法迁移到你的账号…' : '先选择这次要使用的账号资料'}</h2>
         <p>{busy ? '系统正在结合拆解结果与账号资料生成 20 个发散选题。' : '同一份拆解可以分别用于不同商户。选定资料后，系统会恢复这个账号已有的选题，或生成一组新的选题。'}</p>
+        {topicGenerationProgress ? <div className="topic-generation-progress" role="status" aria-live="polite">
+          <div className="topic-generation-progress__meta"><span>{topicGenerationProgress.label}</span><strong>{topicGenerationProgress.percent}%</strong></div>
+          <div className="topic-generation-progress__track" role="progressbar" aria-label="选题生成进度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={topicGenerationProgress.percent}>
+            <span style={{ width: `${topicGenerationProgress.percent}%` }} />
+          </div>
+          <small>进度会根据生成阶段平滑推进，结果完成后自动进入选题页。</small>
+        </div> : null}
         <button className="button button--primary" type="button" disabled={busy} onClick={() => setProfileOpen(true)}>{busy ? <LoaderCircle className="spin" size={17} /> : <WandSparkles size={17} />}{busy ? '正在准备选题' : '选择账号资料'}</button>
       </section> : <TopicPanel
         batch={topicBatch}
