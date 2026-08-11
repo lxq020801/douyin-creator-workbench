@@ -8911,6 +8911,50 @@ body {
   line-height: 1.75;
 }
 
+.topic-generation-progress {
+  width: min(100%, 460px);
+  margin: 0 auto 24px;
+  text-align: left;
+}
+
+.topic-generation-progress__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.topic-generation-progress__meta strong {
+  color: var(--blue);
+  font-family: Menlo, Monaco, monospace;
+  font-size: 10px;
+}
+
+.topic-generation-progress__track {
+  height: 7px;
+  overflow: hidden;
+  background: var(--paper-deep);
+}
+
+.topic-generation-progress__track > span {
+  display: block;
+  height: 100%;
+  background: var(--red);
+  transition: width .7s ease;
+}
+
+.topic-generation-progress small {
+  display: block;
+  margin-top: 8px;
+  color: var(--quiet);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
 .remake-topic-workspace {
   margin-top: 22px;
 }
