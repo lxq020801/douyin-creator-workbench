@@ -150,7 +150,7 @@ class RuntimeSettingsIn(BaseModel):
 class RuntimeSettingsOut(RuntimeSettingsIn):
     apiKeyConfigured: bool = False
     douyinCookieConfigured: bool = False
-    promptPackVersion: str = "codex-topic-diversity-v1"
+    promptPackVersion: str = "codex-topic-diversity-v2"
 
 
 class LoginRequest(BaseModel):
@@ -240,7 +240,7 @@ class AnalysisOut(BaseModel):
     report: dict[str, Any] | None = None
     coverage: dict[str, Any] | None = None
     error: str | None = None
-    promptVersion: str = "codex-topic-diversity-v1"
+    promptVersion: str = "codex-topic-diversity-v2"
     createdAt: datetime
     updatedAt: datetime
 
@@ -366,7 +366,7 @@ class ScriptOut(BaseModel):
     status: Literal["queued", "running", "completed", "failed"]
     data: DirectorScript | None = None
     error: str | None = None
-    promptVersion: str = "codex-topic-diversity-v1"
+    promptVersion: str = "codex-topic-diversity-v2"
     activeVersion: int = 0
     versionCount: int = 0
 
