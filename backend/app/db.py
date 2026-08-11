@@ -92,7 +92,7 @@ class Analysis(Base):
     coverage_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     job_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
-    prompt_version: Mapped[str] = mapped_column(String(80), default="codex-topic-diversity-v2")
+    prompt_version: Mapped[str] = mapped_column(String(80), default="codex-topic-diversity-v1")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now, index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
 
@@ -119,7 +119,7 @@ class TopicBatch(Base):
     kind: Mapped[str] = mapped_column(String(20))
     direction: Mapped[str] = mapped_column(Text)
     spread_summary: Mapped[str] = mapped_column(Text)
-    prompt_version: Mapped[str] = mapped_column(String(80), default="codex-topic-diversity-v2")
+    prompt_version: Mapped[str] = mapped_column(String(80), default="codex-topic-diversity-v1")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now, index=True)
 
 
@@ -144,7 +144,7 @@ class Script(Base):
     data_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     job_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
-    prompt_version: Mapped[str] = mapped_column(String(80), default="codex-topic-diversity-v2")
+    prompt_version: Mapped[str] = mapped_column(String(80), default="codex-topic-diversity-v1")
     active_version: Mapped[int] = mapped_column(Integer, default=0)
     version_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
@@ -159,7 +159,7 @@ class ScriptVersion(Base):
     script_id: Mapped[str] = mapped_column(ForeignKey("scripts.id", ondelete="CASCADE"), index=True)
     version: Mapped[int] = mapped_column(Integer)
     data_json: Mapped[str] = mapped_column(Text)
-    prompt_version: Mapped[str] = mapped_column(String(80), default="codex-topic-diversity-v2")
+    prompt_version: Mapped[str] = mapped_column(String(80), default="codex-topic-diversity-v1")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
 
 

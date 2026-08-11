@@ -48,14 +48,6 @@ def test_topic_stage_hides_source_metadata_from_video_prompt():
     assert "replicableMethods" in prompt
 
 
-def test_video_topic_prompt_defines_diversity_and_fact_boundaries():
-    prompt = topics_prompt("video", {}, {"name": "测试资料"}, {})
-    assert "至少两个维度形成实质差异" in prompt
-    assert "同一核心叙事套路不超过6条" in prompt
-    assert "不得编造资料卡未提及的具体经营事件" in prompt
-    assert "不得表述为已发生的既定事实与具体数值" in prompt
-
-
 def test_topic_review_reuses_external_prompt_and_checks_unsupported_facts():
     topic = {
         "title": "选题", "concept": "角度", "hook": "钩子", "fitReason": "理由",

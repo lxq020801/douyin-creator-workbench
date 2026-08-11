@@ -22,7 +22,7 @@ export function SettingsPage() {
   const { settings, saveSettings, notify } = useAppStore();
   const [draft, setDraft] = useState<RuntimeSettings>(settings);
   const [promptDefaults, setPromptDefaults] = useState<Record<string, string>>(defaultSettings.prompts);
-  const [promptVersion, setPromptVersion] = useState(settings.promptPackVersion || 'codex-topic-diversity-v2');
+  const [promptVersion, setPromptVersion] = useState(settings.promptPackVersion || 'codex-topic-diversity-v1');
   const [tab, setTab] = useState<'users' | 'model' | 'crawler' | 'video' | 'prompts'>('users');
   const [promptKey, setPromptKey] = useState<(typeof promptTabs)[number]['key']>('videoBreakdown');
   const [testing, setTesting] = useState<'model' | 'cookie' | null>(null);

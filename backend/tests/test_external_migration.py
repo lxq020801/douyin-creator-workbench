@@ -111,7 +111,7 @@ def test_old_saved_prompts_cannot_override_external_pack(tmp_path):
             # pack changes, those saved prompts must no longer override it.
             version_row = await session.get(Setting, "promptPackVersion")
             assert version_row is not None
-            version_row.value = "codex-topic-diversity-v1"
+            version_row.value = "external-rtf-v3"
             await session.commit()
             runtime = await get_runtime_settings(session)
             assert runtime.prompts["videoBreakdown"] == DEFAULT_PROMPTS["videoBreakdown"]

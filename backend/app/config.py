@@ -17,7 +17,7 @@ class AppSettings(BaseSettings):
     cors_origins: str = "http://127.0.0.1:4191,http://localhost:4191"
     local_workspace_id: str = "local"
     temp_retention_hours: int = 24
-    prompt_pack_version: str = "codex-topic-diversity-v2"
+    prompt_pack_version: str = "codex-topic-diversity-v1"
     session_cookie_name: str = "video_benchmark_session"
     session_days: int = 14
     secure_cookies: bool = False
