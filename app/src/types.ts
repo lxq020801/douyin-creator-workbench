@@ -197,6 +197,7 @@ export interface GeneratedTopic {
   profileConnection: string;
   fitReason: string;
   accountRole: string;
+  creativeType: string;
 }
 
 export interface TopicBatch {

@@ -141,7 +141,7 @@ export function RemakeWorkspacePage() {
         : percent < 58
           ? '正在结合账号资料'
           : percent < 82
-            ? '正在发散 20 个选题'
+            ? '正在发散 10 个选题'
             : '正在整理生成结果';
       setTopicGenerationProgress({ percent, label });
     }, 800);
@@ -253,7 +253,7 @@ export function RemakeWorkspacePage() {
       {!topicBatch ? <section className="remake-profile-gate">
         <span>01 / 选择复刻对象</span>
         <h2>{busy ? '正在把方法迁移到你的账号…' : '先选择这次要使用的账号资料'}</h2>
-        <p>{busy ? '系统正在结合拆解结果与账号资料生成 20 个发散选题。' : '同一份拆解可以分别用于不同商户。选定资料后，系统会恢复这个账号已有的选题，或生成一组新的选题。'}</p>
+        <p>{busy ? '系统正在结合拆解结果与账号资料生成 10 个发散选题。' : '同一份拆解可以分别用于不同商户。选定资料后，系统会恢复这个账号已有的选题，或生成一组新的选题。'}</p>
         {topicGenerationProgress ? <div className="topic-generation-progress" role="status" aria-live="polite">
           <div className="topic-generation-progress__meta"><span>{topicGenerationProgress.label}</span><strong>{topicGenerationProgress.percent}%</strong></div>
           <div className="topic-generation-progress__track" role="progressbar" aria-label="选题生成进度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={topicGenerationProgress.percent}>

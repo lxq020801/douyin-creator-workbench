@@ -100,7 +100,7 @@ export function UnifiedWorkspacePage() {
         </div>
 
         {report ? <section className="report-next-step">
-          <div><span>NEXT / 对标复刻</span><h2>把拆解结果变成你的选题</h2><p>进入独立复刻工作台，结合账号资料生成 20 个选题，再选择需要的内容生成可拍脚本。</p></div>
+          <div><span>NEXT / 对标复刻</span><h2>把拆解结果变成你的选题</h2><p>进入独立复刻工作台，结合账号资料生成 10 个选题，再选择需要的内容生成可拍脚本。</p></div>
           <button type="button" onClick={() => setProfileOpen(true)}>进入复刻工作台 <ArrowRight size={18} /></button>
         </section> : null}
       </main>

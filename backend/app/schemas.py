@@ -257,12 +257,13 @@ class TopicData(BaseModel):
     profileConnection: str
     fitReason: str = ""
     accountRole: str = ""
+    creativeType: str = ""
 
 
 class TopicBatchModel(BaseModel):
     direction: str
     spreadSummary: str
-    topics: list[TopicData] = Field(min_length=20, max_length=20)
+    topics: list[TopicData] = Field(min_length=10, max_length=10)
 
 
 class FactualIssue(BaseModel):
@@ -312,6 +313,7 @@ class TopicUpdate(BaseModel):
     profileConnection: str = ""
     fitReason: str = ""
     accountRole: str = ""
+    creativeType: str = ""
 
 
 class ScriptBatchRequest(BaseModel):

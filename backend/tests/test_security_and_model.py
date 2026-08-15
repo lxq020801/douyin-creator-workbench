@@ -12,13 +12,13 @@ def test_json_parser_accepts_fenced_model_output():
     assert parse_json_text('```json\n{"ok": true}\n```') == {"ok": True}
 
 
-def test_topic_contract_requires_exactly_twenty_items():
+def test_topic_contract_requires_exactly_ten_items():
     topic = {
         "title": "选题", "concept": "角度", "hook": "钩子", "fitReason": "理由",
         "inheritedValue": "机制", "profileConnection": "迁移", "accountRole": "拉新",
     }
-    value = TopicBatchModel.model_validate({"direction": "杂交方向", "spreadSummary": "发散说明", "topics": [topic] * 20})
-    assert len(value.topics) == 20
+    value = TopicBatchModel.model_validate({"direction": "杂交方向", "spreadSummary": "发散说明", "topics": [topic] * 10})
+    assert len(value.topics) == 10
 
 
 def test_topic_contract_rejects_wrong_item_count():
@@ -48,13 +48,20 @@ def test_topic_stage_hides_source_metadata_from_video_prompt():
     assert "replicableMethods" in prompt
 
 
+def test_video_topic_prompt_requires_diverse_creative_engines():
+    prompt = topics_prompt("video", {}, {"name": "测试资料"}, {})
+    assert "至少覆盖6种不同的内容发动机" in prompt
+    assert "禁止整体换皮" in prompt
+    assert "同一发动机最多2条" in prompt
+
+
 def test_topic_review_reuses_external_prompt_and_checks_unsupported_facts():
     topic = {
         "title": "选题", "concept": "角度", "hook": "钩子", "fitReason": "理由",
         "inheritedValue": "机制", "profileConnection": "迁移", "accountRole": "拉新",
     }
     draft = TopicBatchModel.model_validate({
-        "direction": "杂交方向", "spreadSummary": "发散说明", "topics": [topic] * 20,
+        "direction": "杂交方向", "spreadSummary": "发散说明", "topics": [topic] * 10,
     })
     prompt = factual_audit_prompt("对标选题", {"name": "测试资料"}, draft)
     assert "不负责创意策划" in prompt
@@ -69,7 +76,7 @@ def test_factual_guard_corrects_then_requires_a_clean_audit():
         "inheritedValue": "机制", "profileConnection": "迁移", "accountRole": "拉新",
     }
     draft = TopicBatchModel.model_validate({
-        "direction": "初稿", "spreadSummary": "发散", "topics": [topic] * 20,
+        "direction": "初稿", "spreadSummary": "发散", "topics": [topic] * 10,
     })
     corrected = draft.model_copy(update={"direction": "已校正"})
 
@@ -102,10 +109,10 @@ def test_factual_guard_rejects_events_even_when_model_audit_misses_them():
         "profileConnection": "迁移", "accountRole": "拉新",
     }
     draft = TopicBatchModel.model_validate({
-        "direction": "方向", "spreadSummary": "发散", "topics": [unsafe_topic] * 20,
+        "direction": "方向", "spreadSummary": "发散", "topics": [unsafe_topic] * 10,
     })
     corrected = TopicBatchModel.model_validate({
-        "direction": "方向", "spreadSummary": "发散", "topics": [safe_topic] * 20,
+        "direction": "方向", "spreadSummary": "发散", "topics": [safe_topic] * 10,
     })
 
     class FakeClient:
